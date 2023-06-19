@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<!-- <script lang="ts" setup>
 import { toRefs, ref, watch } from "vue";
 import { size } from "lodash";
 import {
@@ -10,7 +10,7 @@ import {
   RadioButton,
 } from "ant-design-vue";
 import { CloseOutlined } from "@ant-design/icons-vue";
-import { shopService } from "@/services";
+// import { shopService } from "@/services";
 
 const props = defineProps<{
   visible?: boolean;
@@ -120,4 +120,4 @@ function hide() {
   </div>
 </template>
 
-<style scoped lang="scss" src="./styles.scss"></style>
+<style scoped lang="scss" src="./styles.scss"></style> -->

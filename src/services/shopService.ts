@@ -1,65 +1,65 @@
-import { AxiosResponse } from "axios";
+// import { AxiosResponse } from "axios";
 
-import { httpClient } from "@/core";
+// import { httpClient } from "@/core";
 
-class ShopService {
-  async getNewRegistationList(params: any) {
-    const res: AxiosResponse = await httpClient.get("v1/posts", {
-      params,
-    });
+// class ShopService {
+//   async getNewRegistationList(params: any) {
+//     const res: AxiosResponse = await httpClient.get("v1/posts", {
+//       params,
+//     });
 
-    return res.data;
-  }
+//     return res.data;
+//   }
 
-  async getShopTaskList(params: any) {
-    const res: AxiosResponse = await httpClient.get("v1/cs/shop-task/list", {
-      params,
-    });
+//   async getShopTaskList(params: any) {
+//     const res: AxiosResponse = await httpClient.get("v1/cs/shop-task/list", {
+//       params,
+//     });
 
-    return res.data;
-  }
+//     return res.data;
+//   }
 
-  async postMarkCompleted(taskId: number) {
-    const res: AxiosResponse = await httpClient.post(
-      `v1/cs/shop-task/mark-completed/${taskId}`
-    );
+//   async postMarkCompleted(taskId: number) {
+//     const res: AxiosResponse = await httpClient.post(
+//       `v1/cs/shop-task/mark-completed/${taskId}`
+//     );
 
-    return res.data;
-  }
+//     return res.data;
+//   }
 
-  async postMarkCallAgain(taskId: number) {
-    const res: AxiosResponse = await httpClient.post(
-      `v1/cs/shop-task/mark-call-again/${taskId}`
-    );
+//   async postMarkCallAgain(taskId: number) {
+//     const res: AxiosResponse = await httpClient.post(
+//       `v1/cs/shop-task/mark-call-again/${taskId}`
+//     );
 
-    return res.data;
-  }
+//     return res.data;
+//   }
 
-  async getCountShopTask() {
-    const res: AxiosResponse = await httpClient.get("v1/cs/shop-task/count");
+//   async getCountShopTask() {
+//     const res: AxiosResponse = await httpClient.get("v1/cs/shop-task/count");
 
-    return res.data;
-  }
+//     return res.data;
+//   }
 
-  async getListCallLog(params: any) {
-    const res: AxiosResponse = await httpClient.get(
-      "v1/cs/shop-task/call-log/list",
-      {
-        params,
-      }
-    );
+//   async getListCallLog(params: any) {
+//     const res: AxiosResponse = await httpClient.get(
+//       "v1/cs/shop-task/call-log/list",
+//       {
+//         params,
+//       }
+//     );
 
-    return res.data;
-  }
+//     return res.data;
+//   }
 
-  async postAddCallLog(params: any) {
-    const res: AxiosResponse = await httpClient.post(
-      "v1/cs/shop-task/call-log/add",
-      params
-    );
+//   async postAddCallLog(params: any) {
+//     const res: AxiosResponse = await httpClient.post(
+//       "v1/cs/shop-task/call-log/add",
+//       params
+//     );
 
-    return res.data;
-  }
-}
+//     return res.data;
+//   }
+// }
 
-export const shopService = new ShopService();
+// export const shopService = new ShopService();

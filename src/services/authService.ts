@@ -1,28 +1,28 @@
-import { AxiosResponse } from "axios";
+// import { AxiosResponse } from "axios";
 
-import { httpClient } from "@/core";
+// import { httpClient } from "@/core";
 
-class AuthService {
-  async login(username: string, password: string) {
-    const res: AxiosResponse = await httpClient.post("fulfilment/auth/login", {
-      username,
-      password,
-    });
+// class AuthService {
+//   async login(username: string, password: string) {
+//     const res: AxiosResponse = await httpClient.post("fulfilment/auth/login", {
+//       username,
+//       password,
+//     });
 
-    return res.data;
-  }
+//     return res.data;
+//   }
 
-  async refreshToken() {
-    const res: AxiosResponse = await httpClient.post(
-      "auth/refresh-token",
-      null,
-      {
-        withCredentials: true,
-      }
-    );
+//   async refreshToken() {
+//     const res: AxiosResponse = await httpClient.post(
+//       "auth/refresh-token",
+//       null,
+//       {
+//         withCredentials: true,
+//       }
+//     );
 
-    return res.data;
-  }
-}
+//     return res.data;
+//   }
+// }
 
-export const authService = new AuthService();
+// export const authService = new AuthService();
