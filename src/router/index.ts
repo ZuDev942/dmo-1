@@ -1,29 +1,20 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory } from 'vue-router'
+import Login from '@/modules/Login/index.vue'
 
-import { RouteName } from "@/shared/constants";
-import Homepage from "@/modules/homepage/index.vue";
-import NotFound from "@/modules/notFound/index.vue";
-
-const router = createRouter({
+export default createRouter({
   history: createWebHistory(),
-
-  routes: [],
-});
-
-// router.beforeEach((to, from, next) => {
-//   const accessToken = localStorage.getItem(
-//     import.meta.env.VITE_ACCESS_TOKEN_NAME
-//   );
-
-//   if (!to.meta.auth) {
-//     return next();
-//   }
-
-//   if (!accessToken) {
-//     return next({ name: RouteName.HOMEPAGE });
-//   }
-
-//   return next();
-// });
-
-export default router;
+  routes: [
+    {
+      path: '/',
+      component: Login,
+    },
+    // {
+    //   path: '/about',
+    //   component: () => import('@/views/About.vue'),
+    // },
+    // {
+    //   path: '/contact',
+    //   component: () => import('@/views/Contact.vue'),
+    // },
+  ],
+})

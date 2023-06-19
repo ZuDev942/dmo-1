@@ -1,13 +1,5 @@
-import { createApp } from "vue";
-import { createPinia } from "pinia";
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
 
-import router from "@/router";
-import App from "./App.vue";
-
-import "ant-design-vue/dist/antd.less";
-import "./assets/styles/app.scss";
-
-const app = createApp(App);
-app.use(createPinia());
-app.use(router);
-app.mount("#__app");
+createApp(App).use(router).mount('#app')

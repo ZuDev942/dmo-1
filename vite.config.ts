@@ -1,34 +1,13 @@
-import { resolve } from "path";
-import { defineConfig, loadEnv } from "vite";
-import vue from "@vitejs/plugin-vue";
+import { fileURLToPath } from 'url'
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
 
-export default ({ mode }) => {
-  process.env = { ...process.env, ...loadEnv(mode, "./") };
-
-  return defineConfig({
-    plugins: [vue()],
-    css: {
-      preprocessorOptions: {
-        less: {
-          modifyVars: {
-            "primary-color": "#00904a",
-          },
-          javascriptEnabled: true,
-        },
-        scss: {
-          additionalData: `
-              @import "./src/assets/styles/common/_variable.scss";
-            `,
-        },
-      },
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [vue({})],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
-    resolve: {
-      alias: {
-        "@": resolve(__dirname, "./src"),
-      },
-    },
-    server: {
-      port: 3000,
-    },
-  });
-};
+  },
+})
