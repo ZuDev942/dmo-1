@@ -1,4 +1,4 @@
-import{_ as i}from"./index.61846b39.js";var l=`accept acceptcharset accesskey action allowfullscreen allowtransparency
+import{_ as i}from"./omit.3fc7e930.js";var l=`accept acceptcharset accesskey action allowfullscreen allowtransparency
 alt async autocomplete autofocus autoplay capture cellpadding cellspacing challenge
 charset checked classid classname colspan cols content contenteditable contextmenu
 controls coords crossorigin data datetime default defer dir disabled download draggable

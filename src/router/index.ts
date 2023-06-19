@@ -22,6 +22,7 @@ const router = createRouter({
       path: "/shop-lives",
       name: RouteName.SHOP_LIVES,
       component: () => import("@/modules/shopProblem/pages/Lives/index.vue"),
+      meta: { layout: "defaultNoHeader" },
     },
     {
       path: "/new-registation",
