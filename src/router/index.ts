@@ -1,15 +1,16 @@
 import { createRouter, createWebHistory } from "vue-router";
 
 import routes from "./routes";
-import MainLayout from "@/shared/layout/MainLayout/index.vue";
+import { RouteName } from "@/shared/constants";
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: "",
-      component: MainLayout,
-      children: routes,
+      path: "/login-page",
+      name: RouteName.LOGIN_PAGE,
+      component: () => import("@/modules/yourWork/login/index.vue"),
+      meta: { layout: "defaultNoHeader" },
     },
   ],
 });
