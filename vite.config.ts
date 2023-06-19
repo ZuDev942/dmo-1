@@ -1,28 +1,29 @@
-import { fileURLToPath } from 'url'
+import { resolve } from 'path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [vue({})],
-  css: {
-    preprocessorOptions: {
-      less: {
-        modifyVars: {
-          'primary-color': '#00904a',
+export default ({ mode }) => {
+  return defineConfig({
+    plugins: [vue()],
+    css: {
+      preprocessorOptions: {
+        less: {
+          modifyVars: {
+            'primary-color': '#00904a',
+          },
+          javascriptEnabled: true,
         },
-        javascriptEnabled: true,
-      },
-      scss: {
-        additionalData: `
-            @import "./src/assets/styles/common/_variable.scss";
-          `,
+        scss: {
+          additionalData: `
+              @import "./src/assets/styles/common/_variable.scss";
+            `,
+        },
       },
     },
-  },
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    resolve: {
+      alias: {
+        '@': resolve(__dirname, './src'),
+      },
     },
-  },
-})
+  })
+}
