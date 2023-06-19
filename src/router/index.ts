@@ -60,20 +60,20 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach((to, from, next) => {
-  const accessToken = localStorage.getItem(
-    import.meta.env.VITE_ACCESS_TOKEN_NAME
-  );
+// router.beforeEach((to, from, next) => {
+//   const accessToken = localStorage.getItem(
+//     import.meta.env.VITE_ACCESS_TOKEN_NAME
+//   );
 
-  if (!to.meta.auth) {
-    return next();
-  }
+//   if (!to.meta.auth) {
+//     return next();
+//   }
 
-  if (!accessToken) {
-    return next({ name: RouteName.HOMEPAGE });
-  }
+//   if (!accessToken) {
+//     return next({ name: RouteName.HOMEPAGE });
+//   }
 
-  return next();
-});
+//   return next();
+// });
 
 export default router;
