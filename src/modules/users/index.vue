@@ -10,50 +10,26 @@ import {
 import type { IDataSource } from "@/components";
 import type { SelectProps } from "ant-design-vue";
 import { map, findIndex } from "lodash";
-import {
-  DataTable,
-  ImageDefault,
-  TimeOption,
-  CallLogModal,
-} from "@/components";
+import { DataTable } from "@/components";
 import { shopService } from "@/services";
 import { useCurrentPage } from "@/store";
 import { subYears, format } from "date-fns";
 import { crossSiteEvent } from "@/shared";
+// ==== Import ==== //
+import { userService } from "@/services";
 
-// interface IReqParams {
-//   taskType?: number;
-//   from?: string;
-//   to?: string;
-//   limit?: number;
-//   isCallAgain?: any;
-// }
-
-// const PAGE_SIZE = 10;
-
-// const reqParams = reactive<IReqParams>({
-//   taskType: 0,
-//   from: format(subYears(new Date(), 10), "yyyy-MM-dd"),
-//   to: format(new Date(), "yyyy-MM-dd"),
-//   limit: PAGE_SIZE,
-//   isCallAgain: null,
-// });
-
-// const currentPage = computed(() => {
-//   return useCurrentPage();
-// });
-
+// ==== Data ==== //
 const dataSource = reactive<IDataSource>({
   loading: false,
-  noDataText: "Không có shop nào",
+  noDataText: "No data",
   pagination: {
     totalPage: 0,
     page: 1,
   },
-  data: [1, 2, 3, 4, 5, 6, 7, 5, 5, 3],
+  data: [],
   columns: [
     {
-      title: "No.",
+      title: "No",
       width: "5%",
       scopedSlots: "no",
       className: "align-top",
@@ -102,39 +78,87 @@ const dataSource = reactive<IDataSource>({
     },
   ],
 });
+// ==== Method ==== //
 
-const listStatus = ref<SelectProps["options"]>([
-  {
-    value: null,
-    label: "Trạng thái",
-  },
-  {
-    value: 0,
-    label: "Chưa liên hệ",
-  },
-  {
-    value: 1,
-    label: "Liên hệ lại",
-  },
-]);
+onMounted(() => {
+  console.log("redirict list user...");
+  getList();
+});
 
-const isShowCallLog = ref<boolean>(false);
-const isStatusCallLog = ref<boolean>(false);
-const options = ref<any[]>();
-const taskId = ref<number>(0);
-const isCallAgain = ref<number | any>(null);
+async function getList() {
+  dataSource.loading = true;
 
-const lastShop = ref<any[]>([
-  {
-    after: "",
-  },
-]);
-const callLogIds = ref<any[]>([]);
+  const res = await userService.getLisrUser().finally(() => {
+    dataSource.loading = false;
+  });
+
+  if (res) {
+    dataSource.data = res;
+  }
+}
+
+// interface IReqParams {
+//   taskType?: number;
+//   from?: string;
+//   to?: string;
+//   limit?: number;
+//   isCallAgain?: any;
+// }
+
+// const PAGE_SIZE = 10;
+
+// const reqParams = reactive<IReqParams>({
+//   taskType: 0,
+//   from: format(subYears(new Date(), 10), "yyyy-MM-dd"),
+//   to: format(new Date(), "yyyy-MM-dd"),
+//   limit: PAGE_SIZE,
+//   isCallAgain: null,
+// });
+
+// const currentPage = computed(() => {
+//   return useCurrentPage();
+// });
+
+// const listStatus = ref<SelectProps["options"]>([
+//   {
+//     value: null,
+//     label: "Trạng thái",
+//   },
+//   {
+//     value: 0,
+//     label: "Chưa liên hệ",
+//   },
+//   {
+//     value: 1,
+//     label: "Liên hệ lại",
+//   },
+// ]);
+
+// const isShowCallLog = ref<boolean>(false);
+// const isStatusCallLog = ref<boolean>(false);
+// const options = ref<any[]>();
+// const taskId = ref<number>(0);
+// const isCallAgain = ref<number | any>(null);
+
+// const lastShop = ref<any[]>([
+//   {
+//     after: "",
+//   },
+// ]);
+// const callLogIds = ref<any[]>([]);
 
 function handleLoadPage(current: any) {
   dataSource.pagination.page = current.page;
   console.log("a");
   //   getShopTaskList();
+}
+
+async function handleDelete(id: any) {
+  console.log("ID:", id);
+
+  const res = await userService.deleteUser()
+
+  console.log(res)
 }
 
 const value = ref<string>();
@@ -165,19 +189,15 @@ const value = ref<string>();
 
     <div class="content">
       <DataTable :dataSource="dataSource" @table-change="handleLoadPage">
-        <template #no="{ record }">
-          <div class="flex items-center">1</div>
-        </template>
-
-        <template #id="{ record }"> acc006 </template>
-
-        <template #fullname="{ record }"> Nguyen Thanh A </template>
-        <template #role="{ record }"> Member </template>
-        <template #phone="{ record }"> 0933422342 </template>
-        <template #email="{ record }"> nta@911.com </template>
-        <template #signday="{ record }"> 11/21/2299 </template>
+        <template #no="{ record }"> {{ record.no }} </template>
+        <template #id="{ record }">{{ record.id }}</template>
+        <template #fullname="{ record }">{{ record.name }}</template>
+        <template #role="{ record }">{{ record.role }}</template>
+        <template #phone="{ record }">{{ record.phone }}</template>
+        <template #email="{ record }">{{ record.email }}</template>
+        <template #signday="{ record }">{{ record.signday }}</template>
         <template #action="{ record }">
-          <DeleteOutlined />
+          <DeleteOutlined @click="handleDelete(record.id)" />
         </template>
       </DataTable>
     </div>

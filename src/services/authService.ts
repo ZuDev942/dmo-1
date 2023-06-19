@@ -4,7 +4,7 @@ import { httpClient } from "@/core";
 
 class AuthService {
   async login(username: string, password: string) {
-    const res: AxiosResponse = await httpClient.post("auth/login", {
+    const res: AxiosResponse = await httpClient.post("login", {
       username,
       password,
     });

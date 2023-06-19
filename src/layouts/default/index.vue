@@ -7,20 +7,39 @@ import {
   SettingOutlined,
   LoginOutlined,
 } from "@ant-design/icons-vue";
+import { useRouter } from "vue-router";
+import { RouteName } from "@/shared/constants";
+const router = useRouter();
+import { useUserPage } from "@/store/modules";
 
-const visible = ref<boolean>(false);
+// ==== Data ====
 const hide = () => {
   visible.value = false;
 };
+
+const userStore = useUserPage();
+
+// ==== Method ====
+const visible = ref<boolean>(false);
+
+function handleLogout() {
+  console.log("Logout...");
+  // Reset state infor user
+  userStore.$reset();
+
+  localStorage.setItem(import.meta.env.VITE_ACCESS_TOKEN_NAME, "");
+  router.push({ name: RouteName.HOMEPAGE });
+}
 </script>
 
 <template>
   <div id="__main" class="flex w-full h-full">
-    <!-- <MenuRight /> -->
+    <!-- MenuRight -->
     <div id="__menu">
       <MenuRight></MenuRight>
     </div>
 
+    <!-- Content -->
     <div id="__content">
       <router-view />
 
@@ -38,14 +57,10 @@ const hide = () => {
           >
             <template #content>
               <div class="flex items-center setting__box">
-                <img
-                  src="@/assets/images/avatar.jpeg"
-                  alt=""
-                  class="setting__avatar"
-                />
+                <img :src="userStore.image" alt="" class="setting__avatar" />
                 <div class="pl-4">
-                  <h4>Nguyen Thanh A</h4>
-                  <p>namnt@911.com</p>
+                  <h4>{{ userStore.username }}</h4>
+                  <p>{{ userStore.email }}</p>
                 </div>
               </div>
 
@@ -56,18 +71,14 @@ const hide = () => {
               <div class="setting__item">
                 <SettingOutlined class="pr-3" /> Change Password
               </div>
-              <div class="setting__log">
+              <div class="setting__log" @click="handleLogout()">
                 <LoginOutlined class="pr-3" /> Log out
               </div>
             </template>
 
             <div class="setting">
-              <p class="setting__name">Nguyen Thanh A</p>
-              <img
-                src="@/assets/images/avatar.jpeg"
-                alt=""
-                class="setting__avatar"
-              />
+              <p class="setting__name">{{ userStore.username }}</p>
+              <img :src="userStore.image" alt="" class="setting__avatar" />
             </div>
           </Popover>
         </div>

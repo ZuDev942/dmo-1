@@ -45,6 +45,10 @@
   text-align: center;
 }
 
+.ant-table-wrapper :deep(.ant-table-tbody > tr > td) {
+  text-align: center;
+}
+
 .ant-table-wrapper :deep(.ant-table-footer) {
   border-top: 1px solid #f0f0f0;
   background: white;
@@ -54,4 +58,9 @@
   color: $darkgray-color;
   border: 1px solid $darkgray-color;
   background: white;
+}
+
+th.column-money,
+td.column-money {
+  text-align: right !important;
 }

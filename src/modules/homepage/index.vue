@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive } from "vue";
+import { reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthEvent } from "@/shared";
 import { RouteName } from "@/shared/constants";
@@ -14,6 +14,7 @@ import {
   InputPassword,
   Checkbox,
   message,
+  Spin,
 } from "ant-design-vue";
 const router = useRouter();
 
@@ -30,25 +31,47 @@ const formState = reactive<FormState>({
   remember: true,
 });
 
+const isLoading = ref<boolean>(false);
+import { useUserPage } from "@/store/modules";
+
+const userStore = useUserPage();
+
 // ==== Method
 
 const onFinish = async (values: any) => {
-  console.log("Success:", values);
-  const res = await authService.login(formState.username, formState.password);
+  isLoading.value = true;
+
+  const res = await authService
+    .login(formState.username, formState.password)
+    .finally(() => {
+      isLoading.value = false;
+    });
 
   if (res) {
+    // patch infor user to store
+    userStore.$patch({
+      id: res.id,
+      username: res.username,
+      email: res.email,
+      firstname: res.firstname,
+      lastname: res.lastname,
+      gender: res.gender,
+      image: res.image,
+      token: res.token,
+    });
+    
     localStorage.setItem(import.meta.env.VITE_ACCESS_TOKEN_NAME, res.token);
 
     router.push({ name: RouteName.SHOP_LIVES });
 
     message.success("Login success");
   } else {
-    console.log("err");
+    message.error("thong tin dang nhap ko chinh xac");
   }
 };
 
 const onFinishFailed = (errorInfo: any) => {
-  message.info("Vui long nhap thong tin");
+  message.error("Vui long nhap thong tin");
 };
 
 useAuthEvent();
@@ -104,7 +127,10 @@ useAuthEvent();
         </FormItem>
 
         <FormItem class="flex justify-center">
-          <Button html-type="submit" class="login-form-button"> LOG IN </Button>
+          <Button html-type="submit" class="login-form-button">
+            <p v-if="!isLoading">LOG IN</p>
+            <Spin v-else />
+          </Button>
         </FormItem>
       </Form>
     </div>
