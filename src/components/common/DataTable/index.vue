@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { toRefs } from "vue";
-import { Table } from "ant-design-vue";
+import { Table, Empty } from "ant-design-vue";
 
 import { IDataSource } from "./types";
 
@@ -14,6 +14,10 @@ const { dataSource } = toRefs(props);
 const emit = defineEmits<{
   (e: "tableChange", params): void;
 }>();
+
+function handleChange() {
+  console.log("a");
+}
 </script>
 
 <template>
@@ -32,7 +36,8 @@ const emit = defineEmits<{
             :record="record"
             :column="column"
             :index="index"
-          ></slot>
+          >
+          </slot>
         </template>
       </template>
 

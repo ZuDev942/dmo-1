@@ -16,7 +16,6 @@ const { visible } = toRefs(props);
       wrapClassName="newStyle"
       :bodyStyle="{ padding: 0 }"
       :closable="false"
-      :maskClosable="false"
       :footer="null"
     >
       as

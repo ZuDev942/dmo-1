@@ -1,22 +1,18 @@
 <script lang="ts" setup>
-import { reactive, ref, computed, watch, onMounted } from "vue";
-import { Button, InputSearch, message } from "ant-design-vue";
+// ==== Import ==== //
+import { reactive, ref, computed, watch, onMounted, createVNode } from "vue";
+import { Button, InputSearch, Drawer, Modal, message } from "ant-design-vue";
 import {
   DeleteOutlined,
   PlusOutlined,
   FilterOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons-vue";
 
 import type { IDataSource } from "@/components";
-import type { SelectProps } from "ant-design-vue";
-import { map, findIndex } from "lodash";
 import { DataTable } from "@/components";
-import { shopService } from "@/services";
-import { useCurrentPage } from "@/store";
-import { subYears, format } from "date-fns";
-import { crossSiteEvent } from "@/shared";
-// ==== Import ==== //
 import { userService } from "@/services";
+import DetailUser from "./detailUser/index.vue";
 
 // ==== Data ==== //
 const dataSource = reactive<IDataSource>({
@@ -78,12 +74,21 @@ const dataSource = reactive<IDataSource>({
     },
   ],
 });
-// ==== Method ==== //
+const isDrawer = ref<boolean>(false);
+const value = ref<string>();
+const isLoadingDetail = ref<boolean>(false);
+const isType = ref<boolean>(false);
 
+// ==== Method ==== //
 onMounted(() => {
   console.log("redirict list user...");
   getList();
 });
+
+const showDrawer = () => {
+  isDrawer.value = true;
+  isType.value = false;
+};
 
 async function getList() {
   dataSource.loading = true;
@@ -97,76 +102,49 @@ async function getList() {
   }
 }
 
-// interface IReqParams {
-//   taskType?: number;
-//   from?: string;
-//   to?: string;
-//   limit?: number;
-//   isCallAgain?: any;
-// }
-
-// const PAGE_SIZE = 10;
-
-// const reqParams = reactive<IReqParams>({
-//   taskType: 0,
-//   from: format(subYears(new Date(), 10), "yyyy-MM-dd"),
-//   to: format(new Date(), "yyyy-MM-dd"),
-//   limit: PAGE_SIZE,
-//   isCallAgain: null,
-// });
-
-// const currentPage = computed(() => {
-//   return useCurrentPage();
-// });
-
-// const listStatus = ref<SelectProps["options"]>([
-//   {
-//     value: null,
-//     label: "Trạng thái",
-//   },
-//   {
-//     value: 0,
-//     label: "Chưa liên hệ",
-//   },
-//   {
-//     value: 1,
-//     label: "Liên hệ lại",
-//   },
-// ]);
-
-// const isShowCallLog = ref<boolean>(false);
-// const isStatusCallLog = ref<boolean>(false);
-// const options = ref<any[]>();
-// const taskId = ref<number>(0);
-// const isCallAgain = ref<number | any>(null);
-
-// const lastShop = ref<any[]>([
-//   {
-//     after: "",
-//   },
-// ]);
-// const callLogIds = ref<any[]>([]);
-
 function handleLoadPage(current: any) {
   dataSource.pagination.page = current.page;
-  console.log("a");
-  //   getShopTaskList();
 }
 
-async function handleDelete(id: any) {
-  console.log("ID:", id);
+const handleDelete = (id: any) => {
+  Modal.confirm({
+    title: "Do you want to delete account?",
+    icon: createVNode(ExclamationCircleOutlined),
+    async onOk() {
+      const res = await userService.deleteUser();
 
-  const res = await userService.deleteUser()
+      if (res) {
+        message.success("Delete successful!");
+      }
+    },
+    onCancel() {},
+  });
+};
 
-  console.log(res)
-}
+const afterVisibleChange = (bool: boolean) => {
+  console.log("close drawer", bool);
+};
 
-const value = ref<string>();
+const handleSelectDetail = async (id: number) => {
+  isDrawer.value = true;
+  isType.value = true;
+};
 </script>
 
 <template>
   <div class="page h-full">
     <div class="page__top">
+      <div>
+        <Button class="btn" size="small" @click="showDrawer">
+          <PlusOutlined />
+          Create Account
+        </Button>
+        <Button class="btn" size="small">
+          <FilterOutlined />
+          Inactive
+        </Button>
+      </div>
+
       <div>
         <InputSearch
           v-model:value="value"
@@ -174,32 +152,47 @@ const value = ref<string>();
           style="width: 200px"
         />
       </div>
-
-      <div>
-        <Button class="btn" size="small">
-          <FilterOutlined />
-          Inactive
-        </Button>
-        <Button class="btn" size="small">
-          <PlusOutlined />
-          Create Account
-        </Button>
-      </div>
     </div>
 
-    <div class="content">
+    <div class="content relative">
       <DataTable :dataSource="dataSource" @table-change="handleLoadPage">
-        <template #no="{ record }"> {{ record.no }} </template>
+        <template #no="{ record }">{{ record.no }}</template>
         <template #id="{ record }">{{ record.id }}</template>
-        <template #fullname="{ record }">{{ record.name }}</template>
+        <template #fullname="{ record }">
+          <div @click="handleSelectDetail(record.no)" class="cursor-pointer">
+            {{ record.name }}
+          </div>
+        </template>
         <template #role="{ record }">{{ record.role }}</template>
         <template #phone="{ record }">{{ record.phone }}</template>
         <template #email="{ record }">{{ record.email }}</template>
         <template #signday="{ record }">{{ record.signday }}</template>
         <template #action="{ record }">
-          <DeleteOutlined @click="handleDelete(record.id)" />
+          <div class="content__icon">
+            <DeleteOutlined
+              @click="handleDelete(record.id)"
+              style="color: white"
+            />
+          </div>
         </template>
       </DataTable>
+
+      <!-- Detail & Create User -->
+      <Drawer
+        v-model:visible="isDrawer"
+        class="custom-class"
+        title="Create Account"
+        placement="right"
+        :width="'calc(100% - 213px)'"
+        @after-visible-change="afterVisibleChange"
+      >
+        <!--  -->
+        <DetailUser
+          :is-loading="isLoadingDetail"
+          :is-type="isType"
+        ></DetailUser>
+        <!--  -->
+      </Drawer>
     </div>
   </div>
 </template>

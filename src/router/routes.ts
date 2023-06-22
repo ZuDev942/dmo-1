@@ -54,10 +54,10 @@ const routes: RouteRecordRaw[] = [
     meta: { auth: true },
   },
   {
-    path: "login-page",
-    name: RouteName.LOGIN_PAGE,
-    component: () => import("@/modules/yourWork/login/index.vue"),
-    meta: { layout: "defaultNoHeader", auth: true },
+    path: "projects",
+    name: RouteName.PROJECTS,
+    component: () => import("@/modules/project/index.vue"),
+    meta: { auth: true },
   },
 ];
 

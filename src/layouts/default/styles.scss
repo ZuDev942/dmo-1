@@ -107,3 +107,66 @@
 .ant-dropdown :deep(.ant-dropdown-content) {
   font-size: 16px;
 }
+
+.modal {
+  &__header {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 4rem;
+    background: #2bc48a;
+
+    h3 {
+      font-size: 1.6 rem;
+      color: white;
+    }
+
+    img {
+      cursor: pointer;
+      position: absolute;
+      width: 1.5rem;
+      height: 1.5rem;
+      right: 1.5rem;
+    }
+  }
+
+  &__content {
+    padding: 2rem;
+    font-family: "Poppins", sans-serif;
+
+    .box {
+      margin-bottom: 2rem;
+      h4 {
+        font-size: 1.4rem;
+        color: #172b4d;
+        margin-bottom: 5px;
+      }
+
+      input {
+        border-radius: 5px;
+      }
+    }
+  }
+
+  &__action {
+    display: flex;
+    justify-content: center;
+  }
+
+  &__btn {
+    background: #2bc48a;
+    color: white;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    border: 1px solid #2bc48a;
+
+    &:hover {
+      border: 1px solid #2bc48a;
+    }
+  }
+}
+
+.ant-popover-content {
+  height: 300px;
+}

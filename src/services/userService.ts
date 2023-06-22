@@ -16,6 +16,12 @@ class UserService {
 
     return res.data;
   }
+
+  async getDetailUser(id: number) {
+    const res: AxiosResponse = await httpClient.get(`users/${id}`);
+
+    return res.data;
+  }
 }
 
 export const userService = new UserService();

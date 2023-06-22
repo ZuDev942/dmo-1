@@ -9,4 +9,5 @@ export enum RouteName {
   PROFILE = "Profile",
   TASKS = "Tasks",
   LOGIN_PAGE = "LoginPage",
+  PROJECTS = "Projects",
 }

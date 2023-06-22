@@ -27,7 +27,7 @@ const collapsed = ref<boolean>(false);
         </div>
       </router-link>
 
-      <router-link class="menu__item" to="/">
+      <router-link class="menu__item" to="/projects">
         <div class="item__img">
           <img src="@/assets/images/project.png" alt="" />
           <div class="item__name">Project</div>
