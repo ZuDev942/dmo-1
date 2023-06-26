@@ -1,11 +1,19 @@
 <script lang="ts" setup>
 // ==== Import ==== //
 import { reactive, ref, computed, watch, onMounted, createVNode } from "vue";
-import { Button, InputSearch, Drawer, Modal, message } from "ant-design-vue";
+import {
+  Button,
+  InputSearch,
+  Drawer,
+  Modal,
+  message,
+  Table,
+} from "ant-design-vue";
 import {
   DeleteOutlined,
-  PlusOutlined,
+  CaretDownOutlined,
   FilterOutlined,
+  PlusOutlined,
   ExclamationCircleOutlined,
 } from "@ant-design/icons-vue";
 
@@ -27,50 +35,48 @@ const dataSource = reactive<IDataSource>({
     {
       title: "No",
       width: "5%",
-      scopedSlots: "no",
-      className: "align-top",
+      dataIndex: "no",
+      slots: { title: "customNo", customRender: "no" },
     },
     {
       title: "ID",
-      //   width: "50%",
-      scopedSlots: "id",
-      className: "align-top",
+      dataIndex: "id",
+      slots: { title: "customId", customRender: "id" },
+      width: 200,
     },
     {
       title: "Fullname",
-      dataIndex: "action",
-      scopedSlots: "fullname",
-      className: "align-top",
+      dataIndex: "fullname",
+      slots: { title: "customFullname", customRender: "fullname" },
     },
     {
       title: "Role",
-      dataIndex: "action",
-      scopedSlots: "role",
-      className: "align-top",
+      dataIndex: "role",
+      slots: { title: "customRole", customRender: "role" },
+      width: 150,
     },
     {
       title: "Phone",
-      dataIndex: "action",
-      scopedSlots: "phone",
-      className: "align-top",
+      dataIndex: "phone",
+      slots: { title: "customPhone", customRender: "phone" },
+      width: 150,
     },
     {
       title: "Email",
-      dataIndex: "action",
-      scopedSlots: "email",
-      className: "align-top",
+      dataIndex: "email",
+      slots: { title: "customEmail", customRender: "email" },
+      width: 200,
     },
     {
       title: "Signday",
-      dataIndex: "action",
-      scopedSlots: "signday",
-      className: "align-top",
+      dataIndex: "signday",
+      slots: { title: "customSignday", customRender: "signday" },
+      width: 150,
     },
     {
-      title: "",
       dataIndex: "action",
-      scopedSlots: "action",
-      className: "align-top",
+      slots: { title: "customAction", customRender: "action" },
+      width: "5%",
     },
   ],
 });
@@ -102,10 +108,6 @@ async function getList() {
   }
 }
 
-function handleLoadPage(current: any) {
-  dataSource.pagination.page = current.page;
-}
-
 const handleDelete = (id: any) => {
   Modal.confirm({
     title: "Do you want to delete account?",
@@ -133,29 +135,29 @@ const handleSelectDetail = async (id: number) => {
 
 <template>
   <div class="page h-full">
-    <div class="page__top">
-      <div>
-        <Button class="btn" size="small" @click="showDrawer">
-          <PlusOutlined />
-          Create Account
-        </Button>
-        <Button class="btn" size="small">
-          <FilterOutlined />
-          Inactive
-        </Button>
-      </div>
-
+    <div class="user__filter">
       <div>
         <InputSearch
           v-model:value="value"
-          placeholder="Search by ID, name..."
-          style="width: 200px"
+          style="width: 300px"
+          placeholder="Search by name, ID..."
         />
       </div>
+
+      <Button class="user__btn" size="small" @click="showDrawer">
+        <PlusOutlined />
+        Create Account
+      </Button>
     </div>
 
     <div class="content relative">
-      <DataTable :dataSource="dataSource" @table-change="handleLoadPage">
+      <Table
+        :dataSource="dataSource.data"
+        :columns="dataSource.columns"
+        :pagination="false"
+        :loading="dataSource.loading"
+        :scroll="{ y: 500 }"
+      >
         <template #no="{ record }">{{ record.no }}</template>
         <template #id="{ record }">{{ record.id }}</template>
         <template #fullname="{ record }">
@@ -175,7 +177,7 @@ const handleSelectDetail = async (id: number) => {
             />
           </div>
         </template>
-      </DataTable>
+      </Table>
 
       <!-- Detail & Create User -->
       <Drawer

@@ -14,6 +14,9 @@ import {
   MenuOutlined,
   SettingOutlined,
   LoginOutlined,
+  IdcardOutlined,
+  UnlockOutlined,
+  SendOutlined,
 } from "@ant-design/icons-vue";
 import { useRouter } from "vue-router";
 import { RouteName } from "@/shared/constants";
@@ -112,7 +115,6 @@ const routeName = computed(() => {
   return "";
 });
 const options: { value: string; disabled: boolean }[] = [];
-
 </script>
 
 <template>
@@ -148,15 +150,15 @@ const options: { value: string; disabled: boolean }[] = [];
               </div>
 
               <router-link class="setting__item" to="/profile">
-                <SettingOutlined class="pr-3" /> Profile
+                <IdcardOutlined class="pr-3" /> Profile
               </router-link>
 
               <div class="setting__item" @click="handleChangePassword()">
-                <SettingOutlined class="pr-3" /> Change Password
+                <UnlockOutlined class="pr-3" /> Change Password
               </div>
 
               <div class="setting__item" @click="handleAbsenceRequest()">
-                <SettingOutlined class="pr-3" /> Absence Request
+                <SendOutlined class="pr-3" /> Absence Request
               </div>
 
               <div class="setting__log" @click="handleLogout()">

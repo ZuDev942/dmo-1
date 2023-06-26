@@ -153,7 +153,7 @@ async function getDetailUser() {
   <div>
     <div class="box__wrap mb-10">
       <div class="box box__top">
-        <h3 class="box__title">Account Info {{ isLoading }} {{ isType }}</h3>
+        <h3 class="box__title">Account Info</h3>
 
         <div class="box__top--wrap">
           <div class="flex items-center justify-center w-[15rem]">

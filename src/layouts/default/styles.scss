@@ -9,7 +9,7 @@
   overflow: auto;
   width: 100%;
   padding-top: 5rem;
-  background: #edf1f5;
+  background: #F7F8F9;
 }
 
 #__menu {
@@ -67,10 +67,6 @@
     font-family: "Poppins", sans-serif;
     display: flex;
     align-items: center;
-
-    &:hover {
-      background: #d9d9d9;
-    }
   }
 
   &__log {
@@ -139,12 +135,13 @@
       margin-bottom: 2rem;
       h4 {
         font-size: 1.4rem;
-        color: #172b4d;
+        color: #44546f;
         margin-bottom: 5px;
       }
 
       input {
         border-radius: 5px;
+        border-width: 2px;
       }
     }
   }

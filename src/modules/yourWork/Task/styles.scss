@@ -123,3 +123,145 @@
 .ant-tabs :deep(.ant-tabs-tab) {
   height: 3.2rem;
 }
+
+//
+
+.modal {
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+
+    img {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+
+    img {
+      width: 2rem;
+      height: 2rem;
+      margin-right: 1rem;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      color: #5e6c84;
+    }
+  }
+
+  &__wrap {
+    padding: 2rem;
+  }
+
+  &__footer {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 2rem;
+  }
+
+  &__btn {
+    background: #2bc48a;
+    color: white;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    border: 1px solid #2bc48a;
+
+    &:hover {
+      border: 1px solid #2bc48a;
+    }
+  }
+}
+
+.taskdetail {
+  &__wrap {
+    margin-bottom: 2rem;
+
+    p {
+      font-size: 1.4rem;
+      color: #172b4d;
+      font-weight: 600;
+    }
+  }
+  &__img {
+    width: 10rem;
+    margin-right: 1rem;
+
+    img {
+      width: 10rem;
+      height: 10rem;
+      border-radius: 5px;
+    }
+  }
+
+  &__activity {
+    margin-right: 2rem;
+    img {
+      width: 3.2rem;
+      height: 3.2rem;
+      border-radius: 50%;
+    }
+  }
+
+  &__attach {
+    border: none;
+    background: #edeff2;
+    color: #172b4d;
+    font-weight: 500;
+    font-size: 1.4rem;
+    border-radius: 5px;
+    margin: 2rem 0;
+  }
+
+  &__border {
+    border: 1px solid #d9d9d9;
+    border-radius: 5px;
+  }
+
+  &__title{
+    border-bottom: 1px solid #d9d9d9;
+    padding: 1rem;
+
+    h4{
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #172b4d;
+    }
+  }
+
+  &__details{
+    padding: 1rem;
+  }
+
+  &__status{
+    margin-bottom: 1rem;
+  }
+}
+
+.taskdetail__status .ant-select :deep(.ant-select-selector) {
+  background: #edeff2;
+  border: none;
+  color: #172b4d;
+  font-weight: 400;
+  border-radius: 5px;
+}
+.taskdetail__status .ant-select :deep(.ant-select-arrow) {
+  display: none;
+}
+
+.taskdetail__assignee .ant-select :deep(.ant-select-arrow) {
+  position: absolute;
+  left: 1%;
+  top: 37%;
+}
+
+.taskdetail__assignee .ant-select :deep(.ant-select-selector) {
+  padding-left: 3rem;
+  border: none;
+}

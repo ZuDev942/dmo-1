@@ -59,7 +59,7 @@ const onFinish = async (values: any) => {
       image: res.image,
       token: res.token,
     });
-    
+
     localStorage.setItem(import.meta.env.VITE_ACCESS_TOKEN_NAME, res.token);
 
     router.push({ name: RouteName.SHOP_LIVES });
@@ -80,10 +80,11 @@ useAuthEvent();
 <template>
   <div class="page">
     <div class="login">
-      <img src="@/assets/images/hrm.png" alt="" />
-      <h1>HRM</h1>
+      <div class="flex justify-center items-center flex-col">
+        <img src="@/assets/images/hrm.png" alt="" />
+        <h1>HRM</h1>
+      </div>
 
-      <!-- Form -->
       <Form
         :model="formState"
         name="normal_login"
@@ -92,17 +93,18 @@ useAuthEvent();
         @finishFailed="onFinishFailed"
       >
         <FormItem
+          class="flex flex-col items-start mb-[4rem]"
+          label="User ID"
           name="username"
           :rules="[{ required: true, message: 'Please input your username!' }]"
         >
           <Input v-model:value="formState.username" placeholder="Username">
-            <template #prefix>
-              <UserOutlined class="site-form-item-icon" />
-            </template>
           </Input>
         </FormItem>
 
         <FormItem
+          class="flex flex-col items-start mb-[4rem]"
+          label="Password"
           name="password"
           :rules="[{ required: true, message: 'Please input your password!' }]"
         >
@@ -110,28 +112,21 @@ useAuthEvent();
             v-model:value="formState.password"
             placeholder="Password"
           >
-            <template #prefix>
-              <LockOutlined class="site-form-item-icon" />
-            </template>
           </InputPassword>
         </FormItem>
 
-        <FormItem class="flex justify-between">
-          <FormItem name="remember" no-style>
-            <Checkbox v-model:checked="formState.remember"
-              >Remember me
-            </Checkbox>
-          </FormItem>
-
-          <a class="login-form-forgot" href="">Forgot password</a>
+        <FormItem class="flex justify-center mb-3">
+          <div class="flex justify-center items-center">
+            <Button html-type="submit" class="login__btn">
+              <p v-if="!isLoading">Continue</p>
+              <Spin v-else />
+            </Button>
+          </div>
         </FormItem>
 
-        <FormItem class="flex justify-center">
-          <Button html-type="submit" class="login-form-button">
-            <p v-if="!isLoading">LOG IN</p>
-            <Spin v-else />
-          </Button>
-        </FormItem>
+        <div class="flex justify-center">
+          <a class="login-form-forgot" href="">You can't login?</a>
+        </div>
       </Form>
     </div>
   </div>
