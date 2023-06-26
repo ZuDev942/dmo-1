@@ -131,16 +131,24 @@ const columns2 = [
   },
 ];
 
-interface FormState {
-  username: string;
-  password: string;
-  remember: any;
-}
-
-const formState = reactive<FormState>({
-  username: "a",
-  password: "",
-  remember: true,
+const formState = ref({
+  employid: "acc2",
+  password: "acc2",
+  role: "Member",
+  permission: "Member",
+  email_company: "nta@911.com",
+  id_card: "0993377473",
+  tax_number: "HHN88837NH",
+  id_co: "0966337464",
+  married: "no",
+  children: 0,
+  fullname: "Nguyen Thanh A",
+  shortname: "ant",
+  gender: "Male",
+  birthday: "09/04/2000",
+  email_per: "abc@911.com",
+  address: "Ha Noi",
+  signday: "02/02/2022",
 });
 
 const fileList = ref<any>();
@@ -185,7 +193,7 @@ const handleChange = (info: UploadChangeParam) => {
                   >
                     <FormItem label="Employee ID" class="mb-4">
                       <Input
-                        v-model:value="formState.username"
+                        v-model:value="formState.employid"
                         :bordered="false"
                         disabled
                       />
@@ -201,7 +209,7 @@ const handleChange = (info: UploadChangeParam) => {
 
                     <FormItem label="Roles" class="mb-4">
                       <Select
-                        v-model:value="formState.remember"
+                        v-model:value="formState.role"
                         placeholder="please select your role"
                         disabled
                         :bordered="false"
@@ -213,7 +221,7 @@ const handleChange = (info: UploadChangeParam) => {
 
                     <FormItem label="Permission Template" class="mb-4">
                       <Select
-                        v-model:value="formState.remember"
+                        v-model:value="formState.permission"
                         placeholder="please select your permission"
                         :bordered="false"
                         disabled
@@ -225,7 +233,7 @@ const handleChange = (info: UploadChangeParam) => {
 
                     <FormItem label="Email Company" class="mb-4">
                       <Input
-                        v-model:value="formState.password"
+                        v-model:value="formState.email_company"
                         :bordered="false"
                         disabled
                       />
@@ -243,7 +251,7 @@ const handleChange = (info: UploadChangeParam) => {
                 :wrapper-col="{ span: 16 }"
               >
                 <FormItem label="Fullname" class="mb-3">
-                  <Input v-model:value="formState.username" />
+                  <Input v-model:value="formState.fullname" />
                 </FormItem>
 
                 <FormItem label="Shortname" class="mb-3">
@@ -253,7 +261,7 @@ const handleChange = (info: UploadChangeParam) => {
                 <div class="flex">
                   <FormItem label="Gender" class="mb-3 w-1/2">
                     <Select
-                      v-model:value="formState.remember"
+                      v-model:value="formState.gender"
                       placeholder="please select your role"
                     >
                       <SelectOption value="shanghai">Member</SelectOption>
@@ -276,7 +284,7 @@ const handleChange = (info: UploadChangeParam) => {
 
                 <FormItem label="Email Personal" class="mb-3">
                   <Select
-                    v-model:value="formState.remember"
+                    v-model:value="formState.email_per"
                     placeholder="please select your permission"
                   >
                     <SelectOption value="shanghai">Member</SelectOption>
@@ -285,13 +293,13 @@ const handleChange = (info: UploadChangeParam) => {
                 </FormItem>
 
                 <FormItem label="Address" class="mb-3">
-                  <Input v-model:value="formState.password" />
+                  <Input v-model:value="formState.address" />
                 </FormItem>
 
                 <div class="flex">
                   <FormItem label="Sign Day" class="mb-3 w-1/2">
                     <Select
-                      v-model:value="formState.remember"
+                      v-model:value="formState.signday"
                       placeholder="please select your role"
                     >
                       <SelectOption value="shanghai">Member</SelectOption>
@@ -328,7 +336,7 @@ const handleChange = (info: UploadChangeParam) => {
               >
                 <FormItem label="ID Card" class="mb-4">
                   <Input
-                    v-model:value="formState.username"
+                    v-model:value="formState.id_card"
                     :bordered="false"
                     disabled
                   />
@@ -336,7 +344,7 @@ const handleChange = (info: UploadChangeParam) => {
 
                 <FormItem label="Tax Number" class="mb-4">
                   <Input
-                    v-model:value="formState.username"
+                    v-model:value="formState.tax_number"
                     :bordered="false"
                     disabled
                   />
@@ -344,7 +352,7 @@ const handleChange = (info: UploadChangeParam) => {
 
                 <FormItem label="ID Social Insurance" class="mb-4">
                   <Input
-                    v-model:value="formState.username"
+                    v-model:value="formState.id_co"
                     :bordered="false"
                     disabled
                   />
@@ -352,7 +360,7 @@ const handleChange = (info: UploadChangeParam) => {
 
                 <FormItem label="Married" class="mb-4">
                   <Input
-                    v-model:value="formState.username"
+                    v-model:value="formState.married"
                     :bordered="false"
                     disabled
                   />
@@ -360,7 +368,7 @@ const handleChange = (info: UploadChangeParam) => {
 
                 <FormItem label="Children Description" class="mb-4">
                   <Input
-                    v-model:value="formState.username"
+                    v-model:value="formState.children"
                     :bordered="false"
                     disabled
                   />
