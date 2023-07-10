@@ -39,7 +39,6 @@ const routes: RouteRecordRaw[] = [
     path: "users",
     name: RouteName.USERS,
     component: () => import("@/modules/users/index.vue"),
-    meta: { auth: true },
   },
   {
     path: "profile",
