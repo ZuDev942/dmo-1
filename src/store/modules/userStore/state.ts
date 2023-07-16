@@ -4,13 +4,8 @@ import { IUser } from "./types";
 export const useUserPage = defineStore("userPage", {
   state: () =>
     ({
-      id: 0,
-      username: "",
+      avatar: "",
       email: "",
-      firstName: "",
-      lastName: "",
-      gender: "",
-      image: "",
-      token: "",
+      fullname: "",
     } as IUser),
 });

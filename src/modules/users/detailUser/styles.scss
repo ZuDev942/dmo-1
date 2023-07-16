@@ -53,6 +53,36 @@
       border-radius: 50%;
     }
   }
+
+  &__container {
+    position: relative;
+    padding-bottom: 5rem;
+  }
+
+  &__save {
+    position: fixed;
+    z-index: 9999;
+    width: 100%;
+    bottom: 0;
+    background: white;
+    border-top: 1px solid #c1c7d0;
+    height: 4.2rem;
+    display: flex;
+    align-items: center;
+  }
+ 
+  &__btn {
+    height: 3.2rem;
+    background: #2bc48a;
+    color: white;
+    font-size: 1.5rem;
+    border: 1px solid #2bc48a;
+    border-radius: 5px;
+
+    &:hover {
+      border: 1px solid #2bc48a;
+    }
+  }
 }
 
 .ant-form :deep(.ant-col) {
@@ -107,6 +137,25 @@ td.column-money {
   text-align: right !important;
 }
 
-.ant-table-wrapper{
+.ant-table-wrapper {
   border: 1px solid #f0f0f0;
+}
+
+label {
+  font-size: 1.4rem;
+  color: #44546f;
+  font-weight: 500;
+}
+
+.ant-form :deep(.ant-form-item-label) {
+  label {
+    font-size: 1.4rem;
+    color: #44546f;
+    font-weight: 500;
+  }
+}
+
+.calender__icon {
+  width: 1.5rem;
+  height: 1.5rem;
 }

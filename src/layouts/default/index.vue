@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { MenuRight } from "@/layout-components";
 import {
   Popover,
@@ -9,10 +9,14 @@ import {
   FormItem,
   Form,
   Select,
+  Tooltip,
+  SelectOption,
+  RangePicker,
+  Textarea,
+  message,
 } from "ant-design-vue";
 import {
   MenuOutlined,
-  SettingOutlined,
   LoginOutlined,
   IdcardOutlined,
   UnlockOutlined,
@@ -21,6 +25,10 @@ import {
 import { useRouter } from "vue-router";
 import { RouteName } from "@/shared/constants";
 import { useUserPage } from "@/store/modules";
+import { userService, dayoffService } from "@/services";
+import { map, isEmpty, forEach } from "lodash";
+import type { Dayjs } from "dayjs";
+type RangeValue = [Dayjs, Dayjs];
 
 // ==== Data ==== //
 const router = useRouter();
@@ -29,53 +37,138 @@ const isSetting = ref<boolean>(false);
 const isChangePassword = ref<boolean>(false);
 const isAbsence = ref<boolean>(false);
 interface IChangePassword {
-  currentPassword: string;
+  oldPassword: string;
   newPassword: string;
-  repPassword: string;
 }
 
 const changePassword = reactive<IChangePassword>({
-  currentPassword: "",
+  oldPassword: "",
   newPassword: "",
-  repPassword: "",
 });
 
 interface FormAbsence {
-  requester: string;
-  approver: string;
-  inform: any[];
-  dayofftype: string;
-  session: string;
-  offday: any;
+  requestAccountId: number;
+  approverId: any;
+  informList: any[];
+  dayOffType: string;
+  sessionOff: string;
+  offDay: any;
   reason: string;
   note: string;
 }
 
 const formAbsence = reactive<FormAbsence>({
-  requester: "Nguyen Thanh A",
-  approver: "",
-  inform: ["Luong Quynh Trang"],
-  dayofftype: "",
-  session: "",
-  offday: "",
+  requestAccountId: 3,
+  approverId: [],
+  informList: [],
+  dayOffType: "",
+  sessionOff: "",
+  offDay: [],
   reason: "",
   note: "",
 });
-// ==== Method ==== //
-const handleOk = (e: MouseEvent) => {
-  isChangePassword.value = false;
-};
 
-const handleOkAbsence = (e: MouseEvent) => {
-  isChangePassword.value = false;
+const dateFormat = "YYYY/MM/DD";
+const rangeDate = ref<RangeValue>();
+const userList = ref<any>([]);
+const userInfo = ref<any>({});
+
+// ==== Method ==== //
+onMounted(() => {
+  getUser();
+  const savedUser = localStorage.getItem("userInfo");
+
+  if (savedUser) {
+    userInfo.value = JSON.parse(savedUser);
+  }
+});
+
+const list = ref<any>([]);
+
+async function getUser() {
+  const req = {
+    pageIndex: 1,
+    pageSize: 20,
+    keyword: "",
+  };
+
+  const res = await userService.getLisrUser(req);
+
+  const a = map(res.data.data, (item) => {
+    return {
+      value: item.id,
+      label: item.fullName,
+    };
+  });
+
+  list.value = res.data.data;
+
+  userList.value = a;
+}
+
+const isCheckField = computed(() => {
+  if (
+    !isEmpty(changePassword.oldPassword) ||
+    !isEmpty(changePassword.newPassword)
+  ) {
+    return false;
+  }
+
+  return true;
+});
+
+async function handleOk() {
+  const res = await userService.changePassword(changePassword).catch((err) => {
+    message.error("The current password is incorrect");
+  });
+
+  if (res.status === "SUCCESS") {
+    message.success("Change your password successfull!");
+    isChangePassword.value = false;
+  }
+}
+
+const handleOkAbsence = async (e: MouseEvent) => {
+  const inform: { accountId: any; fullName: any }[] = [];
+
+  forEach(list.value, (item) => {
+    forEach(formAbsence.informList, (i) => {
+      if (item.id === i) {
+        console.log(item);
+        const acc = {
+          accountId: item.id,
+          fullName: item.fullName,
+        };
+
+        inform.push(acc);
+      }
+    });
+  });
+
+  const reqParams = {
+    requestAccountId: 3,
+    approverId: formAbsence.approverId,
+    informList: inform,
+    dayOffType: formAbsence.dayOffType,
+    sessionOff: formAbsence.sessionOff,
+    offDay: "2023-07-15",
+    reason: formAbsence.reason,
+    note: formAbsence.note,
+  };
+
+  const res = await dayoffService.postDayoff(reqParams);
+
+  if (res) {
+    isAbsence.value = false;
+    message.success("Send absent successfull!");
+  }
 };
 
 function handleLogout() {
-  console.log("Logout...");
-  // Reset state infor user
-  userStore.$reset();
-
+  // Reset store infor user
+  localStorage.removeItem("userInfo");
   localStorage.setItem(import.meta.env.VITE_ACCESS_TOKEN_NAME, "");
+
   router.push({ name: RouteName.HOMEPAGE });
 }
 
@@ -113,7 +206,7 @@ const routeName = computed(() => {
   }
 
   if (currentPage === "Dayoff") {
-    return "DAYOFF";
+    return "DAY OFF";
   }
 
   return "";
@@ -136,6 +229,7 @@ const options: { value: string; disabled: boolean }[] = [];
         <div class="header__rou">
           <MenuOutlined class="pr-3" /> {{ routeName }}
         </div>
+
         <div>
           <Popover
             v-model:visible="isSetting"
@@ -146,10 +240,10 @@ const options: { value: string; disabled: boolean }[] = [];
           >
             <template #content>
               <div class="flex items-center setting__box">
-                <img :src="userStore.image" alt="" class="setting__avatar" />
+                <img :src="userInfo.avatar" alt="" class="setting__avatar" />
                 <div class="pl-4">
-                  <h4>{{ userStore.username || "null" }}</h4>
-                  <p>{{ userStore.email || "null" }}</p>
+                  <h4>{{ userInfo.fullname || "null" }}</h4>
+                  <p>{{ userInfo.email || "null" }}</p>
                 </div>
               </div>
 
@@ -171,8 +265,8 @@ const options: { value: string; disabled: boolean }[] = [];
             </template>
 
             <div class="setting">
-              <p class="setting__name">{{ userStore.username }}</p>
-              <img :src="userStore.image" alt="" class="setting__avatar" />
+              <p class="setting__name">{{ userInfo.fullname }}</p>
+              <img :src="userInfo.avatar" alt="" class="setting__avatar" />
             </div>
           </Popover>
         </div>
@@ -197,21 +291,27 @@ const options: { value: string; disabled: boolean }[] = [];
         <div class="modal__content">
           <div class="box">
             <h4>Current Password</h4>
-            <Input v-model:value="changePassword.currentPassword" />
+            <Input
+              v-model:value="changePassword.oldPassword"
+              placeholder="Enter current password"
+            />
           </div>
 
           <div class="box">
             <h4>New Password</h4>
-            <Input v-model:value="changePassword.newPassword" />
-          </div>
-
-          <div class="box">
-            <h4>Repeat Password</h4>
-            <Input v-model:value="changePassword.repPassword" />
+            <Input
+              v-model:value="changePassword.newPassword"
+              placeholder="Enter new password"
+            />
           </div>
 
           <div class="modal__action">
-            <Button class="modal__btn" @click="handleOk">SAVE</Button>
+            <Button
+              class="modal__btn"
+              @click="handleOk()"
+              :disabled="isCheckField"
+              >Save change</Button
+            >
           </div>
         </div>
       </Modal>
@@ -225,14 +325,9 @@ const options: { value: string; disabled: boolean }[] = [];
         :closable="false"
         :footer="null"
       >
-        <!-- <Button @click="handleOk">Close</Button> -->
         <div class="modal__header">
           <h3>DAYOFF DETAIL</h3>
-          <img
-            src="@/assets/images/closed.png"
-            alt=""
-            @click="handleOkAbsence"
-          />
+          <img src="@/assets/images/closed.png" alt="" />
         </div>
 
         <div class="modal__content w-full">
@@ -251,8 +346,7 @@ const options: { value: string; disabled: boolean }[] = [];
                 class="mb-3"
                 :aria-disabled="true"
               >
-                <Select v-model:value="formAbsence.requester" disabled>
-                </Select>
+                <Select v-model:value="userInfo.fullname" disabled></Select>
               </FormItem>
 
               <FormItem
@@ -261,20 +355,19 @@ const options: { value: string; disabled: boolean }[] = [];
                 name="approver"
                 class="mb-3"
               >
-                <Input
-                  v-model:value="formAbsence.approver"
-                  autocomplete="off"
-                />
+                <Select
+                  v-model:value="formAbsence.approverId"
+                  style="width: 100%"
+                  :options="userList"
+                ></Select>
               </FormItem>
 
               <FormItem has-feedback label="Inform" name="inform" class="mb-3">
-                <!-- <Input v-model:value="formAbsence.inform" autocomplete="off" /> -->
                 <Select
-                  v-model:value="formAbsence.inform"
+                  v-model:value="formAbsence.informList"
                   mode="multiple"
                   style="width: 100%"
-                  placeholder="Please select"
-                  :options="options"
+                  :options="userList"
                 ></Select>
               </FormItem>
 
@@ -284,10 +377,15 @@ const options: { value: string; disabled: boolean }[] = [];
                 name="dayofftype"
                 class="mb-3"
               >
-                <Input
-                  v-model:value="formAbsence.dayofftype"
-                  autocomplete="off"
-                />
+                <Select
+                  v-model:value="formAbsence.dayOffType"
+                  style="width: 100%"
+                >
+                  <SelectOption value="MATERNITY_LEAVE">
+                    Maternity Leave
+                  </SelectOption>
+                  <SelectOption value="UNPAID_LEAVE">Unpaid Leave</SelectOption>
+                </Select>
               </FormItem>
 
               <FormItem
@@ -296,19 +394,33 @@ const options: { value: string; disabled: boolean }[] = [];
                 name="session"
                 class="mb-3"
               >
-                <Input v-model:value="formAbsence.session" autocomplete="off" />
+                <Select
+                  v-model:value="formAbsence.sessionOff"
+                  style="width: 100%"
+                >
+                  <SelectOption value="Morning"> Morning </SelectOption>
+                  <SelectOption value="Afternoon"> Afternoon </SelectOption>
+                  <SelectOption value="Fullday"> Full Day </SelectOption>
+                </Select>
               </FormItem>
 
               <FormItem has-feedback label="Off Day" name="offday" class="mb-3">
-                <Input v-model:value="formAbsence.offday" autocomplete="off" />
+                <RangePicker
+                  v-model:value="rangeDate"
+                  :format="dateFormat"
+                  style="width: 100%"
+                  :placeholder="['DD-MM-YYYY', 'DD-MM-YYYY']"
+                />
               </FormItem>
 
               <FormItem has-feedback label="Reason" name="reason" class="mb-3">
-                <Input v-model:value="formAbsence.reason" autocomplete="off" />
+                <Textarea v-model:value="formAbsence.reason" autocomplete="off">
+                </Textarea>
               </FormItem>
 
               <FormItem has-feedback label="Note" name="note" class="mb-3">
-                <Input v-model:value="formAbsence.note" autocomplete="off" />
+                <Textarea v-model:value="formAbsence.note" autocomplete="off">
+                </Textarea>
               </FormItem>
             </Form>
           </div>

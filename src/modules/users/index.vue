@@ -1,26 +1,20 @@
 <script lang="ts" setup>
 // ==== Import ==== //
 import { reactive, ref, computed, watch, onMounted, createVNode } from "vue";
-import {
-  Button,
-  InputSearch,
-  Drawer,
-  Modal,
-  message,
-  Table,
-} from "ant-design-vue";
+import { Button, Input, Drawer, Modal, message, Table } from "ant-design-vue";
 import {
   DeleteOutlined,
-  CaretDownOutlined,
-  FilterOutlined,
   PlusOutlined,
   ExclamationCircleOutlined,
+  SearchOutlined,
+  CloseOutlined,
 } from "@ant-design/icons-vue";
 
 import type { IDataSource } from "@/components";
-import { DataTable } from "@/components";
 import { userService } from "@/services";
 import DetailUser from "./detailUser/index.vue";
+import moment from "moment";
+import { debounce, isEmpty } from "lodash";
 
 // ==== Data ==== //
 const dataSource = reactive<IDataSource>({
@@ -81,30 +75,67 @@ const dataSource = reactive<IDataSource>({
   ],
 });
 const isDrawer = ref<boolean>(false);
-const value = ref<string>();
+const textSearch = ref<string>("");
 const isLoadingDetail = ref<boolean>(false);
-const isType = ref<boolean>(false);
+const isType = ref<string>("none");
+const title = ref<string>("Create Account");
+const count = ref<number>(0);
+const idCreate = ref<number>(0);
 
+interface IReqParams {
+  pageIndex?: number;
+  pageSize?: number;
+  keyword?: string;
+}
+
+const reqParams = reactive<IReqParams>({
+  pageIndex: 1,
+  pageSize: 20,
+  keyword: "",
+});
+
+const idUser = ref<number>(0);
 // ==== Method ==== //
 onMounted(() => {
   console.log("redirict list user...");
-  getList();
+  getListUser();
 });
 
-const showDrawer = () => {
+const createAccount = () => {
   isDrawer.value = true;
-  isType.value = false;
+  title.value = "Create Account";
+  isType.value = "create";
+  count.value++;
+  console.log(typeof generateUniqueId())
+  // idCreate.value = generateUniqueId().toN;
 };
 
-async function getList() {
+const showDetail = () => {
+  isDrawer.value = true;
+  isType.value = "detail";
+  idUser.value = 14;
+};
+
+async function getListUser() {
   dataSource.loading = true;
 
-  const res = await userService.getLisrUser().finally(() => {
+  const res = await userService.getLisrUser(reqParams).finally(() => {
     dataSource.loading = false;
   });
 
   if (res) {
-    dataSource.data = res;
+    dataSource.data = res.data.data;
+  }
+}
+
+function generateUniqueId() {
+  const uniqueId = `${Math.floor(Math.random() * 1000)}`;
+
+  const existingId = dataSource.data.find((item) => item.id === uniqueId);
+  if (existingId) {
+    generateUniqueId();
+  } else {
+    return uniqueId;
   }
 }
 
@@ -113,38 +144,69 @@ const handleDelete = (id: any) => {
     title: "Do you want to delete account?",
     icon: createVNode(ExclamationCircleOutlined),
     async onOk() {
-      const res = await userService.deleteUser();
+      const res = await userService.deleteUser(id);
 
-      if (res) {
+      if (res.status === "SUCCESS") {
         message.success("Delete successful!");
+        getListUser();
       }
     },
     onCancel() {},
   });
 };
 
-const afterVisibleChange = (bool: boolean) => {
-  console.log("close drawer", bool);
-};
-
 const handleSelectDetail = async (id: number) => {
   isDrawer.value = true;
-  isType.value = true;
+  idUser.value = id;
+  isType.value = "detail";
+  title.value = "Detail Account";
+  count.value++;
 };
+
+const convertTime = (date: Date) => {
+  return moment(date).format("DD-MM-YYYY");
+};
+
+watch(
+  textSearch,
+  debounce(() => {
+    reqParams.keyword = textSearch.value;
+    getListUser();
+  }, 300)
+);
+
+async function getDetailUser() {
+  const res = userService.getDetailUser(1);
+
+  console.log(res);
+}
+
+function handleClear() {
+  textSearch.value = "";
+}
+
+function handleRefresh() {
+  isDrawer.value = false;
+  getListUser();
+}
 </script>
 
 <template>
   <div class="page h-full">
     <div class="user__filter">
-      <div>
-        <InputSearch
-          v-model:value="value"
+      <div class="user__search">
+        <Input
+          v-model:value="textSearch"
           style="width: 300px"
           placeholder="Search by name, ID..."
         />
+        <div class="user__icon">
+          <SearchOutlined v-if="isEmpty(textSearch)" />
+          <CloseOutlined v-else @click="handleClear()" />
+        </div>
       </div>
 
-      <Button class="user__btn" size="small" @click="showDrawer">
+      <Button class="user__btn" size="small" @click="createAccount()">
         <PlusOutlined />
         Create Account
       </Button>
@@ -158,17 +220,22 @@ const handleSelectDetail = async (id: number) => {
         :loading="dataSource.loading"
         :scroll="{ y: 500 }"
       >
-        <template #no="{ record }">{{ record.no }}</template>
-        <template #id="{ record }">{{ record.id }}</template>
+        <template #no="{ record }">{{ record.id }}</template>
+        <template #id="{ record }">{{ record.userName }}</template>
         <template #fullname="{ record }">
-          <div @click="handleSelectDetail(record.no)" class="cursor-pointer">
-            {{ record.name }}
+          <div @click="handleSelectDetail(record.id)" class="cursor-pointer">
+            {{ record.fullName }}
           </div>
         </template>
-        <template #role="{ record }">{{ record.role }}</template>
+        <template #role="{ record }">
+          <div v-if="record.role"></div>
+          {{ record.role }}
+        </template>
         <template #phone="{ record }">{{ record.phone }}</template>
         <template #email="{ record }">{{ record.email }}</template>
-        <template #signday="{ record }">{{ record.signday }}</template>
+        <template #signday="{ record }">{{
+          convertTime(record.signDay)
+        }}</template>
         <template #action="{ record }">
           <div class="content__icon">
             <DeleteOutlined
@@ -183,15 +250,18 @@ const handleSelectDetail = async (id: number) => {
       <Drawer
         v-model:visible="isDrawer"
         class="custom-class"
-        title="Create Account"
+        :title="title"
         placement="right"
         :width="'calc(100% - 213px)'"
-        @after-visible-change="afterVisibleChange"
       >
         <!--  -->
         <DetailUser
           :is-loading="isLoadingDetail"
           :is-type="isType"
+          :count="count"
+          :id-user="idUser"
+          :id-create="idCreate"
+          @refresh-list="handleRefresh()"
         ></DetailUser>
         <!--  -->
       </Drawer>

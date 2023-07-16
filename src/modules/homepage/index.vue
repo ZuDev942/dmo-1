@@ -47,20 +47,26 @@ const onFinish = async (values: any) => {
       isLoading.value = false;
     });
 
-  if (res) {
+  if (res.status === "SUCCESS") {
     // patch infor user to store
-    userStore.$patch({
-      id: res.id,
-      username: res.username,
-      email: res.email,
-      firstname: res.firstname,
-      lastname: res.lastname,
-      gender: res.gender,
-      image: res.image,
-      token: res.token,
-    });
+    const userInfo = {
+      avatar: res.data.avatar,
+      email: res.data.email,
+      fullname: res.data.fullName,
+    };
 
-    localStorage.setItem(import.meta.env.VITE_ACCESS_TOKEN_NAME, res.token);
+    localStorage.setItem("userInfo", JSON.stringify(userInfo));
+
+    // userStore.$patch({
+    //   avatar: res.data.avatar,
+    //   email: res.data.email,
+    //   fullname: res.data.fullName,
+    // });
+
+    localStorage.setItem(
+      import.meta.env.VITE_ACCESS_TOKEN_NAME,
+      res.data.token
+    );
 
     router.push({ name: RouteName.SHOP_LIVES });
 

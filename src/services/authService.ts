@@ -3,9 +3,9 @@ import { AxiosResponse } from "axios";
 import { httpClient } from "@/core";
 
 class AuthService {
-  async login(username: string, password: string) {
-    const res: AxiosResponse = await httpClient.post("login", {
-      username,
+  async login(userName: string, password: string) {
+    const res: AxiosResponse = await httpClient.post("api/v0/user/login", {
+      userName,
       password,
     });
 

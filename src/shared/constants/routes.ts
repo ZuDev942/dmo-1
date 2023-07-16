@@ -10,5 +10,5 @@ export enum RouteName {
   TASKS = "Tasks",
   LOGIN_PAGE = "LoginPage",
   PROJECTS = "Projects",
-  DAYOFF = "Dayoff",
+  DAYOFF = "Dayoff"
 }

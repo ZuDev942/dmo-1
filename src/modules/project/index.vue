@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 // ==== Import ==== //
-import { computed, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import {
   Button,
   Table,
@@ -22,6 +22,7 @@ import {
 } from "@ant-design/icons-vue";
 import type { IDataSource } from "@/components";
 import { cloneDeep } from "lodash";
+import { projectService } from "@/services";
 
 // ==== Data ==== //
 const dataSource = reactive<IDataSource>({
@@ -31,29 +32,7 @@ const dataSource = reactive<IDataSource>({
     totalPage: 0,
     page: 1,
   },
-  data: [
-    {
-      name: "Human Resource",
-      key: "HRM",
-      type: "Company",
-      lead: "Vu Thanh A",
-      status: "Processing",
-    },
-    {
-      name: "Human Resource",
-      key: "HRM",
-      type: "Company",
-      lead: "Vu Thanh A",
-      status: "Processing",
-    },
-    {
-      name: "Human Resource",
-      key: "HRM",
-      type: "Company",
-      lead: "Vu Thanh A",
-      status: "Processing",
-    },
-  ],
+  data: [],
   columns: [
     {
       dataIndex: "name",
@@ -119,6 +98,43 @@ const formState = ref({
   period: "",
   note: "",
 });
+
+const reqProject = {
+  id: 0,
+  name: "string",
+  content: "string",
+  type: "COMPANY",
+  priority: "LOW",
+  customer: "string",
+  status: "NOT_STARTED",
+  progress: 0,
+  periodStart: "2023-07-16T12:14:01.293Z",
+  periodEnd: "2023-07-16T12:14:01.293Z",
+  note: "string",
+  originalEstimate: "string",
+  projectUserList: [
+    {
+      id: 0,
+      accountId: 0,
+      departmentId: 0,
+      roleId: "ADMIN",
+      effort: 0,
+    },
+  ],
+  projectWorkList: [
+    {
+      id: 0,
+      registerDay: "2023-07-16T12:14:01.293Z",
+      workCd: "string",
+      workName: "string",
+      branchId: 0,
+      status: "NOT_STARTED",
+      projectEffort: 0,
+      periodStart: "2023-07-16T12:14:01.293Z",
+      periodEnd: "2023-07-16T12:14:01.293Z",
+    },
+  ],
+};
 
 const columns = [
   {
@@ -242,6 +258,10 @@ const handleAdd = () => {
 };
 
 // ==== Method ==== //
+onMounted(() => {
+  getListProject();
+});
+
 function handleLoadPage() {}
 
 function handleCreateProject() {
@@ -251,6 +271,26 @@ function handleCreateProject() {
 const handleChange = (value: string) => {
   console.log(`selected ${value}`);
 };
+
+interface IReqParams {
+  pageIndex?: number;
+  pageSize?: number;
+  keyword?: string;
+}
+
+const reqParams = reactive<IReqParams>({
+  pageIndex: 1,
+  pageSize: 20,
+  keyword: "",
+});
+
+async function getListProject() {
+  const res = await projectService.getListProject(reqParams);
+
+  if (res.status === "SUCCESS") {
+    dataSource.data = res.data.data;
+  }
+}
 </script>
 
 <template>
@@ -338,7 +378,7 @@ const handleChange = (value: string) => {
           </template>
           <template #status="{ record }">
             <div class="flex items-center justify-between">
-              <span> {{ record.status }} </span>
+              <span> {{ record.projectStatus }} </span>
               <span class="project__action">
                 <Popover trigger="click" placement="bottomRight">
                   <template #content>
