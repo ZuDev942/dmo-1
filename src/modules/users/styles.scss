@@ -9,6 +9,7 @@
 .page {
   background: white;
   padding: 2rem;
+  padding-top: 6rem;
 
   &__top {
     display: flex;
@@ -35,17 +36,6 @@
 
 .content {
   padding-top: 2rem;
-
-  &__icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #f34234;
-    margin: 0 auto;
-  }
 }
 
 .ant-form {
@@ -92,7 +82,7 @@
     color: #1c9e6d;
   }
 
-  &:nth-child(3) {
+  &:nth-child(2) {
     &:hover {
       color: #1c9e6d;
     }
@@ -139,6 +129,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    height: max-content;
   }
 
   &__btn {
@@ -152,6 +143,7 @@
 
   &__search {
     position: relative;
+    margin-right: 10px;
 
     input {
       border-width: 1.5px;
@@ -168,4 +160,168 @@
 
 .ant-drawer-body {
   padding: 0;
+}
+
+.contract {
+  padding-top: 2rem;
+  height: 100%;
+
+  h3 {
+    position: absolute;
+    font-size: 1.5rem;
+    color: #172b4d;
+    background: white;
+    top: -12px;
+    padding: 0 1rem;
+  }
+
+  &__wrap {
+    position: relative;
+    border: 1px solid #d9d9d9;
+    border-radius: 10px;
+    padding: 2rem;
+  }
+}
+
+.calender__icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.user__btn {
+  background: #2bc48a;
+  color: white;
+  font-size: 1.5rem;
+  border: 1px solid #2bc48a;
+  border-radius: 5px;
+}
+
+// Contract
+.ant-modal-content {
+  border-radius: 8px !important; /* Điều chỉnh bán kính bo tròn tùy ý */
+}
+
+.ant-btn-primary {
+  background-color: #1c9e6d;
+
+  &:hover {
+    background: #30b099;
+  }
+}
+
+label {
+  display: block;
+  font-size: 1.4rem;
+  color: #44546f;
+  font-weight: 500;
+}
+
+.centered-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.account_model {
+  position: relative;
+  &::before {
+    position: absolute;
+    content: "";
+    height: 6rem;
+    width: 100%;
+    background: #1c9e6d;
+  }
+}
+
+.ant-modal-content {
+  padding: 0;
+}
+
+.ant-modal :deep(.ant-modal-content) {
+  padding: 0 !important;
+}
+
+.cTable {
+  border-radius: 5px;
+  width: 100%;
+
+  &__head {
+    th {
+      font-weight: 400;
+      border: 0.5px solid #dfe1e6;
+      height: 3rem;
+    }
+  }
+
+  &__body {
+    td {
+      border: 0.5px solid #dfe1e6;
+      padding: 5px;
+    }
+  }
+}
+
+.role {
+  font-weight: 500;
+  width: max-content;
+  padding: 5px 1rem;
+  border-radius: 6px;
+
+  &__m {
+    color: #968cd8;
+    background: #f0eefb;
+  }
+
+  &__u {
+    background: #e6f4f2;
+    color: #54b3a5;
+  }
+}
+
+.ant-pagination :deep(.ant-pagination-item) {
+  .ant-pagination-item-active {
+    border-color: #2bc48a;
+  }
+}
+
+.options {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 3px;
+
+  &:hover {
+    background: #dbdcdbbc;
+  }
+}
+
+.search {
+  position: relative;
+
+  input {
+    border-width: 1.5px;
+  }
+
+  &__icon {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.active {
+  display: flex;
+  align-items: center;
+
+  &__dot {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: #1c9e6d;
+    margin-right: 1rem;
+  }
 }

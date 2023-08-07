@@ -1,5 +1,6 @@
 .project {
   background: white;
+  padding-top: 5rem;
 
   &__head {
     display: flex;
@@ -30,6 +31,21 @@
     font-size: 1.2rem;
     color: #626f86;
     margin-top: 1rem;
+  }
+
+  &__search {
+    position: relative;
+
+    input {
+      border-width: 1.5px;
+    }
+  }
+
+  &__icon {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translate(-50%, -50%);
   }
 }
 
@@ -129,4 +145,37 @@ label {
 
 .project__user .ant-select {
   width: 100%;
+}
+
+.option {
+  height: 3rem;
+  cursor: pointer;
+}
+
+.ant-table-wrapper :deep(.ant-table-tbody > tr > td) {
+  font-size: 1.4rem;
+  color: #44546f;
+  padding: 0;
+  height: 5.2rem;
+  padding-left: 1.6rem;
+  padding-right: 1rem;
+
+  a {
+    color: #1c9e6d;
+  }
+
+  &:nth-child(1) {
+    cursor: pointer;
+    &:hover {
+      color: #1c9e6d;
+    }
+  }
+}
+
+.ant-btn-primary {
+  background-color: #209653;
+
+  &:hover {
+    background: #209653;
+  }
 }

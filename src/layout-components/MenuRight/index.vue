@@ -1,69 +1,67 @@
 <script lang="ts" setup>
-import { reactive, ref, computed, watch, onMounted } from "vue";
-import { Button, Popover, MenuItem } from "ant-design-vue";
-import { MenuUnfoldOutlined, MenuFoldOutlined } from "@ant-design/icons-vue";
+import {
+  AppstoreAddOutlined,
+  ContactsOutlined,
+  ProjectOutlined,
+  SendOutlined,
+  UsergroupAddOutlined,
+} from "@ant-design/icons-vue";
+import { ref, onMounted } from "vue";
 
-import { ImageDefault } from "@/components";
+// ==== Data ==== //
+const userInfo = ref<any>({});
+const role = ref<boolean>(false);
 
-const collapsed = ref<boolean>(false);
+// ==== Function ==== //
+onMounted(() => {
+  const savedUser = localStorage.getItem("userInfo");
+
+  if (savedUser) {
+    userInfo.value = JSON.parse(savedUser);
+    role.value = userInfo.value.role === "MANAGER" ? true : false;
+  }
+});
 </script>
 
 <template>
   <section>
-    <!-- Logo -->
     <div class="logo">
       <h1>HRM</h1>
     </div>
 
-    <!-- Dashboard -->
     <div class="menu">
       <router-link class="menu__item" to="/shop-lives">
         <div class="item__img">
-          <img src="@/assets/images/calendar.png" alt="" />
-          <div class="item__name">Schedule</div>
-        </div>
-        <div class="item__arrow">
-          <img src="@/assets/images/arrow-down.png" alt="" />
+          <AppstoreAddOutlined class="text-[2rem] mr-5" />
+          <div class="item__name">Work Report</div>
         </div>
       </router-link>
 
       <router-link class="menu__item" to="/projects">
         <div class="item__img">
-          <img src="@/assets/images/project.png" alt="" />
+          <ProjectOutlined class="text-[2rem] mr-5" />
           <div class="item__name">Project</div>
-        </div>
-        <div class="item__arrow">
-          <img src="@/assets/images/arrow-down.png" alt="" />
         </div>
       </router-link>
 
       <router-link class="menu__item" to="/your-work">
         <div class="item__img">
-          <img src="@/assets/images/yourwork.png" alt="" />
+          <ContactsOutlined class="text-[2rem] mr-5" />
           <div class="item__name">Your Work</div>
         </div>
-        <div class="item__arrow">
-          <img src="@/assets/images/arrow-down.png" alt="" />
-        </div>
       </router-link>
 
-      <router-link class="menu__item" to="/users">
+      <router-link class="menu__item" to="/users" v-if="role">
         <div class="item__img">
-          <img src="@/assets/images/customer.png" alt="" />
+          <UsergroupAddOutlined class="text-[2rem] mr-5" />
           <div class="item__name">Users</div>
         </div>
-        <div class="item__arrow">
-          <img src="@/assets/images/arrow-down.png" alt="" />
-        </div>
       </router-link>
 
-      <router-link class="menu__item" to="/dayoff">
+      <router-link class="menu__item" to="/dayoff" v-if="role">
         <div class="item__img">
-          <img src="@/assets/images/customer.png" alt="" />
-          <div class="item__name">Day off</div>
-        </div>
-        <div class="item__arrow">
-          <img src="@/assets/images/arrow-down.png" alt="" />
+          <SendOutlined class="text-[2rem] mr-5" />
+          <div class="item__name">Day Off</div>
         </div>
       </router-link>
     </div>

@@ -26,7 +26,7 @@ class UserService {
   }
 
   async createUser(reqParams: any) {
-    const res: AxiosResponse = await httpClient.post("api/v0/user", reqParams);
+    const res: AxiosResponse = await httpClient.post("api/v1/user", reqParams);
 
     return res.data;
   }
@@ -40,6 +40,38 @@ class UserService {
   async changePassword(reqParams: any) {
     const res: AxiosResponse = await httpClient.post(
       "api/v1/user/changePassword",
+      reqParams
+    );
+
+    return res.data;
+  }
+
+  async profileUser() {
+    const res: AxiosResponse = await httpClient.get("api/v1/user/profile");
+
+    return res.data;
+  }
+
+  async getContractByID(idUser: number) {
+    const res: AxiosResponse = await httpClient.get(
+      `/api/v1/user-contract/by-user/${idUser}`
+    );
+
+    return res.data;
+  }
+
+  async createContract(reqParams: any) {
+    const res: AxiosResponse = await httpClient.post(
+      "/api/v1/user-contract",
+      reqParams
+    );
+
+    return res.data;
+  }
+
+  async updateContract(reqParams: any) {
+    const res: AxiosResponse = await httpClient.put(
+      "/api/v1/user-contract",
       reqParams
     );
 

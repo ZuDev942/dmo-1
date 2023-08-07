@@ -1,0 +1,29 @@
+.task {
+  &__item {
+    background: white;
+    color: #172b4d;
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    padding: 1rem;
+
+    &:hover {
+      background: #8787873d;
+    }
+  }
+
+  &__wrap {
+    display: flex;
+
+    img {
+      width: 2rem;
+      height: 2rem;
+      padding-top: 0.5rem;
+      margin-right: 0.7rem;
+    }
+  }
+
+  &__name {
+    color: #172b4d;
+  }
+}

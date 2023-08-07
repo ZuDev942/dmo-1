@@ -28,3 +28,11 @@ p {
   margin: 0;
   padding: 0;
 }
+
+.ant-btn-primary {
+  background-color: #2bc48a;
+
+  &:hover {
+    background: #2bc48a;
+  }
+}

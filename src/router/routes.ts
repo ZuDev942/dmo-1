@@ -48,7 +48,7 @@ const routes: RouteRecordRaw[] = [
     meta: { auth: true },
   },
   {
-    path: "tasks",
+    path: "tasks/:id",
     name: RouteName.TASKS,
     component: () => import("@/modules/yourWork/Task/index.vue"),
     meta: { auth: true },
@@ -63,6 +63,18 @@ const routes: RouteRecordRaw[] = [
     path: "dayoff",
     name: RouteName.DAYOFF,
     component: () => import("@/modules/dayoff/index.vue"),
+    meta: { auth: true },
+  },
+  {
+    path: "forgot",
+    name: RouteName.FORGOT,
+    component: () => import("@/modules/forgotPassword/index.vue"),
+    meta: { layout: "defaultNoHeader" },
+  },
+  {
+    path: "absence",
+    name: RouteName.ABSENCE,
+    component: () => import("@/modules/absence/index.vue"),
     meta: { auth: true },
   },
 ];

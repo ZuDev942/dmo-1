@@ -7,3 +7,5 @@ export { default as TimeOption } from "./TimeOption/index.vue";
 export { default as CallLogModal } from "./CallLogModal/index.vue";
 export { default as TaskDetailModal } from "./TaskDetailModal/index.vue";
 export { default as TableData } from "./TableData/index.vue";
+export { default as TaskItem } from "./TaskItem/index.vue";
+export { default as CalendarH } from "./CalendarH/index.vue";

@@ -1,12 +1,11 @@
 <script lang="ts" setup>
 // ==== Import ==== //
 import { computed, onMounted, reactive, ref, watch } from "vue";
-import { Button, Table, Input, Tag, message } from "ant-design-vue";
-import { SearchOutlined, CloseOutlined } from "@ant-design/icons-vue";
-import type { IDataSource } from "../../components";
-import { dayoffService } from "../../services";
+import { Button, Table, Tag, message, Tabs, TabPane } from "ant-design-vue";
+import type { IDataSource } from "@/components";
+import { dayoffService } from "@/services";
 import moment from "moment";
-import { debounce, filter, isEmpty } from "lodash";
+import { debounce, filter } from "lodash";
 
 // ==== Data ==== //
 const dataSource = reactive<IDataSource>({
@@ -21,11 +20,11 @@ const dataSource = reactive<IDataSource>({
     {
       dataIndex: "name",
       key: "name",
-      slots: { title: "customTitle", customRender: "name" },
+      title: "Name",
       width: "250px",
     },
     {
-      title: "Username",
+      title: "User ID",
       dataIndex: "id",
       key: "id",
     },
@@ -36,12 +35,12 @@ const dataSource = reactive<IDataSource>({
       width: "250px",
     },
     {
-      title: "Time",
+      title: "Off date",
       key: "time",
       dataIndex: "time",
     },
     {
-      title: "Type",
+      title: "Off type",
       dataIndex: "type",
       key: "type",
       width: "200px",
@@ -66,11 +65,11 @@ const dataSource2 = reactive<IDataSource>({
     {
       dataIndex: "name",
       key: "name",
-      slots: { title: "customTitle", customRender: "name" },
+      title: "Name",
       width: "250px",
     },
     {
-      title: "Username",
+      title: "User ID",
       dataIndex: "id",
       key: "id",
     },
@@ -81,12 +80,12 @@ const dataSource2 = reactive<IDataSource>({
       width: "250px",
     },
     {
-      title: "Time",
+      title: "Off date",
       key: "time",
       dataIndex: "time",
     },
     {
-      title: "Type",
+      title: "Off type",
       dataIndex: "type",
       key: "type",
       width: "200px",
@@ -180,6 +179,8 @@ async function updateStatusDayoff(type: number, id: number) {
     req.approveStatus = "REJECT";
   }
 
+  console.log(req);
+
   const res = await dayoffService.putDayoff(req);
 
   console.log(res);
@@ -188,145 +189,123 @@ async function updateStatusDayoff(type: number, id: number) {
     getDayoff();
   }
 }
+
+const activeKey = ref("1");
+const type = ref("");
+const status = ref("");
 </script>
 
 <template>
-  <div class="project h-full">
-    <div class="project__head">
-      <div class="project__filter">
-        <div class="user__search">
-          <Input
-            v-model:value="textSearch"
-            style="width: 300px"
-            placeholder="Search by name..."
-          />
-          <div class="user__icon">
-            <SearchOutlined v-if="isEmpty(textSearch)" />
-            <CloseOutlined v-else @click="handleClear()" />
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="project">
+    <Tabs v-model:activeKey="activeKey">
+      <TabPane key="1" tab="Absence request">
+        <Table
+          :columns="dataSource.columns"
+          :data-source="dataSource.data"
+          :pagination="false"
+          :loading="dataSource.loading"
+          :scroll="{ y: 700 }"
+        >
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.dataIndex === 'status'">
+              <Button
+                class="text-[1.3rem] mr-5"
+                @click="updateStatusDayoff(0, record.id)"
+              >
+                Accept
+              </Button>
+              <Button
+                class="text-[1.3rem]"
+                @click="updateStatusDayoff(1, record.id)"
+                >Reject</Button
+              >
+            </template>
 
-    <div class="project__wrap">
-      <Table
-        :columns="dataSource.columns"
-        :data-source="dataSource.data"
-        :pagination="false"
-        :loading="dataSource.loading"
-      >
-        <template #customTitle> Fullname </template>
-        <template #name="{ record }">
-          <img
-            src="https://hoondea.atlassian.net/secure/viewavatar?size=xxxlarge@2x&avatarId=10425&avatarType=project"
-            alt=""
-            style="
-              width: 2.4rem;
-              height: 2.4rem;
-              border-radius: 2px;
-              margin-right: 0.5rem;
-            "
-          />
-          {{ record.fullName }}
-        </template>
+            <template v-if="column.dataIndex === 'name'">
+              <div class="flex items-center">
+                <img
+                  src="https://hoondea.atlassian.net/secure/viewavatar?size=xxxlarge@2x&avatarId=10425&avatarType=project"
+                  alt=""
+                  style="
+                    width: 2.4rem;
+                    height: 2.4rem;
+                    border-radius: 2px;
+                    margin-right: 0.5rem;
+                  "
+                />
+                {{ record.fullName }}
+              </div>
+            </template>
 
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'status'">
-            <Button
-              class="text-[1.3rem] mr-5"
-              @click="updateStatusDayoff(0, record.id)"
-            >
-              Accept
-            </Button>
-            <Button
-              class="text-[1.3rem]"
-              @click="updateStatusDayoff(1, record.id)"
-              >Reject</Button
-            >
+            <template v-if="column.dataIndex === 'type'">
+              <span> {{ convertType(record.dayOffType) }} </span>
+            </template>
+
+            <template v-if="column.dataIndex === 'id'">
+              <span> {{ record.userName }} </span>
+            </template>
+
+            <template v-if="column.dataIndex === 'reason'">
+              <span> {{ record.reason }} </span>
+            </template>
+
+            <template v-if="column.dataIndex === 'time'">
+              <span> {{ convertTime(record.time) }} </span>
+            </template>
           </template>
+        </Table>
+      </TabPane>
+      <TabPane key="2" tab="Offtime">
+        <Table
+          :columns="dataSource2.columns"
+          :data-source="dataSource2.data"
+          :pagination="false"
+          :scroll="{ y: 530 }"
 
-          <template v-if="column.key === 'type'">
-            <span> {{ convertType(record.dayOffType) }} </span>
+        >
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.dataIndex === 'status'">
+              <Tag color="cyan" v-if="record.status === 'ACCEPT'">
+                {{ record.status }}
+              </Tag>
+              <Tag color="orange" v-else>{{ record.status }}</Tag>
+            </template>
+
+            <template v-if="column.dataIndex === 'name'">
+              <div class="flex items-center">
+                <img
+                  src="https://hoondea.atlassian.net/secure/viewavatar?size=xxxlarge@2x&avatarId=10425&avatarType=project"
+                  alt=""
+                  style="
+                    width: 2.4rem;
+                    height: 2.4rem;
+                    border-radius: 2px;
+                    margin-right: 0.5rem;
+                  "
+                />
+                {{ record.fullName }}
+              </div>
+            </template>
+
+            <template v-if="column.dataIndex === 'type'">
+              <span> {{ convertType(record.dayOffType) }} </span>
+            </template>
+
+            <template v-if="column.dataIndex === 'id'">
+              <span> {{ record.userName }} </span>
+            </template>
+
+            <template v-if="column.dataIndex === 'reason'">
+              <span> {{ record.reason }} </span>
+            </template>
+
+            <template v-if="column.dataIndex === 'time'">
+              <span> {{ convertTime(record.time) }} </span>
+            </template>
           </template>
-
-          <template v-if="column.key === 'id'">
-            <span> {{ record.userName }} </span>
-          </template>
-
-          <template v-if="column.key === 'reason'">
-            <span> {{ record.reason }} </span>
-          </template>
-
-          <template v-if="column.key === 'time'">
-            <span> {{ convertTime(record.time) }} </span>
-          </template>
-        </template>
-      </Table>
-
-      <br />
-
-      <Table
-        :columns="dataSource2.columns"
-        :data-source="dataSource2.data"
-        :pagination="false"
-        :show-header="false"
-      >
-        <template #customTitle> Name </template>
-        <template #name="{ record }">
-          <img
-            src="https://hoondea.atlassian.net/secure/viewavatar?size=xxxlarge@2x&avatarId=10425&avatarType=project"
-            alt=""
-            style="
-              width: 2.4rem;
-              height: 2.4rem;
-              border-radius: 2px;
-              margin-right: 0.5rem;
-            "
-          />
-          {{ record.fullName }}
-        </template>
-
-        <template #lead="{ record }">
-          <span>
-            <img
-              src="@/assets/images/avatar.jpeg"
-              style="
-                width: 2.5rem;
-                height: 2.5rem;
-                border-radius: 50%;
-                margin-right: 4px;
-              "
-            />
-            {{ record.lead }}
-          </span>
-        </template>
-
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'status'">
-            <Tag color="cyan" v-if="record.status === 'ACCEPT'">
-              {{ record.status }}
-            </Tag>
-            <Tag color="orange" v-else>{{ record.status }}</Tag>
-          </template>
-
-          <template v-if="column.key === 'type'">
-            <span> {{ convertType(record.dayOffType) }} </span>
-          </template>
-
-          <template v-if="column.key === 'id'">
-            <span> {{ record.userName }} </span>
-          </template>
-
-          <template v-if="column.key === 'reason'">
-            <span> {{ record.reason }} </span>
-          </template>
-
-          <template v-if="column.key === 'time'">
-            <span> {{ convertTime(record.time) }} </span>
-          </template>
-        </template>
-      </Table>
-    </div>
+        </Table>
+      </TabPane>
+    </Tabs>
   </div>
 </template>
 

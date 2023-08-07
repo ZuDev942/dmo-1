@@ -13,11 +13,11 @@
 .ant-picker-calendar :deep(.ant-picker-panel) {
   .ant-picker-cell-selected {
     .ant-picker-calendar-date {
-      background: #2a3e4c;
+      background: #a3a4a44a;
     }
 
     .ant-picker-calendar-date-value {
-      color: white;
+      color: black;
     }
 
     .ant-picker-calendar-full
@@ -26,14 +26,25 @@
       border-color: none;
     }
   }
+
+  .ant-picker-cell {
+    .ant-picker-calendar-date-content {
+      height: 130px;
+    }
+  }
+
   .ant-picker-cell-inner {
     height: 17rem;
-    border: 1px solid #f0f0f0;
+    border: 0.5px solid #f0f0f0;
     margin: 0;
   }
+
   .ant-picker-content td {
-    // min-height: 17rem;
     height: 170px;
+
+    .ant-picker-cell-end{
+      background: #172b4d;
+    }
   }
 
   .ant-badge {
@@ -58,6 +69,7 @@
 .schedule {
   background: white;
   padding: 2rem;
+  padding-top: 6rem;
 
   &__btn {
     background: #2bc48a;
@@ -275,6 +287,9 @@
   }
 
   &__time {
+    display: flex;
+    align-items: center;
+
     img {
       width: 1.8rem;
       height: 1.8rem;
@@ -286,4 +301,9 @@
 
 .ant-modal {
   top: 65%;
+}
+
+.events {
+  height: 80px;
+  overflow: auto;
 }

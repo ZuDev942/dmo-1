@@ -23,6 +23,17 @@ class AuthService {
 
     return res.data;
   }
+
+  async forgotPassword(email: any) {
+    const res: AxiosResponse = await httpClient.get(
+      "/api/v1/user/forgetPassword",
+      {
+        params: email,
+      }
+    );
+
+    return res.data;
+  }
 }
 
 export const authService = new AuthService();

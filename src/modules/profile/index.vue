@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import {
   Tabs,
   Input,
@@ -14,12 +14,18 @@ import {
   UploadChangeParam,
   message,
   Button,
+  InputPassword,
   DatePicker,
+  SelectProps,
+  Checkbox,
 } from "ant-design-vue";
 import { UploadOutlined } from "@ant-design/icons-vue";
 
 const value = ref<string>("account006");
 const activeKey = ref<string>("1");
+import { userService } from "@/services";
+import { cloneDeep } from "lodash";
+import moment from "moment";
 
 interface IContract {
   conName: string;
@@ -36,21 +42,6 @@ interface IContract {
   payment: string;
 }
 
-const contract = reactive<IContract>({
-  conName: "SHHSG00392/33884",
-  conType: "Thu viec",
-  salaryBasic: "10.000.000 vnd",
-  branch: "Nam Tu Liem",
-  staffType: "Partime",
-  endDay: "2023/05/05",
-  note: "OK",
-  conNumber: "ASIS2023",
-  salaryGross: "12.000.000 vnd",
-  salaryCap: "0",
-  department: "Developer",
-  payment: "Bank Transfer",
-});
-
 const dataSource = [
   {
     banking: "Vietcombank",
@@ -58,16 +49,6 @@ const dataSource = [
     number: "1013876779",
     status: "On",
     note: "",
-  },
-];
-
-const dataSource2 = [
-  {
-    schools: "FPT",
-    degree: "Cu nhan",
-    mode: "4",
-    year: "2023",
-    des: "",
   },
 ];
 
@@ -100,50 +81,87 @@ const columns = [
     width: "10%",
   },
 ];
-const columns2 = [
-  {
-    title: "Schools",
-    dataIndex: "schools",
-    key: "schools",
-  },
-  {
-    title: "Degree",
-    dataIndex: "degree",
-    key: "degree",
-  },
-  {
-    title: "Mode of study",
-    dataIndex: "mode",
-    key: "mode",
-    width: "20%",
-  },
-  {
-    title: "Graduation Year",
-    dataIndex: "year",
-    key: "year",
-    width: "20%",
-  },
-  {
-    title: "Description",
-    dataIndex: "des",
-    key: "des",
-    width: "15%",
-  },
-];
 
-interface FormState {
-  username: string;
-  password: string;
-  remember: any;
-}
-
-const formState = reactive<FormState>({
-  username: "a",
+const reqParams = ref<any>({
+  id: 0,
+  avatar:
+    "https://i.pinimg.com/564x/43/f6/96/43f696508a59aadffaecac0b4aa2de45.jpg",
+  userName: "",
   password: "",
-  remember: true,
+  roleId: 1,
+  permissionTemplateId: 1,
+  companyEmail: "",
+  fullName: "",
+  shortName: "",
+  gender: "MALE",
+  birthday: "",
+  personalEmail: "",
+  phoneNumber: "",
+  address: "",
+  signDay: "",
+  quitDay: "",
+  identityCard: "",
+  taxNumber: "",
+  socialInsuranceId: "",
+  marriedFlag: true,
+  childrenDescription: "",
+  bankingList: [],
+  universityList: [],
+  contractList: [
+    {
+      contractName: "",
+      contractNumber: "",
+      contractType: 0,
+      salaryGross: 0,
+      salaryBasic: null,
+      salaryCapacity: 0,
+      staffType: "Fulltime",
+      departmentId: 0,
+      paymentMethod: "Bank",
+      endDay: "",
+      note: "",
+    },
+  ],
 });
 
-const fileList = ref<any>();
+const optionsRole = ref<SelectProps["options"]>([
+  {
+    value: 1,
+    label: "User",
+  },
+  {
+    value: 2,
+    label: "Admin",
+  },
+]);
+
+const optionsPosition = ref<SelectProps["options"]>([
+  {
+    value: 1,
+    label: "Developer",
+  },
+  {
+    value: 2,
+    label: "Tester",
+  },
+  {
+    value: 3,
+    label: "Comtor",
+  },
+  {
+    value: 4,
+    label: "HR",
+  },
+  {
+    value: 5,
+    label: "BrSE",
+  },
+]);
+
+// ==== Method ==== //
+onMounted(() => {
+  getProfile();
+});
 
 const handleChange = (info: UploadChangeParam) => {
   if (info.file.status !== "uploading") {
@@ -155,10 +173,24 @@ const handleChange = (info: UploadChangeParam) => {
     message.error(`${info.file.name} file upload failed.`);
   }
 };
+
+async function getProfile() {
+  const res = await userService.profileUser();
+
+  // console.log(res);
+  if (res.status === "SUCCESS") {
+    const a = cloneDeep(res.data);
+    reqParams.value = a;
+  }
+}
+
+const convertTime = (date: Date) => {
+  return moment(date).format("DD/MM/YYYY");
+};
 </script>
 
 <template>
-  <div class="tabs">
+  <div class="tabs mt-[5rem]">
     <Tabs v-model:activeKey="activeKey">
       <!-- Profile -->
       <TabPane key="1" tab="PROFILE">
@@ -171,64 +203,54 @@ const handleChange = (info: UploadChangeParam) => {
                 <div class="flex items-center justify-center w-[15rem]">
                   <div>
                     <div class="box__img">
-                      <img src="@/assets/images/avatar.jpeg" alt="" />
+                      <img :src="reqParams.avatar" alt="" />
                     </div>
                   </div>
                 </div>
 
                 <!-- Input field -->
-                <div class="w-full pl-10 account__field">
+                <div class="w-full pl-10">
                   <Form
-                    :model="formState"
+                    :model="reqParams"
                     :label-col="{ span: 10 }"
                     :wrapper-col="{ span: 16 }"
                   >
-                    <FormItem label="Employee ID" class="mb-4">
+                    <FormItem label="Employee ID" class="mb-3">
                       <Input
-                        v-model:value="formState.username"
-                        :bordered="false"
-                        disabled
+                        v-model:value="reqParams.userName"
+                        :disabled="true"
                       />
                     </FormItem>
 
-                    <FormItem label="Password" class="mb-4">
-                      <Input
-                        v-model:value="formState.password"
-                        :bordered="false"
-                        disabled
+                    <FormItem label="Password" class="mb-3">
+                      <InputPassword
+                        v-model:value="reqParams.password"
+                        :disabled="true"
                       />
                     </FormItem>
 
-                    <FormItem label="Roles" class="mb-4">
+                    <FormItem label="Roles" class="mb-3">
                       <Select
-                        v-model:value="formState.remember"
+                        v-model:value="reqParams.roleId"
+                        :options="optionsRole"
                         placeholder="please select your role"
-                        disabled
-                        :bordered="false"
+                        :disabled="true"
                       >
-                        <SelectOption value="shanghai">Member</SelectOption>
-                        <SelectOption value="beijing">Zone two</SelectOption>
                       </Select>
                     </FormItem>
 
-                    <FormItem label="Permission Template" class="mb-4">
+                    <FormItem label="Position" class="mb-3">
                       <Select
-                        v-model:value="formState.remember"
+                        v-model:value="reqParams.permissionTemplateId"
                         placeholder="please select your permission"
-                        :bordered="false"
-                        disabled
+                        :options="optionsPosition"
+                        :disabled="true"
                       >
-                        <SelectOption value="shanghai">Member</SelectOption>
-                        <SelectOption value="beijing">Zone two</SelectOption>
                       </Select>
                     </FormItem>
 
-                    <FormItem label="Email Company" class="mb-4">
-                      <Input
-                        v-model:value="formState.password"
-                        :bordered="false"
-                        disabled
-                      />
+                    <FormItem label="Email Company" class="mb-3">
+                      <Input v-model:value="reqParams.companyEmail" />
                     </FormItem>
                   </Form>
                 </div>
@@ -238,31 +260,36 @@ const handleChange = (info: UploadChangeParam) => {
             <div class="box box__top">
               <h3 class="box__title">Main Info</h3>
               <Form
-                :model="formState"
+                :model="reqParams"
                 :label-col="{ span: 7 }"
                 :wrapper-col="{ span: 16 }"
               >
                 <FormItem label="Fullname" class="mb-3">
-                  <Input v-model:value="formState.username" />
+                  <Input v-model:value="reqParams.fullName" />
                 </FormItem>
 
                 <FormItem label="Shortname" class="mb-3">
-                  <Input v-model:value="formState.password" />
+                  <Input v-model:value="reqParams.shortName" />
                 </FormItem>
 
-                <div class="flex">
-                  <FormItem label="Gender" class="mb-3 w-1/2">
+                <div class="flex mb-3 justify-between w-full pr-[2.2rem]">
+                  <div class="w-1/2">
+                    <label for="" class="mr-[10.6rem]">Gender</label>
                     <Select
-                      v-model:value="formState.remember"
+                      v-model:value="reqParams.gender"
                       placeholder="please select your role"
                     >
-                      <SelectOption value="shanghai">Member</SelectOption>
-                      <SelectOption value="beijing">Zone two</SelectOption>
+                      <SelectOption value="MALE">Male</SelectOption>
+                      <SelectOption value="FEMALE">Female</SelectOption>
                     </Select>
-                  </FormItem>
+                  </div>
 
-                  <FormItem label="Birthday" class="mb-3 w-1/2 select__status">
-                    <DatePicker>
+                  <div class="">
+                    <label for="" class="mr-10">Birthday</label>
+                    <DatePicker
+                      v-model:value="reqParams.birthday"
+                      value-format="YYYY-MM-DD"
+                    >
                       <template #suffixIcon>
                         <img
                           src="@/assets/images/calender.png"
@@ -271,46 +298,20 @@ const handleChange = (info: UploadChangeParam) => {
                         />
                       </template>
                     </DatePicker>
-                  </FormItem>
+                  </div>
                 </div>
 
                 <FormItem label="Email Personal" class="mb-3">
-                  <Select
-                    v-model:value="formState.remember"
-                    placeholder="please select your permission"
-                  >
-                    <SelectOption value="shanghai">Member</SelectOption>
-                    <SelectOption value="beijing">Zone two</SelectOption>
-                  </Select>
+                  <Input v-model:value="reqParams.personalEmail" />
+                </FormItem>
+
+                <FormItem label="Phone" class="mb-3">
+                  <Input v-model:value="reqParams.phoneNumber" />
                 </FormItem>
 
                 <FormItem label="Address" class="mb-3">
-                  <Input v-model:value="formState.password" />
+                  <Input v-model:value="reqParams.address" />
                 </FormItem>
-
-                <div class="flex">
-                  <FormItem label="Sign Day" class="mb-3 w-1/2">
-                    <Select
-                      v-model:value="formState.remember"
-                      placeholder="please select your role"
-                    >
-                      <SelectOption value="shanghai">Member</SelectOption>
-                      <SelectOption value="beijing">Zone two</SelectOption>
-                    </Select>
-                  </FormItem>
-
-                  <FormItem label="Quit Day" class="mb-3 w-1/2 select__status">
-                    <DatePicker>
-                      <template #suffixIcon>
-                        <img
-                          src="@/assets/images/calender.png"
-                          alt=""
-                          class="calender__icon"
-                        />
-                      </template>
-                    </DatePicker>
-                  </FormItem>
-                </div>
               </Form>
             </div>
           </div>
@@ -318,78 +319,20 @@ const handleChange = (info: UploadChangeParam) => {
           <!-- Other -->
           <div class="box mb-10">
             <h3 class="box__title">Other Info</h3>
-            <div class="flex account__field">
-              <Form
-                :model="formState"
-                name="normal_login"
-                class="login-form w-[40%] mr-4"
-                :label-col="{ span: 9 }"
-                :wrapper-col="{ span: 16 }"
-              >
-                <FormItem label="ID Card" class="mb-4">
-                  <Input
-                    v-model:value="formState.username"
-                    :bordered="false"
-                    disabled
-                  />
-                </FormItem>
-
-                <FormItem label="Tax Number" class="mb-4">
-                  <Input
-                    v-model:value="formState.username"
-                    :bordered="false"
-                    disabled
-                  />
-                </FormItem>
-
-                <FormItem label="ID Social Insurance" class="mb-4">
-                  <Input
-                    v-model:value="formState.username"
-                    :bordered="false"
-                    disabled
-                  />
-                </FormItem>
-
-                <FormItem label="Married" class="mb-4">
-                  <Input
-                    v-model:value="formState.username"
-                    :bordered="false"
-                    disabled
-                  />
-                </FormItem>
-
-                <FormItem label="Children Description" class="mb-4">
-                  <Input
-                    v-model:value="formState.username"
-                    :bordered="false"
-                    disabled
-                  />
-                </FormItem>
-              </Form>
-
-              <div class="w-[60%]">
-                <div class="mb-5">
-                  <h1 class="box__name">Banking</h1>
-                  <Table
-                    :dataSource="dataSource"
-                    :columns="columns"
-                    :pagination="false"
-                  >
-                  </Table>
-                </div>
-
-                <div>
-                  <h1 class="box__name">University</h1>
-                  <Table
-                    :dataSource="dataSource2"
-                    :columns="columns2"
-                    :pagination="false"
-                  >
-                  </Table>
-                </div>
+            <div class="flex">
+              <div class="mb-5">
+                <h1 class="box__name">Banking</h1>
+                <Table
+                  :dataSource="dataSource"
+                  :columns="columns"
+                  :pagination="false"
+                >
+                </Table>
               </div>
             </div>
           </div>
+
+          <!-- Contract -->
         </div>
       </TabPane>
 
@@ -397,19 +340,19 @@ const handleChange = (info: UploadChangeParam) => {
       <TabPane key="2" tab="CONTRACT">
         <div class="contract">
           <div class="contract__wrap">
-            <h3>Sign Day - 2022/03/01</h3>
+            <h3>Sign Day - {{ convertTime(reqParams.signDay) }}</h3>
 
             <Form
               ref="formRef"
               name="custom-validation"
-              :model="contract"
+              :model="reqParams"
               class="grid grid-cols-2"
               :label-col="{ span: 7 }"
               :wrapper-col="{ span: 16 }"
             >
               <FormItem label="Contract Name" name="conName" class="mb-4">
                 <Input
-                  v-model:value="contract.conName"
+                  v-model:value="reqParams.contract.contractName"
                   disabled
                   :bordered="false"
                 />
@@ -417,7 +360,7 @@ const handleChange = (info: UploadChangeParam) => {
 
               <FormItem label="Contract Type" name="conType" class="mb-4">
                 <Input
-                  v-model:value="contract.conType"
+                  v-model:value="reqParams.contract.contractNumber"
                   disabled
                   :bordered="false"
                 />
@@ -425,23 +368,23 @@ const handleChange = (info: UploadChangeParam) => {
 
               <FormItem label="Salary Basic" name="salaryBasic" class="mb-4">
                 <Input
-                  v-model:value="contract.salaryBasic"
+                  v-model:value="reqParams.contract.salaryBasic"
                   disabled
                   :bordered="false"
                 />
               </FormItem>
 
-              <FormItem label="Branch" name="branch" class="mb-4">
+              <!-- <FormItem label="Branch" name="branch" class="mb-4">
                 <Input
-                  v-model:value="contract.branch"
+                  v-model:value="reqParams.br"
                   disabled
                   :bordered="false"
                 />
-              </FormItem>
+              </FormItem> -->
 
               <FormItem label="Staff Type" name="staffType" class="mb-4">
                 <Input
-                  v-model:value="contract.staffType"
+                  v-model:value="reqParams.contract.staffType"
                   disabled
                   :bordered="false"
                 />
@@ -449,7 +392,7 @@ const handleChange = (info: UploadChangeParam) => {
 
               <FormItem label="End Day" name="endDay" class="mb-4">
                 <Input
-                  v-model:value="contract.endDay"
+                  v-model:value="reqParams.contract.endDay"
                   disabled
                   :bordered="false"
                 />
@@ -457,7 +400,7 @@ const handleChange = (info: UploadChangeParam) => {
 
               <FormItem label="Contract Number" name="conNumber" class="mb-4">
                 <Input
-                  v-model:value="contract.conNumber"
+                  v-model:value="reqParams.contract.contractNumber"
                   disabled
                   :bordered="false"
                 />
@@ -465,7 +408,7 @@ const handleChange = (info: UploadChangeParam) => {
 
               <FormItem label="Salary Gross" name="salaryGross" class="mb-4">
                 <Input
-                  v-model:value="contract.salaryGross"
+                  v-model:value="reqParams.contract.salaryGross"
                   disabled
                   :bordered="false"
                 />
@@ -473,7 +416,7 @@ const handleChange = (info: UploadChangeParam) => {
 
               <FormItem label="Salary Capacity" name="salaryCap" class="mb-4">
                 <Input
-                  v-model:value="contract.salaryCap"
+                  v-model:value="reqParams.contract.salaryCapacity"
                   disabled
                   :bordered="false"
                 />
@@ -481,7 +424,7 @@ const handleChange = (info: UploadChangeParam) => {
 
               <FormItem label="Department" name="department" class="mb-4">
                 <Input
-                  v-model:value="contract.department"
+                  v-model:value="reqParams.contract.departmentId"
                   disabled
                   :bordered="false"
                 />
@@ -489,7 +432,7 @@ const handleChange = (info: UploadChangeParam) => {
 
               <FormItem label="Payment Method" name="payment" class="mb-4">
                 <Input
-                  v-model:value="contract.payment"
+                  v-model:value="reqParams.contract.paymentMethod"
                   disabled
                   :bordered="false"
                 />
@@ -497,7 +440,7 @@ const handleChange = (info: UploadChangeParam) => {
 
               <FormItem label="Note" name="note" class="mb-4">
                 <Textarea
-                  v-model:value="contract.note"
+                  v-model:value="reqParams.contract.note"
                   disabled
                   :bordered="false"
                 ></Textarea>

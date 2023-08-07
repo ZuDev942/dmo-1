@@ -1,30 +1,33 @@
 <script lang="ts" setup>
 // ==== Import ==== //
-import { computed, onMounted, reactive, ref } from "vue";
+import { createVNode, onMounted, reactive, ref, watch } from "vue";
 import {
   Button,
   Table,
   Drawer,
-  InputSearch,
+  Input,
   Popover,
   Select,
-  Input,
-  DatePicker,
-  Textarea,
-  SelectOption,
+  Modal,
+  message,
+  Tooltip,
+  Tag,
 } from "ant-design-vue";
 import {
   EllipsisOutlined,
-  ArrowDownOutlined,
   CaretDownOutlined,
-  PlusSquareOutlined,
-  DeleteOutlined,
+  SearchOutlined,
+  CloseOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons-vue";
 import type { IDataSource } from "@/components";
-import { cloneDeep } from "lodash";
 import { projectService } from "@/services";
+import ProjectDetail from "./ProjectDetail/index.vue";
+import useEventBus from "../../eventBus";
+import { debounce, map, isEmpty } from "lodash";
 
 // ==== Data ==== //
+const { emitEvent } = useEventBus();
 const dataSource = reactive<IDataSource>({
   loading: false,
   noDataText: "No data",
@@ -35,47 +38,95 @@ const dataSource = reactive<IDataSource>({
   data: [],
   columns: [
     {
+      title: "Name",
       dataIndex: "name",
-      key: "name",
-      slots: { title: "customTitle", customRender: "name" },
+      width: 300,
     },
     {
       title: "Key",
-      dataIndex: "key",
-      key: "key",
+      dataIndex: "content",
+      width: 140,
     },
     {
       title: "Type",
       dataIndex: "type",
-      key: "type",
+      width: "120px",
     },
     {
       title: "Lead",
-      key: "lead",
       dataIndex: "lead",
-      slots: { customRender: "lead" },
+      width: "200px",
     },
     {
       title: "Status",
-      key: "status",
-      slots: { customRender: "status" },
+      dataIndex: "status",
+      width: "200px",
     },
   ],
 });
 
 const projectTypes = ref([
   {
-    value: "jack",
-    label: "Jack",
+    value: "COMPANY",
+    label: "Company",
   },
   {
-    value: "lucy",
-    label: "Lucy",
+    value: "PROJECT",
+    label: "Project",
   },
   {
-    value: "disabled",
-    label: "Disabled",
-    disabled: true,
+    value: "ALL",
+    label: "Type",
+  },
+]);
+
+const projectStatus = ref([
+  {
+    value: "NOT_STARTED",
+    label: "Not Started",
+  },
+  {
+    value: "PENDING",
+    label: "Pending",
+  },
+  {
+    value: "PROCESSING",
+    label: "Processing",
+  },
+  {
+    value: "COMPLETED",
+    label: "Completed",
+  },
+  {
+    value: "CANCELED",
+    label: "Canceled",
+  },
+  {
+    value: "ALL",
+    label: "Status",
+  },
+]);
+
+const projectPriority = ref([
+  {
+    value: "LOW",
+    label: "Low",
+  },
+  {
+    value: "MEDIUM",
+    label: "Medium",
+  },
+  {
+    value: "HIGH",
+    label: "High",
+  },
+  {
+    value: "URGENT",
+    label: "Urgent",
+  },
+  {
+    value: "ALL",
+    label: "Priority",
   },
 ]);
 
@@ -84,235 +135,190 @@ const isProjectDetail = ref<boolean>(false);
 const typeValue = ref<string>("Type");
 const priorityValue = ref<string>("Priority");
 const statusValue = ref<string>("Status");
-const formState = ref({
-  project_name: "",
-  project_content: "",
-  project_type: "Company",
-  priority: "Medium",
-  customer: "",
-  status: "New",
-  progress: "",
-  project_effort: "",
-  estimated_effort: "",
-  actual_effort: "",
-  period: "",
-  note: "",
+
+const reqParams = ref<any>({
+  pageIndex: 1,
+  pageSize: 20,
+  keyword: null,
+  type: null,
+  status: null,
+  priority: null,
 });
 
-const reqProject = {
-  id: 0,
-  name: "string",
-  content: "string",
-  type: "COMPANY",
-  priority: "LOW",
-  customer: "string",
-  status: "NOT_STARTED",
-  progress: 0,
-  periodStart: "2023-07-16T12:14:01.293Z",
-  periodEnd: "2023-07-16T12:14:01.293Z",
-  note: "string",
-  originalEstimate: "string",
-  projectUserList: [
-    {
-      id: 0,
-      accountId: 0,
-      departmentId: 0,
-      roleId: "ADMIN",
-      effort: 0,
-    },
-  ],
-  projectWorkList: [
-    {
-      id: 0,
-      registerDay: "2023-07-16T12:14:01.293Z",
-      workCd: "string",
-      workName: "string",
-      branchId: 0,
-      status: "NOT_STARTED",
-      projectEffort: 0,
-      periodStart: "2023-07-16T12:14:01.293Z",
-      periodEnd: "2023-07-16T12:14:01.293Z",
-    },
-  ],
-};
-
-const columns = [
-  {
-    dataIndex: "add",
-    slots: { title: "customAdd", customRender: "add" },
-    width: "5%",
-  },
-  {
-    title: "User",
-    dataIndex: "user",
-    slots: { title: "customUser", customRender: "user" },
-  },
-  {
-    title: "Department",
-    dataIndex: "department",
-    slots: { title: "customDepartment", customRender: "department" },
-  },
-  {
-    title: "Effort",
-    dataIndex: "effort",
-    slots: { title: "customEffort", customRender: "effort" },
-  },
-  {
-    title: "Role",
-    dataIndex: "role",
-    slots: { title: "customRole", customRender: "role" },
-  },
-  {
-    dataIndex: "delete",
-    slots: { title: "customDelete", customRender: "delete" },
-    width: "5%",
-  },
-];
-
-const column2 = [
-  {
-    dataIndex: "add",
-    slots: { title: "customAdd", customRender: "add" },
-    width: 100,
-  },
-  {
-    title: "Register day",
-    dataIndex: "register",
-    slots: { title: "customRegister", customRender: "register" },
-  },
-  {
-    title: "Work CD",
-    dataIndex: "work",
-    slots: { title: "customWork", customRender: "work" },
-  },
-  {
-    title: "Work Name",
-    dataIndex: "workName",
-    slots: { title: "customWorkname", customRender: "workName" },
-  },
-  {
-    title: "Branch",
-    dataIndex: "branch",
-    slots: { title: "customBranch", customRender: "branch" },
-  },
-  {
-    title: "Status",
-    dataIndex: "status",
-    slots: { title: "customStatus", customRender: "status" },
-  },
-  {
-    title: "Project effort",
-    dataIndex: "effort",
-    slots: { title: "customEffort", customRender: "effort" },
-  },
-  {
-    title: "Period",
-    dataIndex: "period",
-    slots: { title: "customPeriod", customRender: "period" },
-  },
-  {
-    title: "Project effort",
-    dataIndex: "effort",
-    slots: { title: "customEffort", customRender: "effort" },
-  },
-  {
-    dataIndex: "delete",
-    slots: { title: "customDelete", customRender: "delete" },
-    width: "5%",
-  },
-];
-
-const dataSource2 = ref([
-  {
-    index: 1,
-    user: "Nguyen Thanh A",
-    department: "HR",
-    effort: "25%",
-    role: "Admin",
-  },
-  {
-    index: 2,
-    user: "Nguyen Thanh B",
-    department: "Developer",
-    effort: "50%",
-    role: "Leader",
-  },
-]);
-
-const count = computed(() => dataSource2.value.length + 1);
-
-const onDelete = (key: number) => {
-  dataSource2.value = dataSource2.value.filter((item) => item.index !== key);
-};
-
-const handleAdd = () => {
-  const newData = {
-    index: count.value,
-    user: "",
-    department: "",
-    effort: "",
-    role: "",
-  };
-
-  dataSource2.value.push(newData);
-};
+const role = ref<boolean>(false);
 
 // ==== Method ==== //
 onMounted(() => {
   getListProject();
+  const savedUser = localStorage.getItem("userInfo");
+
+  if (savedUser) {
+    const userInfo = JSON.parse(savedUser);
+    role.value = userInfo.role === "MANAGER" ? true : false;
+  }
 });
 
-function handleLoadPage() {}
+const typeDetail = ref<string>("");
+const countProject = ref<number>(0);
+const idProject = ref<number>(0);
 
+watch(typeValue, () => {
+  if (typeValue.value === "ALL") {
+    reqParams.type = null;
+  } else {
+    reqParams.type = typeValue.value;
+  }
+  getListProject();
+});
+
+watch(statusValue, () => {
+  if (statusValue.value === "ALL") {
+    reqParams.status = null;
+  } else {
+    reqParams.status = statusValue.value;
+  }
+  getListProject();
+});
+
+watch(priorityValue, () => {
+  if (priorityValue.value === "ALL") {
+    reqParams.priority = null;
+  } else {
+    reqParams.priority = priorityValue.value;
+  }
+  getListProject();
+});
+
+watch(
+  searchOn,
+  debounce(() => {
+    reqParams.value.keyword = searchOn.value;
+
+    getListProject();
+  }, 300)
+);
+
+function handleClear() {
+  searchOn.value = "";
+}
+const titleProject = ref("");
 function handleCreateProject() {
   isProjectDetail.value = true;
+  typeDetail.value = "create";
+  countProject.value += 1;
+  titleProject.value = "Create Project";
 }
 
-const handleChange = (value: string) => {
-  console.log(`selected ${value}`);
-};
-
-interface IReqParams {
-  pageIndex?: number;
-  pageSize?: number;
-  keyword?: string;
+function handleSelectDetail(idPro: number) {
+  isProjectDetail.value = true;
+  typeDetail.value = "detail";
+  countProject.value += 1;
+  idProject.value = idPro;
+  titleProject.value = "Detail Project";
 }
-
-const reqParams = reactive<IReqParams>({
-  pageIndex: 1,
-  pageSize: 20,
-  keyword: "",
-});
 
 async function getListProject() {
-  const res = await projectService.getListProject(reqParams);
+  console.log(reqParams.value)
+  const res = await projectService.getListProject(reqParams.value);
 
   if (res.status === "SUCCESS") {
     dataSource.data = res.data.data;
   }
+}
+
+async function handleDeleteProject(idProject: number) {
+  Modal.confirm({
+    title: "Do you want to delete account?",
+    icon: createVNode(ExclamationCircleOutlined),
+    async onOk() {
+      const res = await projectService.deleteProject(idProject);
+
+      if (res.status === "SUCCESS") {
+        message.success("Delete successful!");
+        getListProject();
+      }
+    },
+    onCancel() {},
+  });
+}
+
+function handleRefresh() {
+  getListProject();
+  isProjectDetail.value = false;
+}
+
+const convertType = (type: string) => {
+  if (type === "PROJECT") {
+    return "Project";
+  } else {
+    return "Company";
+  }
+};
+
+const convertStatus = (status: string) => {
+  if (status === "NOT_STARTED") {
+    return "NOT STARTED";
+  }
+  if (status === "PENDING") {
+    return "PENDING";
+  }
+  if (status === "PROCESSING") {
+    return "PROCESSING";
+  }
+  if (status === "COMPLETED") {
+    return "COMPLETED";
+  }
+  if (status === "CANCELED") {
+    return "CANCELED";
+  }
+};
+
+function shortenText(text) {
+  if (text.length <= 35) {
+    return text;
+  }
+
+  const shortenedText = text.substring(0, 35 - 3) + " ...";
+  return shortenedText;
+}
+
+import { useRouter } from "vue-router";
+import { RouteName } from "@/shared/constants";
+
+const router = useRouter();
+function handleOpenTask(idProject: number, nameProject: string, keyP: string) {
+  const payload = {
+    name: nameProject,
+    id: idProject,
+  };
+  emitEvent("NAME_PROJECT", payload);
+  router.push({
+    name: RouteName.TASKS,
+    params: { id: idProject, key: keyP },
+  });
 }
 </script>
 
 <template>
   <div class="project h-full">
     <div class="project__head">
-      <div class="project__filter">
-        <InputSearch
-          v-model:value="searchOn"
-          style="width: 300px"
-          placeholder="Search by name, ID..."
-        />
-
-        <Select v-model:value="typeValue" :options="projectTypes" class="ml-5">
-          <template #suffixIcon>
-            <CaretDownOutlined style="color: #172b4d" />
-          </template>
-        </Select>
+      <div class="project__filter flex">
+        <div class="project__search">
+          <Input
+            v-model:value="searchOn"
+            style="width: 300px"
+            placeholder="Search by name, id..."
+          />
+          <div class="project__icon">
+            <SearchOutlined v-if="isEmpty(searchOn)" />
+            <CloseOutlined v-else @click="handleClear()" />
+          </div>
+        </div>
 
         <Select
-          v-model:value="priorityValue"
+          v-model:value="typeValue"
           :options="projectTypes"
-          class="ml-5"
+          class="ml-5 w-[10rem]"
         >
           <template #suffixIcon>
             <CaretDownOutlined style="color: #172b4d" />
@@ -321,7 +327,17 @@ async function getListProject() {
 
         <Select
           v-model:value="statusValue"
-          :options="projectTypes"
+          :options="projectStatus"
+          class="ml-5 w-[13rem]"
+        >
+          <template #suffixIcon>
+            <CaretDownOutlined style="color: #172b4d" />
+          </template>
+        </Select>
+
+        <Select
+          v-model:value="priorityValue"
+          :options="projectPriority"
           class="ml-5"
         >
           <template #suffixIcon>
@@ -330,7 +346,7 @@ async function getListProject() {
         </Select>
       </div>
 
-      <Button class="project__create" @click="handleCreateProject()">
+      <Button type="primary" @click="handleCreateProject()" v-if="role">
         Create project
       </Button>
     </div>
@@ -338,57 +354,129 @@ async function getListProject() {
     <div class="project__wrap">
       <div class="project__list">
         <Table
-          :columns="dataSource.columns"
           :data-source="dataSource.data"
-          :pagination="false"
+          :columns="dataSource.columns"
+          :loading="dataSource.loading"
+          :scroll="{ y: 480 }"
         >
-          <template #customTitle> Name </template>
-          <template #name="{ text }">
-            <img
-              src="https://hoondea.atlassian.net/secure/viewavatar?size=xxxlarge@2x&avatarId=10425&avatarType=project"
-              alt=""
-              style="
-                width: 2.4rem;
-                height: 2.4rem;
-                border-radius: 2px;
-                margin-right: 0.5rem;
-              "
-            />
-            {{ text }}
-          </template>
-          <template #key="{}">
-            <span> a </span>
-          </template>
-          <template #type="{ record }">
-            <span> Company </span>
-          </template>
-          <template #lead="{ record }">
-            <span>
-              <img
-                src="@/assets/images/avatar.jpeg"
-                style="
-                  width: 2.5rem;
-                  height: 2.5rem;
-                  border-radius: 50%;
-                  margin-right: 4px;
-                "
-              />
-              {{ record.lead }}
-            </span>
-          </template>
-          <template #status="{ record }">
-            <div class="flex items-center justify-between">
-              <span> {{ record.projectStatus }} </span>
-              <span class="project__action">
-                <Popover trigger="click" placement="bottomRight">
-                  <template #content>
-                    <p>Content</p>
-                    <p>Move to trash</p>
-                  </template>
-                  <EllipsisOutlined style="font-size: 2.5rem" />
-                </Popover>
-              </span>
-            </div>
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.dataIndex === 'name'">
+              <div
+                @click="handleSelectDetail(record.id)"
+                class="flex items-center"
+              >
+                <img
+                  src="https://hoondea.atlassian.net/secure/viewavatar?size=xxxlarge@2x&avatarId=10425&avatarType=project"
+                  alt=""
+                  style="
+                    width: 2.4rem;
+                    height: 2.4rem;
+                    border-radius: 2px;
+                    margin-right: 0.5rem;
+                  "
+                />
+                <Tooltip>
+                  <template #title>{{ record.key }}</template>
+                  {{ shortenText(record.key) }}
+                </Tooltip>
+              </div>
+            </template>
+
+            <template v-if="column.dataIndex === 'content'">
+              {{ record.name }}
+            </template>
+
+            <template v-if="column.dataIndex === 'type'">
+              <Tag color="#F4F5F7" class="cursor-pointe">
+                <span
+                  class="cursor-pointer text-[#42526E] font-[500] text-[1.3rem]"
+                >
+                  <span> {{ convertType(record.type) }} </span>
+                </span>
+              </Tag>
+            </template>
+
+            <template v-if="column.dataIndex === 'lead'">
+              <div class="flex items-center">
+                <img
+                  :src="record.avatar"
+                  alt=""
+                  style="
+                    width: 2.4rem;
+                    height: 2.4rem;
+                    border-radius: 50%;
+                    margin-right: 0.5rem;
+                  "
+                />
+                <span> {{ record.lead }} </span>
+              </div>
+            </template>
+
+            <template v-if="column.dataIndex === 'status'">
+              <div class="flex items-center justify-between">
+                <div>
+                  <Tag
+                    v-if="record.projectStatus === 'NOT_STARTED'"
+                    color="#DFE1E6"
+                    class="cursor-pointer"
+                  >
+                    <span
+                      class="cursor-pointer text-[#44546f] font-[700] text-[1.1rem]"
+                    >
+                      {{ convertStatus(record.projectStatus) }}
+                    </span>
+                  </Tag>
+
+                  <Tag
+                    v-else-if="record.projectStatus === 'CANCELED'"
+                    color="#DFFCF0"
+                    class="cursor-pointer"
+                  >
+                    <span
+                      class="cursor-pointer text-[#216E4E] font-[700] text-[1.1rem]"
+                    >
+                      {{ convertStatus(record.projectStatus) }}
+                    </span>
+                  </Tag>
+
+                  <Tag
+                    v-else-if="
+                      record.projectStatus === 'PENDING' ||
+                      'PROCESSING' ||
+                      'COMPLETED'
+                    "
+                    color="#DEEBFF"
+                    class="cursor-pointer"
+                  >
+                    <span
+                      class="cursor-pointer text-[#0055CC] font-[700] text-[1.1rem]"
+                    >
+                      {{ convertStatus(record.projectStatus) }}
+                    </span>
+                  </Tag>
+                </div>
+                <span class="project__action">
+                  <Popover trigger="click" placement="bottomRight">
+                    <template #content>
+                      <div
+                        class="option"
+                        @click="handleOpenTask(record.id, record.key, record.name)"
+                      >
+                        Open Task
+                      </div>
+                      <div class="option">Open Issue</div>
+                      <div
+                        class="option"
+                        @click="handleDeleteProject(record.id)"
+                      >
+                        Delete
+                      </div>
+                    </template>
+                    <EllipsisOutlined style="font-size: 2.5rem" />
+                  </Popover>
+                </span>
+              </div>
+            </template>
           </template>
         </Table>
       </div>
@@ -396,196 +484,18 @@ async function getListProject() {
 
     <!--  -->
     <Drawer
-      title="Create Project"
+      :title="titleProject"
       placement="right"
       :closable="false"
       :width="'70%'"
-      v-model:visible="isProjectDetail"
+      v-model:open="isProjectDetail"
     >
-      <div class="flex project__form">
-        <div class="w-1/2 mr-3">
-          <div class="mb-4">
-            <label for="">
-              Project name <span class="text-red-600">&ast;</span>
-            </label>
-            <Input v-model:value="formState.project_name" />
-          </div>
-
-          <div class="flex justify-between mb-4">
-            <div class="w-1/2 mr-5">
-              <label for=""> Project type </label>
-              <Select ref="select" v-model:value="formState.project_type">
-                <SelectOption value="jack">Jack</SelectOption>
-              </Select>
-            </div>
-
-            <div class="w-1/2">
-              <label for="">Priority</label>
-              <Select ref="select" v-model:value="formState.priority">
-                <SelectOption value="jack">Jack</SelectOption>
-              </Select>
-            </div>
-          </div>
-
-          <div class="flex justify-between w-full mb-4">
-            <div class="w-1/2 mr-5">
-              <label for="">Status</label>
-              <Select ref="select" v-model:value="formState.status">
-                <SelectOption value="jack">Jack</SelectOption>
-              </Select>
-            </div>
-
-            <div class="w-1/2">
-              <label for="">Progress</label>
-              <Input v-model:value="formState.progress" />
-            </div>
-          </div>
-
-          <div class="mb-4">
-            <label for="">Note</label>
-            <Textarea v-model:value="formState.note" :rows="5"></Textarea>
-          </div>
-        </div>
-
-        <div class="w-1/2 ml-3">
-          <div class="mb-4">
-            <label for="">
-              Project content <span class="text-red-600">&ast;</span>
-            </label>
-            <Input v-model:value="formState.project_name" />
-          </div>
-
-          <div class="mb-4">
-            <label for="">Customer</label>
-            <Input v-model:value="formState.customer" />
-          </div>
-
-          <div class="mb-4">
-            <label for="">Period <span class="text-red-600">&ast;</span></label>
-            <DatePicker>
-              <template #suffixIcon>
-                <img
-                  src="@/assets/images/calender.png"
-                  alt=""
-                  class="calender__icon"
-                />
-              </template>
-            </DatePicker>
-            <span class="mx-3">~</span>
-            <DatePicker>
-              <template #suffixIcon>
-                <img
-                  src="@/assets/images/calender.png"
-                  alt=""
-                  class="calender__icon"
-                />
-              </template>
-            </DatePicker>
-          </div>
-
-          <div class="mb-4">
-            <label for="">
-              Original Estimate <span class="text-red-600">&ast;</span>
-            </label>
-            <Input v-model:value="formState.estimated_effort" />
-
-            <p class="project__des">
-              An estimate of how much work remains until this issue will be
-              resolved. <br />
-              The format of this is ' *w *d *h *m ' (representing weeks, days,
-              hours and minutes - where * can be any number). <br />
-              Examples: 4d, 5h 30m, 60m and 3w.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="project__user">
-        <Table
-          :data-source="dataSource2"
-          :columns="columns"
-          :pagination="false"
-        >
-          <template #customAdd>
-            <div class="cursor-pointer" @click="handleAdd">
-              <PlusSquareOutlined />
-            </div>
-          </template>
-
-          <template #key="{ record }"></template>
-
-          <template #user="{ record }">
-            <Select ref="select" v-model:value="record.user">
-              <SelectOption value="jack">Jack</SelectOption>
-            </Select>
-          </template>
-
-          <template #department="{ record }">
-            <Select ref="select" v-model:value="record.department">
-              <SelectOption value="jack">Jack</SelectOption>
-            </Select>
-          </template>
-
-          <template #effort="{ record }">
-            <Select ref="select" v-model:value="record.effort">
-              <SelectOption value="jack">Jack</SelectOption>
-            </Select>
-          </template>
-
-          <template #role="{ record }">
-            <Select ref="select" v-model:value="record.role">
-              <SelectOption value="jack">Jack</SelectOption>
-            </Select>
-          </template>
-          <template #delete="{ record }">
-            <DeleteOutlined @click="onDelete(record.index)" />
-          </template>
-        </Table>
-      </div>
-
-      <div class="project__user">
-        <Table
-          :data-source="dataSource2"
-          :columns="column2"
-          :pagination="false"
-          :scroll="{ x: 1500, y: 300 }"
-        >
-          <template #customAdd>
-            <div class="cursor-pointer" @click="handleAdd">
-              <PlusSquareOutlined />
-            </div>
-          </template>
-
-          <template #key="{ record }"></template>
-
-          <template #user="{ record }">
-            <Select ref="select" v-model:value="record.user">
-              <SelectOption value="jack">Jack</SelectOption>
-            </Select>
-          </template>
-
-          <template #department="{ record }">
-            <Select ref="select" v-model:value="record.department">
-              <SelectOption value="jack">Jack</SelectOption>
-            </Select>
-          </template>
-
-          <template #effort="{ record }">
-            <Select ref="select" v-model:value="record.effort">
-              <SelectOption value="jack">Jack</SelectOption>
-            </Select>
-          </template>
-
-          <template #role="{ record }">
-            <Select ref="select" v-model:value="record.role">
-              <SelectOption value="jack">Jack</SelectOption>
-            </Select>
-          </template>
-          <template #delete="{ record }">
-            <DeleteOutlined @click="onDelete(record.index)" />
-          </template>
-        </Table>
-      </div>
+      <ProjectDetail
+        :is-type="typeDetail"
+        :count-project="countProject"
+        :id-project="idProject"
+        @refresh-projects="handleRefresh()"
+      ></ProjectDetail>
     </Drawer>
   </div>
 </template>

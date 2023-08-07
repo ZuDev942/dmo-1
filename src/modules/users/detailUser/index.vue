@@ -1,110 +1,23 @@
 <script setup lang="ts">
-import { onBeforeMount, onMounted, reactive, ref, toRefs, watch } from "vue";
-import { UploadOutlined } from "@ant-design/icons-vue";
+import { onMounted, reactive, ref, toRefs, watch } from "vue";
 import {
   Form,
   FormItem,
   Button,
   Input,
-  Upload,
   message,
   Select,
   SelectOption,
   DatePicker,
-  Table,
-  AutoComplete,
-  Checkbox,
-  Textarea,
-  InputPassword,
 } from "ant-design-vue";
-import type { UploadChangeParam } from "ant-design-vue";
-import { userService } from "@/services";
-import { cloneDeep, map } from "lodash";
-import type { UnwrapRef } from "vue";
+import {
+  CameraOutlined,
+} from "@ant-design/icons-vue";
+import { commonService, userService } from "@/services";
+import { cloneDeep, isEmpty, size } from "lodash";
+import type { Ref } from "vue";
 
 // ==== Data ==== //
-
-const fileList = ref<any>();
-interface DataItem {
-  addressBanking: string;
-  accountName: string;
-  accountNumber: string;
-  status: string;
-  note: string;
-}
-
-interface DataUniver {
-  schools: string;
-  degreeLevel: number;
-  modeOfStudy: string;
-  graduationYear: string;
-  description: string;
-}
-
-const data: DataItem[] = [];
-const data2: DataUniver[] = [];
-const dataSource = ref(data);
-const dataSource2 = ref(data2);
-
-const columns = [
-  {
-    title: "Address Banking",
-    dataIndex: "banking",
-    slots: { title: "customBanking", customRender: "banking" },
-  },
-  {
-    title: "Account Name",
-    dataIndex: "name",
-    slots: { title: "customAccname", customRender: "name" },
-  },
-  {
-    title: "Account Number",
-    dataIndex: "number",
-    slots: { title: "customNumber", customRender: "number" },
-  },
-  {
-    title: "Status",
-    dataIndex: "status",
-    slots: { title: "customStatus", customRender: "status" },
-    width: "10%",
-  },
-  {
-    title: "Note",
-    dataIndex: "note",
-    slots: { title: "customNote", customRender: "note" },
-    width: "10%",
-  },
-];
-const columns2 = [
-  {
-    title: "Schools",
-    dataIndex: "schools",
-    slots: { title: "customSchools", customRender: "schools" },
-  },
-  {
-    title: "Degree",
-    dataIndex: "degree",
-    slots: { title: "customDegree", customRender: "degree" },
-  },
-  {
-    title: "Mode of study",
-    dataIndex: "mode",
-    slots: { title: "customMode", customRender: "mode" },
-    width: "20%",
-  },
-  {
-    title: "Graduation Year",
-    dataIndex: "year",
-    slots: { title: "customYear", customRender: "year" },
-    width: "20%",
-  },
-  {
-    title: "Description",
-    dataIndex: "des",
-    slots: { title: "customDes", customRender: "des" },
-    width: "15%",
-  },
-];
 
 const props = defineProps<{
   isLoading?: boolean;
@@ -116,64 +29,22 @@ const props = defineProps<{
 
 const { isLoading, isType, count, idUser, idCreate } = toRefs(props);
 
-const reqParams = ref<any>({
-  id: 0,
-  avatar:
-    "https://i.pinimg.com/564x/43/f6/96/43f696508a59aadffaecac0b4aa2de45.jpg",
-  userName: "",
-  password: "",
-  roleId: 1,
-  permissionTemplateId: 1,
-  companyEmail: "",
-  fullName: "",
-  shortName: "",
-  gender: "MALE",
-  birthday: "",
-  personalEmail: "",
-  phoneNumber: "",
-  address: "",
-  signDay: "",
-  quitDay: "",
-  identityCard: "",
-  taxNumber: "",
-  socialInsuranceId: "",
-  marriedFlag: true,
-  childrenDescription: "",
-  bankingList: [],
-  universityList: [],
-  contractList: [
-    {
-      contractName: "",
-      contractNumber: "",
-      contractType: 0,
-      salaryGross: 0,
-      salaryBasic: null,
-      salaryCapacity: 0,
-      staffType: "Fulltime",
-      departmentId: 0,
-      paymentMethod: "Bank",
-      endDay: "",
-      note: "",
-    },
-  ],
-});
-
 function resetReqParams() {
-  reqParams.value = {
-    id: 16,
+  userParams.value = {
+    id: 0,
     avatar:
-      "https://i.pinimg.com/564x/43/f6/96/43f696508a59aadffaecac0b4aa2de45.jpg",
+      "https://hoondea.atlassian.net/secure/viewavatar?size=xxxlarge@2x&avatarId=10413&avatarType=project",
     userName: "",
     password: "",
     roleId: 1,
     permissionTemplateId: 1,
+    phoneNumber: "",
     companyEmail: "",
     fullName: "",
     shortName: "",
     gender: "MALE",
     birthday: "",
     personalEmail: "",
-    phoneNumber: "",
     address: "",
     signDay: "",
     quitDay: "",
@@ -182,44 +53,9 @@ function resetReqParams() {
     socialInsuranceId: "",
     marriedFlag: true,
     childrenDescription: "",
-    bankingList: [],
     universityList: [],
-    contractList: [
-      {
-        contractName: "",
-        contractNumber: "",
-        contractType: 0,
-        salaryGross: 0,
-        salaryBasic: null,
-        salaryCapacity: 0,
-        staffType: "Fulltime",
-        departmentId: 0,
-        paymentMethod: "Bank",
-        endDay: "",
-        note: "",
-      },
-    ],
+    contract: {},
   };
-
-  dataSource.value = [
-    {
-      addressBanking: "",
-      accountName: "",
-      accountNumber: "",
-      status: "",
-      note: "",
-    },
-  ];
-
-  dataSource2.value = [
-    {
-      schools: "",
-      degreeLevel: 0,
-      modeOfStudy: "",
-      graduationYear: "",
-      description: "",
-    },
-  ];
 }
 
 import type { SelectProps } from "ant-design-vue";
@@ -230,56 +66,30 @@ const optionsRole = ref<SelectProps["options"]>([
   },
   {
     value: 2,
-    label: "Admin",
+    label: "Manager",
   },
 ]);
 
-const optionsContractType = ref<SelectProps["options"]>([
-  {
-    value: 0,
-    label: "Thu viec",
-  },
+const optionsPosition = ref<SelectProps["options"]>([
   {
     value: 1,
-    label: "Chinh thuc",
-  },
-]);
-
-const optionsStaffType = ref<SelectProps["options"]>([
-  {
-    value: "Parttime",
-    label: "Parttime",
-  },
-  {
-    value: "Fulltime",
-    label: "Fulltime",
-  },
-]);
-
-const optionsDepartment = ref<SelectProps["options"]>([
-  {
-    value: 0,
     label: "Developer",
   },
   {
-    value: 1,
-    label: "QC/QA",
-  },
-  {
     value: 2,
-    label: "Business Analyst",
+    label: "Tester",
   },
   {
     value: 3,
-    label: "Product Manager",
+    label: "Comtor",
   },
   {
     value: 4,
-    label: "DevOps",
+    label: "HR",
   },
   {
     value: 5,
-    label: "Data Engineer",
+    label: "BrSE",
   },
 ]);
 
@@ -290,7 +100,7 @@ const handleSearch = (val: string) => {
   if (!val || val.indexOf("@") >= 0) {
     res = [];
   } else {
-    res = ["gmail.com", "fpt.edu.vn", "qq.com"].map((domain) => ({
+    res = ["hrm.com", "fpt.edu.vn", "qq.com"].map((domain) => ({
       value: `${val}@${domain}`,
     }));
   }
@@ -298,19 +108,26 @@ const handleSearch = (val: string) => {
 };
 
 // ==== Method ==== //
+const formUserRef = ref<FormInstance>();
 
-const handleChange = (info: UploadChangeParam) => {
-  if (info.file.status !== "uploading") {
-    console.log(info.file, info.fileList);
+onMounted(() => {
+  if (formUserRef.value) {
+    formUserRef.value.resetFields();
+    formUserRef.value.clearValidate();
   }
-  if (info.file.status === "done") {
-    message.success(`${info.file.name} file uploaded successfully`);
-  } else if (info.file.status === "error") {
-    message.error(`${info.file.name} file upload failed.`);
+  if (isType.value === "create") {
+    resetReqParams();
+  } else {
+    getDetailUser(idUser.value);
   }
-};
+});
 
 watch(count, (n, o) => {
+  if (formUserRef.value) {
+    formUserRef.value.resetFields();
+    formUserRef.value.clearValidate();
+  }
+
   if (isType.value === "create") {
     resetReqParams();
   } else {
@@ -322,459 +139,302 @@ async function getDetailUser(id: number) {
   const res = await userService.getDetailUser(id);
 
   if (res) {
-    const a = cloneDeep(res.data);
-    reqParams.value = a;
-    const banking = reqParams.value.bankingList;
-    const univer = reqParams.value.universityList;
-    dataSource.value = cloneDeep(banking);
-    dataSource.value = cloneDeep(univer);
+    userParams.value = res.data;
+  }
+}
+
+const emit = defineEmits<{
+  (e: "refreshList"): void;
+}>();
+
+// Upload file
+const file: Ref<File | null | undefined> = ref(null);
+
+const handleFileChange = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  file.value = target.files?.[0];
+
+  if (!file.value) return;
+
+  try {
+    const formData = new FormData();
+    formData.append("file", file.value);
+
+    const res = await commonService.uploadFile(formData);
+
+    if (res.status === "SUCCESS") {
+      userParams.value.avatar = res.data.url;
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+// Create account
+import type { FormInstance, Rule } from "ant-design-vue/es/form";
+const userParams = ref<any>({
+  id: 0,
+  avatar: "",
+  userName: "",
+  password: "",
+  roleId: 1,
+  permissionTemplateId: 1,
+  phoneNumber: "",
+  companyEmail: "",
+  fullName: "",
+  shortName: "",
+  gender: "MALE",
+  birthday: "",
+  personalEmail: "",
+  address: "",
+  signDay: "",
+  quitDay: "",
+  identityCard: "",
+  taxNumber: "",
+  socialInsuranceId: "",
+  marriedFlag: true,
+  childrenDescription: "",
+  universityList: [],
+  contract: {},
+});
+
+function validateEmail(email: string) {
+  if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+    return true;
+  }
+  return false;
+}
+
+function isVietnamesePhoneNumberValid(number) {
+  return /(((\+|)84)|0)(3|5|7|8|9)+([0-9]{8})\b/.test(number);
+}
+
+let checkEmail = async (_rule: Rule, value: string) => {
+  if (value === "") {
+    return Promise.reject("Please enter an email address");
+  } else {
+    if (!validateEmail(value)) {
+      return Promise.reject("Please enter a valid email address");
+    }
+    return Promise.resolve();
+  }
+};
+
+let checkPhone = async (_rule: Rule, value: string) => {
+  if (value === "") {
+    return Promise.reject("Please enter phone number");
+  } else {
+    if (!isVietnamesePhoneNumberValid(value)) {
+      return Promise.reject(" Please enter a valid phone number");
+    }
+    return Promise.resolve();
+  }
+};
+
+const rules: Record<string, Rule[]> = {
+  fullName: [
+    { required: true, message: "Please enter your name", trigger: "change" },
+  ],
+  personalEmail: [{ validator: checkEmail, trigger: "change" }],
+  phoneNumber: [{ validator: checkPhone, trigger: "change" }],
+};
+
+async function onFinishChange() {
+  return;
+  if (isType.value === "create") {
+    handleCreateAccount();
+  } else {
+    handleUpdateAccount();
   }
 }
 
 async function handleCreateAccount() {
-  reqParams.value.bankingList = cloneDeep(dataSource.value);
-  reqParams.value.universityList = cloneDeep(dataSource2.value);
-
-  const res = await userService.createUser(reqParams.value);
+  const res = await userService.createUser(userParams.value);
 
   if (res.status === "SUCCESS") {
-    // Do st
     message.success("Create account successfull");
     emit("refreshList");
   }
 }
 
 async function handleUpdateAccount() {
-  const res = await userService.updateAccount(reqParams.value);
+  userParams.value.universityList = null;
+  userParams.value.contract = null;
+
+  const res = await userService.updateAccount(userParams.value);
 
   if (res.status === "SUCCESS") {
     message.success("Update account successfull");
     emit("refreshList");
   }
 }
-
-onMounted(() => {
-  // console.log("call api...", idUser.value);
-  if (isType.value === "create") {
-    resetReqParams();
-  } else {
-    getDetailUser(idUser.value);
-  }
-});
-
-const emit = defineEmits<{
-  (e: "refreshList"): void;
-}>();
-
-const convertCurrency = (num: number) => {
-  const formatter = new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  });
-
-  return formatter.format(num);
-};
 </script>
 
 <template>
   <div class="box__container">
-    <div>
-      <div class="box__wrap mb-10">
-        <div class="box box__top">
-          <h3 class="box__title">Account Info {{ isType }}</h3>
-
-          <div class="box__top--wrap">
-            <div class="flex items-center justify-center w-[15rem]">
-              <div>
-                <div class="box__img">
-                  <img :src="reqParams.avatar" alt="" />
+    <Form
+      ref="formUserRef"
+      :model="userParams"
+      name="normal_user"
+      class="user-form"
+      :rules="rules"
+      @finish="onFinishChange"
+    >
+      <div class="box__wrap flex flex-col">
+        <!-- Input field -->
+        <div class="w-full pt-[4rem]">
+          <div class="flex">
+            <!-- Avatar -->
+            <div class="box__avatar">
+              <div class="flex">
+                <div class="custom flex justify-center h-max cursor-pointer">
+                  <input
+                    id="fileInput"
+                    class="custom-file-input cursor-pointer"
+                    type="file"
+                    @change="handleFileChange"
+                  />
+                  <div class="box__img cursor-pointer">
+                    <img :src="userParams.avatar" alt="" />
+                  </div>
+                  <label for="fileInput">
+                    <div class="custom__plus">
+                      <CameraOutlined
+                        style="
+                          font-size: 1.8rem;
+                          color: white;
+                          font-weight: 600;
+                        "
+                      />
+                    </div>
+                  </label>
                 </div>
-
-                <Upload
-                  v-model:file-list="fileList"
-                  name="file"
-                  action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
-                  @change="handleChange"
-                >
-                  <Button>
-                    <UploadOutlined></UploadOutlined>
-                    Upload
-                  </Button>
-                </Upload>
-                <Input v-model:value="reqParams.id" />
               </div>
-            </div>
-
-            <!-- Input field -->
-            <div class="w-full pl-10">
-              <Form
-                :model="reqParams"
-                :label-col="{ span: 10 }"
-                :wrapper-col="{ span: 16 }"
-              >
-                <FormItem label="Employee ID" class="mb-3">
-                  <Input v-model:value="reqParams.userName" />
-                </FormItem>
-
-                <FormItem label="Password" class="mb-3">
-                  <InputPassword v-model:value="reqParams.password" />
-                </FormItem>
-
-                <FormItem label="Phone" class="mb-3">
-                  <Input v-model:value="reqParams.phoneNumber" />
-                </FormItem>
-
-                <FormItem label="Roles" class="mb-3">
-                  <Select
-                    v-model:value="reqParams.roleId"
-                    :options="optionsRole"
-                    placeholder="please select your role"
-                  >
-                  </Select>
-                </FormItem>
-
-                <FormItem label="Permission Template" class="mb-3">
-                  <Select
-                    v-model:value="reqParams.permissionTemplateId"
-                    placeholder="please select your permission"
-                    :options="optionsRole"
-                  >
-                  </Select>
-                </FormItem>
-
-                <FormItem label="Email Company" class="mb-3">
-                  <AutoComplete
-                    v-model:value="reqParams.companyEmail"
-                    :options="options"
-                    @search="handleSearch"
-                  >
-                    <template #option="{ value: val }">
-                      {{ val.split("@")[0] }} @
-                      <span style="font-weight: bold">{{
-                        val.split("@")[1]
-                      }}</span>
-                    </template>
-                  </AutoComplete>
-                </FormItem>
-              </Form>
-            </div>
-          </div>
-        </div>
-
-        <div class="box box__top">
-          <h3 class="box__title">Main Info</h3>
-          <Form
-            :model="reqParams"
-            :label-col="{ span: 7 }"
-            :wrapper-col="{ span: 16 }"
-          >
-            <FormItem label="Fullname" class="mb-3">
-              <Input v-model:value="reqParams.fullName" />
-            </FormItem>
-
-            <FormItem label="Shortname" class="mb-3">
-              <Input v-model:value="reqParams.shortName" />
-            </FormItem>
-
-            <div class="flex mb-3 justify-between w-full pr-[2.2rem]">
-              <div class="w-1/2">
-                <label for="" class="mr-[10.6rem]">Gender</label>
-                <Select
-                  v-model:value="reqParams.gender"
-                  placeholder="please select your role"
-                >
-                  <SelectOption value="MALE">Male</SelectOption>
-                  <SelectOption value="FEMALE">Female</SelectOption>
-                </Select>
-              </div>
-
-              <div class="">
-                <label for="" class="mr-10">Birthday</label>
-                <DatePicker
-                  v-model:value="reqParams.birthday"
-                  value-format="YYYY-MM-DD"
-                >
-                  <template #suffixIcon>
-                    <img
-                      src="@/assets/images/calender.png"
-                      alt=""
-                      class="calender__icon"
-                    />
-                  </template>
-                </DatePicker>
-              </div>
-            </div>
-
-            <FormItem label="Email Personal" class="mb-3">
-              <AutoComplete
-                v-model:value="reqParams.personalEmail"
-                :options="options"
-                @search="handleSearch"
-              >
-                <template #option="{ value: val }">
-                  {{ val.split("@")[0] }} @
-                  <span style="font-weight: bold">{{ val.split("@")[1] }}</span>
-                </template>
-              </AutoComplete>
-            </FormItem>
-
-            <FormItem label="Address" class="mb-3">
-              <Input v-model:value="reqParams.address" />
-            </FormItem>
-
-            <div class="flex mb-3 justify-between w-full pr-[2.2rem]">
-              <div>
-                <label for="" class="mr-[9.8rem]">Sign day</label>
-                <DatePicker
-                  v-model:value="reqParams.signDay"
-                  value-format="YYYY-MM-DD"
-                >
-                  <template #suffixIcon>
-                    <img
-                      src="@/assets/images/calender.png"
-                      alt=""
-                      class="calender__icon"
-                    />
-                  </template>
-                </DatePicker>
-              </div>
-
-              <div>
-                <label for="" class="mr-4">Quit day</label>
-                <DatePicker
-                  v-model:value="reqParams.quitDay"
-                  value-format="YYYY-MM-DD"
-                >
-                  <template #suffixIcon>
-                    <img
-                      src="@/assets/images/calender.png"
-                      alt=""
-                      class="calender__icon"
-                    />
-                  </template>
-                </DatePicker>
-              </div>
-            </div>
-          </Form>
-        </div>
-      </div>
-
-      <!-- Other -->
-      <div class="box mb-10">
-        <h3 class="box__title">Other Info</h3>
-        <div class="flex">
-          <Form
-            :model="reqParams"
-            name="normal_login"
-            class="login-form w-[45%]"
-            :label-col="{ span: 7 }"
-            :wrapper-col="{ span: 16 }"
-          >
-            <FormItem label="ID Card" class="mb-3">
-              <Input v-model:value="reqParams.identityCard" />
-            </FormItem>
-
-            <FormItem label="Tax Number" class="mb-3">
-              <Input v-model:value="reqParams.taxNumber" />
-            </FormItem>
-
-            <FormItem label="ID Social Insurance" class="mb-3">
-              <Input v-model:value="reqParams.socialInsuranceId" />
-            </FormItem>
-
-            <FormItem label="Married" class="mb-3">
-              <Checkbox v-model:checked="reqParams.marriedFlag"></Checkbox>
-            </FormItem>
-
-            <FormItem label="Children Description" class="mb-3">
-              <Textarea
-                v-model:value="reqParams.childrenDescription"
-              ></Textarea>
-            </FormItem>
-          </Form>
-
-          <div class="w-[55%]">
-            <div class="mb-5">
-              <h1 class="box__name">Banking</h1>
-              <Table
-                :dataSource="dataSource"
-                :columns="columns"
-                :pagination="false"
-              >
-                <template #banking="{ record }">
-                  <Input v-model:value="record.addressBanking" />
-                </template>
-
-                <template #name="{ record }">
-                  <Input v-model:value="record.accountName" />
-                </template>
-
-                <template #number="{ record }">
-                  <Input v-model:value="record.accountNumber" />
-                </template>
-
-                <template #status="{ record }">
-                  <Input v-model:value="record.status" />
-                </template>
-
-                <template #note="{ record }">
-                  <Input v-model:value="record.note" />
-                </template>
-              </Table>
             </div>
 
             <div>
-              <h1 class="box__name">University</h1>
-              <Table
-                :dataSource="dataSource2"
-                :columns="columns2"
-                :pagination="false"
-              >
-                <template #schools="{ record }">
-                  <Input v-model:value="record.schools" />
-                </template>
+              <div class="flex w-full justify-between">
+                <div class="w-[48%]">
+                  <div class="">
+                    <label class="w-[25rem]">
+                      Name <span class="text-red-600">&ast;</span>
+                    </label>
+                    <FormItem name="fullName" class="w-full">
+                      <Input v-model:value="userParams.fullName" />
+                    </FormItem>
+                  </div>
 
-                <template #degree="{ record }">
-                  <Input v-model:value="record.degreeLevel" />
-                </template>
+                  <div class="">
+                    <label class="w-[25rem]">
+                      Personal Email
+                      <span class="text-red-600">&ast;</span>
+                    </label>
+                    <FormItem name="personalEmail" class="w-full">
+                      <Input v-model:value="userParams.personalEmail"> </Input>
+                    </FormItem>
+                  </div>
 
-                <template #mode="{ record }">
-                  <Input v-model:value="record.modeOfStudy" />
-                </template>
+                  <div class="">
+                    <label class="w-[20rem]">
+                      Phone Number <span class="text-red-600">&ast;</span>
+                    </label>
+                    <FormItem name="phoneNumber" class="w-full phone">
+                      <Input v-model:value="userParams.phoneNumber" />
+                    </FormItem>
+                  </div>
 
-                <template #year="{ record }">
-                  <Input v-model:value="record.graduationYear" />
-                </template>
+                  <div class="">
+                    <label class="w-[20rem]"> Shortname </label>
+                    <FormItem class="w-full">
+                      <Input v-model:value="userParams.shortName" />
+                    </FormItem>
+                  </div>
+                </div>
 
-                <template #des="{ record }">
-                  <Input v-model:value="record.description" />
-                </template>
-              </Table>
+                <div class="w-[48%]">
+                  <div class="">
+                    <label class="w-[23rem]"> Role </label>
+                    <FormItem name="roles" class="w-full">
+                      <Select
+                        v-model:value="userParams.roleId"
+                        :options="optionsRole"
+                        placeholder="please select your role"
+                        class="w-full"
+                      >
+                      </Select>
+                    </FormItem>
+                  </div>
+
+                  <div class="">
+                    <label class="w-[23rem]"> Position </label>
+                    <FormItem name="department" class="w-full">
+                      <Select
+                        v-model:value="userParams.permissionTemplateId"
+                        :options="optionsPosition"
+                        placeholder="please select your role"
+                        class="w-full"
+                      >
+                      </Select>
+                    </FormItem>
+                  </div>
+
+                  <div class="">
+                    <label for="" class="w-[20rem]">Gender</label>
+                    <FormItem class="w-full">
+                      <Select
+                        v-model:value="userParams.gender"
+                        placeholder="please select your role"
+                        class="w-full"
+                      >
+                        <SelectOption value="MALE">Male</SelectOption>
+                        <SelectOption value="FEMALE">Female</SelectOption>
+                      </Select>
+                    </FormItem>
+                  </div>
+
+                  <div class="">
+                    <label class="w-[20rem]"> Birthday </label>
+                    <FormItem name="address" class="w-full">
+                      <DatePicker
+                        v-model:value="userParams.birthday"
+                        value-format="YYYY-MM-DD"
+                        class="w-full"
+                        placeholder=""
+                      >
+                        <template #suffixIcon>
+                          <img
+                            src="@/assets/images/calender.png"
+                            alt=""
+                            class="calender__icon"
+                          />
+                        </template>
+                      </DatePicker>
+                    </FormItem>
+                  </div>
+                </div>
+              </div>
+              <div class="">
+                <label class="w-[20rem]"> Address </label>
+                <FormItem name="address" class="w-full">
+                  <Input v-model:value="userParams.address" />
+                </FormItem>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Contract -->
-      <div class="box">
-        <h3 class="box__title">Contract</h3>
-        <div>
-          <Form
-            :model="reqParams"
-            name="normal_login"
-            class="login-form flex"
-            :label-col="{ span: 7 }"
-            :wrapper-col="{ span: 16 }"
-          >
-            <div class="w-1/2">
-              <FormItem label="Contract Name" class="mb-3">
-                <Input v-model:value="reqParams.contractList[0].contractName" />
-              </FormItem>
-
-              <FormItem label="Contract Type" class="mb-3">
-                <Select
-                  v-model:value="reqParams.contractList[0].contractType"
-                  style="width: 100%"
-                  :options="optionsContractType"
-                >
-                </Select>
-              </FormItem>
-
-              <FormItem label="Salary Basic" class="mb-3">
-                <Input
-                  v-model:value="reqParams.contractList[0].salaryBasic"
-                  overlay-class-name="numeric-input"
-                />
-              </FormItem>
-
-              <FormItem label="Staff Type" class="mb-3">
-                <Select
-                  v-model:value="reqParams.contractList[0].staffType"
-                  style="width: 100%"
-                  :options="optionsStaffType"
-                >
-                </Select>
-              </FormItem>
-
-              <FormItem label="End Day" class="mb-3">
-                <DatePicker
-                  v-model:value="reqParams.contractList[0].endDay"
-                  value-format="YYYY-MM-DD"
-                >
-                  <template #suffixIcon>
-                    <img
-                      src="@/assets/images/calender.png"
-                      alt=""
-                      class="calender__icon"
-                    />
-                  </template>
-                </DatePicker>
-              </FormItem>
-
-              <FormItem label="Note" class="mb-3">
-                <Input v-model:value="reqParams.contractList[0].note" />
-              </FormItem>
-            </div>
-
-            <div class="w-1/2">
-              <FormItem label="Contract Number" class="mb-3">
-                <Input
-                  v-model:value="reqParams.contractList[0].contractNumber"
-                />
-              </FormItem>
-
-              <FormItem label="Salary Gross" class="mb-3">
-                <Input v-model:value="reqParams.contractList[0].salaryGross" />
-              </FormItem>
-
-              <FormItem label="Salary Capacity" class="mb-3">
-                <Input
-                  v-model:value="reqParams.contractList[0].salaryCapacity"
-                />
-              </FormItem>
-
-              <FormItem label="Department" class="mb-3">
-                <Select
-                  v-model:value="reqParams.contractList[0].departmentId"
-                  style="width: 100%"
-                  :options="optionsDepartment"
-                >
-                </Select>
-              </FormItem>
-
-              <FormItem label="Payment Method" class="mb-3">
-                <Select
-                  v-model:value="reqParams.contractList[0].paymentMethod"
-                  style="width: 100%"
-                >
-                  <SelectOption value="Bank">Bank transfer</SelectOption>
-                  <SelectOption value="Receive">Receive directly</SelectOption>
-                </Select>
-              </FormItem>
-            </div>
-          </Form>
+      <FormItem class="flex justify-center">
+        <div class="flex justify-center items-center">
+          <Button html-type="submit" type="primary" v-if="isType === 'create'">
+            Create account
+          </Button>
+          <Button html-type="submit" type="primary" v-else>
+            Update account
+          </Button>
         </div>
-      </div>
-    </div>
-
-    <div class="box__save">
-      <Button
-        v-if="isType === 'create'"
-        class="box__btn"
-        size="small"
-        @click="handleCreateAccount()"
-      >
-        Create account
-      </Button>
-      <Button
-        v-else
-        class="box__btn"
-        size="small"
-        @click="handleUpdateAccount()"
-      >
-        Update account
-      </Button>
-    </div>
+      </FormItem>
+    </Form>
   </div>
 </template>
 <style scoped lang="scss" src="./styles.scss"></style>

@@ -1,5 +1,9 @@
 .project {
-  background: white;
+  background: #ededed59;
+  padding: 2rem;
+  padding-top: 6rem;
+  height: 90vh;
+  border-radius: 10px;
 
   &__head {
     display: flex;
@@ -161,4 +165,51 @@ label {
     right: 0;
     transform: translate(-50%, -50%);
   }
+}
+
+.ant-btn-primary {
+  background-color: #209653;
+
+  &:hover {
+    background: #209653;
+  }
+}
+
+.ant-tabs {
+  background: white;
+  padding: 0 2rem;
+  border-radius: 10px;
+}
+
+.ant-tabs :deep(.ant-tabs-tab) {
+  margin: 0;
+
+  &:nth-child(1) {
+    display: flex;
+    justify-content: center;
+    width: 20rem;
+  }
+
+  &:nth-child(2) {
+    display: flex;
+    justify-content: center;
+    width: 15rem;
+  }
+  .ant-tabs-tab-btn {
+    color: #ceced2;
+    font-size: 1.5rem;
+    font-weight: 400;
+  }
+}
+
+.ant-tabs :deep(.ant-tabs-nav){
+  margin-bottom: 1rem;
+}
+
+.ant-tabs :deep(.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn) {
+  color: #3ebc7b;
+}
+
+.ant-tabs :deep(.ant-tabs-ink-bar) {
+  background: #209653;
 }
