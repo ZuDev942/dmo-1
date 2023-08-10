@@ -2,14 +2,14 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #eff7ff;
+  // background: #eff7ff;
+  background: white;
   padding: 0 2rem;
 }
 
 .project {
   position: sticky;
   top: 0;
-  padding: 2rem 2rem 0 2rem;
   padding-top: 6rem;
   background: white;
   max-width: 125rem;
@@ -91,6 +91,7 @@
     display: flex;
     flex-wrap: wrap;
     // justify-content: space-evenly;
+    padding: 0 2rem;
   }
 
   &__title {

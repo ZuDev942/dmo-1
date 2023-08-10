@@ -261,14 +261,19 @@ const status = ref("");
           :data-source="dataSource2.data"
           :pagination="false"
           :scroll="{ y: 530 }"
-
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.dataIndex === 'status'">
-              <Tag color="cyan" v-if="record.status === 'ACCEPT'">
-                {{ record.status }}
+              <Tag color="#F0EEFB" v-if="record.status === 'ACCEPT'">
+                <span class="text-[#968cd8] font-[600] text-[1.2rem]">
+                  {{ record.status }}
+                </span>
               </Tag>
-              <Tag color="orange" v-else>{{ record.status }}</Tag>
+              <Tag color="#e6f4f2" v-else>
+                <span class="text-[#54b3a5] font-[600] text-[1.2rem]">
+                  {{ record.status }}
+                </span>
+              </Tag>
             </template>
 
             <template v-if="column.dataIndex === 'name'">

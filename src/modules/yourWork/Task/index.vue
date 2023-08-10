@@ -52,6 +52,7 @@ import {
   filter,
   debounce,
   includes,
+  sortBy,
 } from "lodash";
 
 const dataSource = reactive<IDataSource>({
@@ -67,6 +68,7 @@ const dataSource = reactive<IDataSource>({
       title: "Key",
       dataIndex: "key",
       width: 50,
+      fixed: "left",
     },
     {
       title: "Task",
@@ -93,24 +95,23 @@ const dataSource = reactive<IDataSource>({
       width: "100px",
     },
     {
-      title: "Status",
-      key: "status",
-      dataIndex: "status",
-      width: "70px",
-    },
-
-    {
-      title: "Process",
-      key: "process",
-      dataIndex: "process",
-      width: "100px",
-    },
-    {
       title: "Assignor",
       key: "assignor",
       dataIndex: "assignor",
       width: "120px",
     },
+    {
+      title: "Status",
+      key: "status",
+      dataIndex: "status",
+      width: "70px",
+    },
+    // {
+    //   title: "Process",
+    //   key: "process",
+    //   dataIndex: "process",
+    //   width: "100px",
+    // },
     {
       title: "",
       key: "delete",
@@ -119,13 +120,12 @@ const dataSource = reactive<IDataSource>({
     },
   ],
 });
-const activeKey = ref<string>("1");
 const value = ref<string>("");
-const isIssue = ref<boolean>(false);
 const userInfo = ref<any>({});
 const userOptions = ref<any>([]);
 const currentPage = ref(1);
 const idProject = ref();
+const typeTask = ref<boolean>(true);
 
 // ==== Method ==== //
 onMounted(() => {
@@ -172,7 +172,7 @@ function handleOkTask() {
   isTask.value = false;
 }
 
-const convertStatus = (status: string) => {
+function convertStatus(status: string) {
   if (status === "NOT_STARTED") {
     return "NOT STARTED";
   }
@@ -188,7 +188,7 @@ const convertStatus = (status: string) => {
   if (status === "CANCELED") {
     return "CANCELED";
   }
-};
+}
 
 const convertCate = (status: string) => {
   if (status === "MOCKUP") {
@@ -200,7 +200,6 @@ const convertCate = (status: string) => {
 };
 
 const value1 = ref();
-const isSwitch = ref(false);
 const total = ref(1);
 const reqListTask = ref({
   pageIndex: 1,
@@ -219,7 +218,10 @@ async function listTask() {
   const res = await taskService.getTask(reqListTask.value);
 
   if (res.status === "SUCCESS") {
-    dataSource.data = res.data.data;
+    // Sort due date
+    const dueThisWeek = sortBy(res.data.data, (item) => new Date(item.dueDate));
+    dataSource.data = dueThisWeek;
+
     dataList.value = res.data.data;
     dataSource.pagination.totalPage = res.data.totalRecords;
     dataSource.pagination.page = res.data.pageIndex;
@@ -271,7 +273,7 @@ function resetTask() {
   };
 }
 
-const taskDetail = ref({
+const taskDetail = ref<any>({
   id: 0,
   projectId: idProject.value,
   priority: "LOW",
@@ -306,7 +308,7 @@ const taskDetail = ref({
 
 async function getTaskDetail(id: number) {
   titleTask.value = keyProject.value;
-  typeTaskModal.value = false;
+  typeTask.value = false;
   isTask.value = true;
 
   const res = await taskService.taskDetail(id);
@@ -384,18 +386,27 @@ const handleFileChange = async (event: Event) => {
 
 // Task
 const titleTask = ref("Add task");
-const typeTaskModal = ref(true);
 
 function openTaskModal() {
   titleTask.value = "Add task";
-  typeTaskModal.value = true;
+  typeTask.value = true;
   isTask.value = true;
   taskDetail.value.taskActivityList = [];
   taskDetail.value.taskAttachmentList = [];
   resetTask();
 }
+
+function generateUniqueHRKey(existingKeys) {
+  const existingNumbers = existingKeys.map((item) =>
+    parseInt(item.taskCode.split("-")[1])
+  );
+  const maxNumber = Math.max(...existingNumbers);
+
+  return `HR-${maxNumber + 1}`;
+}
+
 function onFinishChange() {
-  if (typeTaskModal.value) {
+  if (typeTask.value) {
     handleCreateTask();
   } else {
     handleUpdateTask();
@@ -405,8 +416,9 @@ function onFinishChange() {
 async function handleCreateTask() {
   try {
     taskDetail.value.projectId = idProject.value;
-    const s = size(dataSource.data);
-    taskDetail.value.taskCode = keyProject.value + "-" + s;
+
+    const newKey = generateUniqueHRKey(dataSource.data);
+    taskDetail.value.taskCode = newKey;
 
     const res = await taskService.createTask(taskDetail.value);
 
@@ -448,13 +460,13 @@ function handleClear() {
   value.value = "";
 }
 
-const convertDate = (date) => {
+function convertDate(date: string) {
   if (date) {
     return moment(date).format("DD-MM-YYYY");
   }
 
   return "";
-};
+}
 
 const isAssign = ref(false);
 const isDue = ref(false);
@@ -678,7 +690,7 @@ function checkDueDate(date) {
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.dataIndex === 'key'">
-            <div>{{ record.taskCode }}</div>
+            <div class="text-[#209653] font-[500]">{{ record.taskCode }}</div>
           </template>
           <template v-if="column.dataIndex === 'task'">
             <div class="cursor-pointer" @click="getTaskDetail(record.id)">
@@ -756,40 +768,48 @@ function checkDueDate(date) {
             </Tag>
 
             <Tag
-              v-else-if="record.projectStatus === 'CANCELED'"
-              color="#DFFCF0"
-              class="cursor-pointer"
+              v-else-if="record.projectStatus === 'PENDING'"
+              color="#EBF4FF"
+              class="cursor-pointer text-black"
             >
               <span
-                class="cursor-pointer text-[#216E4E] font-[700] text-[1.1rem]"
+                class="cursor-pointer text-[#8eb4ea] font-[700] text-[1.1rem]"
               >
                 {{ convertStatus(record.projectStatus) }}
               </span>
             </Tag>
 
             <Tag
-              v-else-if="
-                record.projectStatus === 'PENDING' ||
-                'PROCESSING' ||
-                'COMPLETED'
-              "
-              color="#DEEBFF"
+              v-else-if="record.projectStatus === 'COMPLETED'"
+              color="#FFF1EE"
               class="cursor-pointer"
             >
               <span
-                class="cursor-pointer text-[#0055CC] font-[700] text-[1.1rem]"
+                class="cursor-pointer text-[#FFB7A0] font-[700] text-[1.1rem]"
+              >
+                {{ convertStatus(record.projectStatus) }}
+              </span>
+            </Tag>
+
+            <Tag
+              v-else-if="record.projectStatus === 'PROCESSING'"
+              color="#F0EEFB"
+              class="cursor-pointer"
+            >
+              <span
+                class="cursor-pointer text-[#897ec1] font-[700] text-[1.1rem]"
               >
                 {{ convertStatus(record.projectStatus) }}
               </span>
             </Tag>
           </template>
 
-          <template v-if="column.dataIndex === 'process'">
+          <!-- <template v-if="column.dataIndex === 'process'">
             <Progress
               :percent="record.process"
               stroke-color="#2bc48a"
             ></Progress>
-          </template>
+          </template> -->
 
           <template v-if="column.dataIndex === 'action'">
             <Select v-model:value="value1" class="w-full">
@@ -937,7 +957,20 @@ function checkDueDate(date) {
 
           <div class="w-[40%] ml-5">
             <div class="taskdetail__status">
-              <Select ref="selectStatus" v-model:value="taskDetail.status">
+              <Select
+                ref="selectStatus"
+                v-model:value="taskDetail.status"
+                v-if="typeTask"
+              >
+                <SelectOption value="NOT_STARTED">Not Started</SelectOption>
+                <SelectOption value="PENDING">Pending</SelectOption>
+                <SelectOption value="PROCESSING">Processing</SelectOption>
+              </Select>
+              <Select
+                ref="selectStatus"
+                v-model:value="taskDetail.status"
+                v-else
+              >
                 <SelectOption value="NOT_STARTED">Not Started</SelectOption>
                 <SelectOption value="PENDING">Pending</SelectOption>
                 <SelectOption value="PROCESSING">Processing</SelectOption>
@@ -990,7 +1023,7 @@ function checkDueDate(date) {
                   </FormItem>
                 </div>
 
-                <div class="flex">
+                <!-- <div class="flex">
                   <label class="p-0 w-[23rem]">Progress</label>
                   <FormItem class="w-full">
                     <Row class="w-full">
@@ -1011,7 +1044,7 @@ function checkDueDate(date) {
                       </Col>
                     </Row>
                   </FormItem>
-                </div>
+                </div> -->
 
                 <div class="form-task mb-4">
                   <label class="w-[15rem]">Start date</label>
@@ -1101,7 +1134,7 @@ function checkDueDate(date) {
 
         <FormItem class="flex justify-center">
           <div class="flex justify-center items-center">
-            <Button html-type="submit" type="primary" v-if="typeTaskModal">
+            <Button html-type="submit" type="primary" v-if="typeTask">
               Create task
             </Button>
             <Button html-type="submit" type="primary" v-else>

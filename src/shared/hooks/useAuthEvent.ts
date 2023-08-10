@@ -28,6 +28,6 @@ export const useAuthEvent = () => {
       import.meta.env.VITE_ACCESS_TOKEN_NAME,
       eventData.payload.token
     );
-    router.push({ name: RouteName.NEW_REGISTATION });
+    router.push({ name: RouteName.LOGIN });
   };
 };

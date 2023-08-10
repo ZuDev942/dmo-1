@@ -1,3 +1,20 @@
+<script setup lang="ts">
+import { ref, computed } from "vue";
+import { DoubleLeftOutlined, DoubleRightOutlined } from "@ant-design/icons-vue";
+import dayjs from "dayjs";
+
+const monthEmit = defineEmits<{ (e: "selected", v: number): void }>();
+
+const month = ref<number>(dayjs().month());
+
+const cMonth = computed(() => dayjs().month(month.value).format("MMMM"));
+
+function modifyMonth(v: any) {
+  month.value += v;
+  monthEmit("selected", month.value);
+}
+</script>
+
 <template>
   <div class="bg-gray-700 p-3 grid place-items-center month">
     <span class="flex items-center space-x-3 select-none text-gray-50">
@@ -8,25 +25,8 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { DoubleLeftOutlined, DoubleRightOutlined } from "@ant-design/icons-vue";
-import dayjs from "dayjs";
-import { ref, computed } from "vue";
-
-const monthEmit = defineEmits<{ (e: "selected", v: number): void }>();
-
-const month = ref<number>(dayjs().month());
-
-const cMonth = computed(() => dayjs().month(month.value).format("MMMM"));
-
-function modifyMonth(v) {
-  month.value += v;
-  monthEmit("selected", month.value);
-}
-</script>
-
 <style lang="scss" scoped>
-.month{
+.month {
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
 }

@@ -248,10 +248,6 @@ const convertTime = (date: Date) => {
                       >
                       </Select>
                     </FormItem>
-
-                    <FormItem label="Email Company" class="mb-3">
-                      <Input v-model:value="reqParams.companyEmail" />
-                    </FormItem>
                   </Form>
                 </div>
               </div>
@@ -318,17 +314,14 @@ const convertTime = (date: Date) => {
 
           <!-- Other -->
           <div class="box mb-10">
-            <h3 class="box__title">Other Info</h3>
-            <div class="flex">
-              <div class="mb-5">
-                <h1 class="box__name">Banking</h1>
-                <Table
-                  :dataSource="dataSource"
-                  :columns="columns"
-                  :pagination="false"
-                >
-                </Table>
-              </div>
+            <h3 class="box__title">Banking Info</h3>
+            <div class="">
+              <Table
+                :dataSource="dataSource"
+                :columns="columns"
+                :pagination="false"
+              >
+              </Table>
             </div>
           </div>
 

@@ -24,6 +24,15 @@ class TimesheetService {
 
     return res.data;
   }
+
+  async postReportDaily(reqParams: any) {
+    const res: AxiosResponse = await httpClient.post(
+      "/api/v1/report/daily",
+      reqParams
+    );
+
+    return res.data;
+  }
 }
 
 export const timesheetService = new TimesheetService();

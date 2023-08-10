@@ -1,0 +1,1 @@
+import{a1 as e}from"./index.675d893b.js";class s{async getListTask(a){return(await e.get("/api/v1/task/your-work",{params:a})).data}async deleteTask(a){return(await e.delete(`/api/v1/task/${a}`)).data}}const i=new s;export{i as y};

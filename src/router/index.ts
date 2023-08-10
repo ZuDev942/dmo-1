@@ -25,7 +25,7 @@ router.beforeEach((to, from, next) => {
   }
 
   if (!accessToken) {
-    return next({ name: RouteName.HOMEPAGE });
+    return next({ name: RouteName.LOGIN });
   }
 
   return next();

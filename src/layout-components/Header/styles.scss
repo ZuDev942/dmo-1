@@ -215,13 +215,17 @@ label {
   max-height: 35rem;
   min-height: max-content;
   overflow: auto;
+  width: 38rem;
 
   &__contain {
     display: flex;
     padding: 1rem 0;
-    border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
     transition: 0.1s all ease-in-out;
+
+    &:not(:last-child) {
+      border-bottom: 1px solid #f0f0f0;
+    }
 
     &:hover {
       transition: 0.1s all ease-in-out;
@@ -289,9 +293,27 @@ label {
     border-radius: 50%;
     background: #1877f2;
   }
+
+  &__not {
+    border-radius: 50%;
+    width: 2.4rem;
+    height: 2.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      width: 2rem;
+      height: 2rem;
+    }
+  }
 }
 
 .unseen {
   color: #1877f2;
   font-weight: 500;
+}
+
+.ant-tabs :deep(.ant-tabs-tab) {
+  padding: 2px;
 }

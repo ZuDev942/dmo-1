@@ -93,7 +93,7 @@ function handleInput() {
         <h2 v-if="isSend">Can't log in?</h2>
 
         <Form
-          v-if="isSend"
+          v-if="!isSend"
           :model="formState"
           :rules="rules"
           name="normal_forgot"

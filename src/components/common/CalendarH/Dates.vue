@@ -1,127 +1,3 @@
-<template>
-  <div class="w-full">
-    <div class="grid grid-cols-7 place-items-center">
-      <div v-for="day in days" :key="day" class="date__week">
-        <span class="text-gray-500 font-semibold">{{ day.substr(0, 3) }}</span>
-      </div>
-
-      <template v-for="(d, index) in dates" :key="d">
-        <template v-if="index == 0">
-          <div v-for="i in d.day" :key="i" class="date"></div>
-        </template>
-
-        <div class="date" :class="{ 'date-active': d.date === dateToday }">
-          <div class="date__head flex justify-between">
-            <div></div>
-            <div class="text-[1.6rem]">{{ d.date }}</div>
-          </div>
-
-          <div class="date__task">
-            <div class="date__des" v-for="item in d.taskList">
-              {{ item.taskContent }}
-            </div>
-          </div>
-
-          <div class="date__bot flex justify-between items-center">
-            <div class="date__time" v-if="d.taskList">
-              <img src="@/assets/images/clock.png" alt="" />
-              <span>8h</span>
-            </div>
-            <Button
-              class="date__btn"
-              :class="{ 'date__btn--report': d.haveReported }"
-              @click="selected(d.date)"
-            >
-              Report
-            </Button>
-          </div>
-        </div>
-      </template>
-    </div>
-
-    <Modal
-      v-model:open="isReport"
-      width="90%"
-      :bodyStyle="{ padding: 0, 'border-radius': '10px' }"
-      :footer="null"
-      @ok="handleOkReport"
-      title="DAILY REPORT"
-    >
-      <div class="modal__wrap pt-[2rem]">
-        <div class="todo">
-          <div class="todo__search">
-            <h3>TO DO TASK</h3>
-            <Input v-model:value="searchTodo" placeholder="Search task..." />
-          </div>
-
-          <Table
-            :columns="dataSource.columns"
-            :data-source="dataSource.data"
-            :pagination="false"
-            bordered
-          >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.dataIndex === 'action'">
-                <div class="flex justify-center">
-                  <img class="common__img" src="@/assets/images/down.png" />
-                </div>
-              </template>
-            </template>
-          </Table>
-        </div>
-
-        <br />
-        <!--  -->
-        <div class="daily-task">
-          <div class="todo__search">
-            <h3>DAILY REPORT</h3>
-            <Input v-model:value="searchTodo" placeholder="Search task..." />
-          </div>
-          <Table
-            :columns="dataSource2.columns"
-            :data-source="dataSource2.data"
-            :pagination="false"
-            bordered
-          >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.dataIndex === 'action'">
-                <div class="flex justify-center">
-                  <img class="common__img" src="@/assets/images/up-arrow.png" />
-                </div>
-              </template>
-
-              <template v-if="column.dataIndex === 'effort'">
-                <Input v-model:value="record.effort"></Input>
-              </template>
-              <template v-if="column.dataIndex === 'progress'">
-                <Input v-model:value="record.effort"></Input>
-              </template>
-              <template v-if="column.dataIndex === 'status'">
-                <Select v-model:value="record.status">
-                  <SelectOption value="NOT_STARTED">Not Started</SelectOption>
-                  <SelectOption value="PENDING">Pending</SelectOption>
-                  <SelectOption value="PROCESSING">Processing</SelectOption>
-                  <SelectOption value="COMPLETED">Completed</SelectOption>
-                  <SelectOption value="CANCELED">Canceled</SelectOption>
-                </Select>
-              </template>
-              <template v-if="column.dataIndex === 'delivery'">
-                <Select v-model:value="record.delivery">
-                  <SelectOption value="Undelivered">Undelivered</SelectOption>
-                  <SelectOption value="Delivered">Delivered</SelectOption>
-                </Select>
-              </template>
-              <template v-if="column.dataIndex === 'note'">
-                <Input v-model:value="record.note"></Input>
-              </template>
-            </template>
-          </Table>
-        </div>
-      </div>
-    </Modal>
-  </div>
-</template>
-
 <script setup lang="ts">
 import dayjs from "dayjs";
 import { watch, onMounted, ref, reactive } from "vue";
@@ -133,13 +9,20 @@ import {
   Tag,
   Input,
   InputNumber,
+  Checkbox,
   Table,
+  Empty,
+  message,
 } from "ant-design-vue";
-import { timesheetService } from "@/services";
-import { map } from "lodash";
+import { timesheetService, yourworkService } from "@/services";
+import { findIndex, forEach, isEmpty, map, size } from "lodash";
 import type { IDataSource } from "@/components";
-import { DataTable } from "@/components";
 import moment from "moment";
+import {
+  DownCircleOutlined,
+  EditOutlined,
+  UpCircleOutlined,
+} from "@ant-design/icons-vue";
 
 type SelectedValues = {
   year: number;
@@ -168,6 +51,7 @@ const dateNumber = currentDate.getDate();
 const isReport = ref(false);
 const searchTodo = ref("");
 const dateToday = ref<any>(0);
+const yourTasks = ref<any>([]);
 
 onMounted(() => {
   console.log(dateNumber);
@@ -177,8 +61,10 @@ onMounted(() => {
   const day = today.getDate();
   dateToday.value = day;
   console.log(day);
+  getYourTask();
 });
 
+// Date
 watch(
   () => dateProps.selectedValues,
   (v) => {
@@ -229,10 +115,34 @@ async function generateDatesForThatMonth(
   dates.value = aa;
 }
 
-function selected(d) {
-  date.value = d;
-  // dateEmit("selected", d);
+function selected(dateSelected: any) {
+  date.value = dateSelected.date;
   isReport.value = true;
+
+  // handle data
+  console.log(dateSelected);
+  const taskList = dateSelected?.taskList;
+
+  if (!isEmpty(taskList)) {
+    const commonItems = dataSource.data.filter((item1) =>
+      taskList.some((item2) => item2.taskId === item1.id)
+    );
+
+    console.log(isEmpty(taskList));
+
+    forEach(taskList, (task) => {
+      const indexTask = findIndex(
+        dataSource.data,
+        (item) => item.id === task.taskId
+      );
+
+      console.log("index", indexTask, dataSource.data[indexTask]);
+
+      dataSource.data[indexTask].isSelected = true;
+    });
+
+    dataSource2.data = commonItems;
+  }
 }
 
 // Modal
@@ -243,81 +153,57 @@ const dataSource2 = reactive<IDataSource>({
     totalPage: 0,
     page: 1,
   },
-  data: [
-    {
-      action: "1",
-      project: "GHTK PAY",
-      task: "Chuc nang thanh toan online",
-      effort: "",
-      progress: 88,
-      status: "Pending",
-      delivery: "Delivered",
-      note: "2023/01/31: fix bug",
-    },
-    {
-      action: "1",
-      project: "GHTK PAY",
-      task: "Chuc nang thanh toan online",
-      effort: "",
-      progress: 66,
-      status: "Pending",
-      delivery: "Delivered",
-      note: "2023/01/31: fix bug",
-    },
-    {
-      action: "1",
-      project: "GHTK PAY",
-      task: "Chuc nang thanh toan online",
-      effort: "",
-      progress: 55,
-      status: "Pending",
-      delivery: "Delivered",
-      note: "2023/01/31: fix bug",
-    },
-  ],
+  data: [],
   columns: [
     {
       title: "Action",
       dataIndex: "action",
       scopedSlots: "action",
-      width: "5%",
+      width: 35,
+      fixed: "left",
     },
     {
       title: "Project",
       dataIndex: "project",
       scopedSlots: "project",
+      width: 170,
     },
     {
       title: "Task",
       dataIndex: "task",
       scopedSlots: "task",
+      width: 300,
+    },
+    {
+      title: "Priority",
+      dataIndex: "priority",
+      scopedSlots: "priority",
+      width: 60,
+    },
+    {
+      title: "Plan End",
+      dataIndex: "planend",
+      scopedSlots: "planend",
+      width: 100,
     },
     {
       title: "Effort",
       dataIndex: "effort",
       scopedSlots: "effort",
-      width: "6%",
-    },
-    {
-      title: "Progress",
-      dataIndex: "progress",
-      scopedSlots: "progress",
-      width: "5%",
+      width: 60,
     },
     {
       title: "Status",
       dataIndex: "status",
       scopedSlots: "status",
-    },
-    {
-      title: "Delivery Status",
-      dataIndex: "delivery",
-      scopedSlots: "delivery",
+      width: 100,
     },
     {
       title: "Note",
       dataIndex: "note",
       scopedSlots: "note",
+      width: 100,
+      fixed: "right",
     },
   ],
 });
@@ -328,97 +214,379 @@ const dataSource = reactive<IDataSource>({
     totalPage: 0,
     page: 1,
   },
-  data: [
-    {
-      action: "1",
-      project: "GHTK PAY",
-      task: "Chuc nang thanh toan online",
-      priority: "Medium",
-      planend: "30/07/2023",
-      effort: "",
-      progress: "88%",
-      status: "Pending",
-      note: "2023/01/31: fix bug",
-    },
-    {
-      action: "1",
-      project: "GHTK PAY",
-      task: "Chuc nang thanh toan online",
-      priority: "Medium",
-      planend: "30/07/2023",
-      effort: "",
-      progress: "88%",
-      status: "Pending",
-      note: "2023/01/31: fix bug",
-    },
-    {
-      action: "1",
-      project: "GHTK PAY",
-      task: "Chuc nang thanh toan online",
-      priority: "Medium",
-      planend: "30/07/2023",
-      effort: "",
-      progress: "88%",
-      status: "Pending",
-      note: "2023/01/31: fix bug",
-    },
-  ],
+  data: [],
   columns: [
     {
       title: "Action",
       dataIndex: "action",
       scopedSlots: "action",
-      width: "5%",
+      width: 35,
+      fixed: "left",
     },
     {
       title: "Project",
       dataIndex: "project",
       scopedSlots: "project",
+      width: 170,
     },
     {
       title: "Task",
       dataIndex: "task",
       scopedSlots: "task",
+      width: 300,
     },
     {
       title: "Priority",
       dataIndex: "priority",
       scopedSlots: "priority",
+      width: 60,
     },
     {
       title: "Plan End",
       dataIndex: "planend",
       scopedSlots: "planend",
+      width: 100,
     },
     {
       title: "Effort",
       dataIndex: "effort",
       scopedSlots: "effort",
-      width: "6%",
-    },
-    {
-      title: "Progress",
-      dataIndex: "progress",
-      scopedSlots: "progress",
+      width: 60,
     },
     {
       title: "Status",
       dataIndex: "status",
       scopedSlots: "status",
+      width: 100,
     },
     {
       title: "Note",
       dataIndex: "note",
       scopedSlots: "note",
+      width: 100,
     },
   ],
 });
 
 function handleOkReport() {}
 function handleLoadPage() {}
+
+async function getYourTask() {
+  const req = {
+    pageIndex: 1,
+    pageSize: 100,
+  };
+
+  const res = await yourworkService.getListTask(req);
+
+  yourTasks.value = res.data.data;
+
+  dataSource.data = map(res.data.data, (item) => {
+    return {
+      ...item,
+      isSelected: false,
+    };
+  });
+  console.log(dataSource.data);
+  // data.values = res.data.data
+}
+
+function handleDown(idTask: number, index: number) {
+  dataSource.data[index].isSelected = true;
+  const item = dataSource.data[index];
+  dataSource2.data.push(item);
+}
+
+function handleUp(idTask: number, index: number) {
+  const indexTask = findIndex(dataSource.data, (item) => item.id === idTask);
+  dataSource.data[indexTask].isSelected = false;
+  dataSource2.data.splice(index, 1);
+}
+
+async function handleReportDaily() {
+  if (isEmpty(dataSource2.data)) {
+    message.warning("Please select task and work notes for today");
+    return;
+  }
+
+  const req = map(dataSource2.data, (item) => {
+    return {
+      projectName: "Human Resource",
+      taskId: item.id,
+      taskName: item.content,
+      priority: "LOW",
+      effort: 8,
+      progress: 0,
+      deadLine: item.dueDate,
+      status: item.projectStatus,
+      deliveryStatus: "NOT_YET",
+      note: "abc",
+    };
+  });
+
+  console.log(req);
+
+  const res = await timesheetService.postReportDaily(req);
+
+  if (res.status === "SUCCESS") {
+    isReport.value = false;
+  }
+}
 </script>
 
+<template>
+  <div class="w-full">
+    <div class="grid grid-cols-7 place-items-center">
+      <div v-for="day in days" :key="day" class="date__week">
+        <span class="text-gray-500 font-semibold">{{ day.substr(0, 3) }}</span>
+      </div>
+
+      <template v-for="(d, index) in dates" :key="d">
+        <template v-if="index == 0">
+          <div v-for="i in d.day" :key="i" class="date"></div>
+        </template>
+
+        <div
+          class="date"
+          :class="{
+            'date-active': d.date === dateToday,
+            warning: !d.haveReported && d.date < dateToday,
+          }"
+        >
+          <div class="date__head flex justify-between">
+            <div v-if="d.haveReported" class="text-[#374151] font-[500]">
+              <EditOutlined />
+              Daily report
+            </div>
+            <div v-else></div>
+            <div class="text-[1.6rem] date__text">{{ d.date }}</div>
+          </div>
+
+          <div class="date__task">
+            <div class="date__des" v-for="item in d.taskList">
+              {{ item.taskContent }}
+            </div>
+          </div>
+
+          <div class="date__bot flex justify-between items-center">
+            <div class="date__time" v-if="d.taskList">
+              <img src="@/assets/images/clock.png" alt="" />
+              <span>8h</span>
+            </div>
+            <Button
+              v-if="d.date <= dateToday"
+              class="date__btn"
+              :class="{ 'date__btn--report': d.haveReported }"
+              @click="selected(d)"
+            >
+              Report
+            </Button>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <Modal
+      v-model:open="isReport"
+      width="80%"
+      :bodyStyle="{ padding: 0, 'border-radius': '10px' }"
+      :footer="null"
+      @ok="handleOkReport"
+      title="DAILY REPORT"
+    >
+      <div class="modal__wrap pt-[2rem]">
+        <div class="todo">
+          <h3 class="todo__title">TO DO TASK</h3>
+          <div class="todo__search">
+            <Input v-model:value="searchTodo" placeholder="Search task..." />
+          </div>
+
+          <Table
+            class="table__top"
+            :columns="dataSource.columns"
+            :data-source="dataSource.data"
+            :pagination="false"
+            :scroll="{ y: 125, x: 2000 }"
+            bordered
+          >
+            <template #bodyCell="{ column, record, index }">
+              <template v-if="column.dataIndex === 'action'">
+                <Button
+                  class="column__item flex items-center w-full justify-center"
+                  @click="handleDown(record.id, index)"
+                  :disabled="record.isSelected"
+                  type="text"
+                >
+                  <DownCircleOutlined />
+                </Button>
+              </template>
+
+              <template v-if="column.dataIndex === 'project'">
+                <div
+                  class="column__item"
+                  :class="{ select: record.isSelected }"
+                >
+                  Human resource
+                </div>
+              </template>
+
+              <template v-if="column.dataIndex === 'task'">
+                <div
+                  class="column__item"
+                  :class="{ select: record.isSelected }"
+                >
+                  {{ record.content }}
+                </div>
+              </template>
+
+              <template v-if="column.dataIndex === 'priority'">
+                <div
+                  class="column__item"
+                  :class="{ select: record.isSelected }"
+                >
+                  Low
+                </div>
+              </template>
+
+              <template v-if="column.dataIndex === 'planend'">
+                <div
+                  class="column__item"
+                  :class="{ select: record.isSelected }"
+                >
+                  {{ record.dueDate }}
+                </div>
+              </template>
+
+              <template v-if="column.dataIndex === 'effort'">
+                <div
+                  class="column__item"
+                  :class="{ select: record.isSelected }"
+                >
+                  {{ record.effort }}
+                </div>
+              </template>
+
+              <template v-if="column.dataIndex === 'status'">
+                <div
+                  class="column__item"
+                  :class="{ select: record.isSelected }"
+                >
+                  {{ record.projectStatus }}
+                </div>
+              </template>
+
+              <template v-if="column.dataIndex === 'note'">
+                <div
+                  class="column__item"
+                  :class="{ select: record.isSelected }"
+                ></div>
+              </template>
+            </template>
+          </Table>
+        </div>
+
+        <br />
+        <!--  -->
+        <div class="todo">
+          <h3 class="todo__title">DAILY REPORT</h3>
+          <div class="todo__search">
+            <Input v-model:value="searchTodo" placeholder="Search task..." />
+          </div>
+          <Table
+            :columns="dataSource2.columns"
+            :data-source="dataSource2.data"
+            :pagination="false"
+            bordered
+            :scroll="{ y: 125, x: 2000 }"
+          >
+            <template #bodyCell="{ column, record, index }">
+              <template v-if="column.dataIndex === 'action'">
+                <div
+                  class="column__item flex justify-center w-full"
+                  @click="handleUp(record.id, index)"
+                >
+                  <UpCircleOutlined />
+                </div>
+              </template>
+
+              <template v-if="column.dataIndex === 'project'">
+                <div class="column__item">Human resource</div>
+              </template>
+
+              <template v-if="column.dataIndex === 'task'">
+                <div class="column__item">
+                  {{ record.content }}
+                </div>
+              </template>
+
+              <template v-if="column.dataIndex === 'priority'">
+                <div class="column__item">Low</div>
+              </template>
+
+              <template v-if="column.dataIndex === 'planend'">
+                <div class="column__item">
+                  {{ record.dueDate }}
+                </div>
+              </template>
+
+              <template v-if="column.dataIndex === 'effort'">
+                <div class="column__item">
+                  {{ record.effort }}
+                </div>
+              </template>
+
+              <template v-if="column.dataIndex === 'status'">
+                <div class="column__item">
+                  {{ record.projectStatus }}
+                </div>
+              </template>
+
+              <template v-if="column.dataIndex === 'note'">
+                <div class="column__item"></div>
+              </template>
+            </template>
+          </Table>
+        </div>
+      </div>
+      <div class="flex justify-center w-full">
+        <Button @click="handleReportDaily()" type="primary">Report</Button>
+      </div>
+    </Modal>
+  </div>
+</template>
+
 <style lang="scss" scoped>
+.todo {
+  border: 1px solid #dfe1e6;
+  padding: 1rem 2rem;
+  border-radius: 1rem;
+  position: relative;
+  padding-top: 1.5rem;
+
+  &__title {
+    position: absolute;
+    z-index: 9;
+    top: -12px;
+    background: white;
+    padding: 0 1rem;
+    color: #172b4d;
+    font-size: 1.3rem;
+  }
+}
+.column__item {
+  width: 100%;
+  height: 100%;
+  padding: 0.5rem;
+
+  &.select {
+    background: #4c9aff1a;
+    border: 1px solid #4c9aff1a;
+  }
+
+  button {
+    border: none;
+  }
+}
 .date {
   border: 0.5px solid rgb(230, 228, 228);
   width: 100%;
@@ -427,12 +595,17 @@ function handleLoadPage() {}
   cursor: pointer;
   position: relative;
 
+  &__task{
+    height: 7rem;
+    overflow: auto;
+  }
+
   &:hover {
-    background: #e2e2e2c2;
+    background: rgb(230, 228, 228);
   }
 
   &-active {
-    background: #e2e2e2c2;
+    background: rgb(230, 228, 228);
   }
 
   &__des {
@@ -495,6 +668,12 @@ function handleLoadPage() {}
     justify-content: flex-end;
     padding-right: 15px;
   }
+
+  &.warning {
+    .date__text {
+      color: red;
+    }
+  }
 }
 
 .ant-btn-primary {
@@ -538,15 +717,14 @@ function handleLoadPage() {}
   font-weight: 500;
   color: #44546f;
   background: white;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
   border-bottom: 1px solid #dfe1e6;
 }
 
 .ant-table-wrapper :deep(.ant-table-tbody > tr > td) {
   color: #44546f;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
+  padding: 0;
 }
 
 .ant-table-wrapper :deep(.ant-table-tbody > tr > td) {
@@ -555,10 +733,10 @@ function handleLoadPage() {}
     font-weight: 400;
     font-size: 1.5rem;
 
-    &:hover {
-      text-decoration: underline;
-      color: #0065ff;
-    }
+    // &:hover {
+    //   text-decoration: underline;
+    //   color: #0065ff;
+    // }
   }
 }
 
@@ -567,9 +745,9 @@ function handleLoadPage() {}
     background-color: #f0f0f0;
     cursor: pointer;
   }
-  .ant-table-cell:hover {
-    background-color: #f0f0f0;
-    cursor: pointer;
-  }
+  // .ant-table-cell:hover {
+  //   background-color: #f0f0f0;
+  //   cursor: pointer;
+  // }
 }
 </style>

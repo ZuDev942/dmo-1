@@ -21,6 +21,7 @@ import {
   ExclamationCircleOutlined,
 } from "@ant-design/icons-vue";
 import type { IDataSource } from "@/components";
+import { ProjectModal } from "@/components";
 import { projectService } from "@/services";
 import ProjectDetail from "./ProjectDetail/index.vue";
 import useEventBus from "../../eventBus";
@@ -53,7 +54,7 @@ const dataSource = reactive<IDataSource>({
       width: "120px",
     },
     {
-      title: "Lead",
+      title: "Team",
       dataIndex: "lead",
       width: "200px",
     },
@@ -218,7 +219,7 @@ function handleSelectDetail(idPro: number) {
 }
 
 async function getListProject() {
-  console.log(reqParams.value)
+  console.log(reqParams.value);
   const res = await projectService.getListProject(reqParams.value);
 
   if (res.status === "SUCCESS") {
@@ -286,6 +287,7 @@ import { useRouter } from "vue-router";
 import { RouteName } from "@/shared/constants";
 
 const router = useRouter();
+
 function handleOpenTask(idProject: number, nameProject: string, keyP: string) {
   const payload = {
     name: nameProject,
@@ -296,6 +298,22 @@ function handleOpenTask(idProject: number, nameProject: string, keyP: string) {
     name: RouteName.TASKS,
     params: { id: idProject, key: keyP },
   });
+}
+function handleOpenIssue(idProject: number, nameProject: string, keyP: string) {
+  const payload = {
+    name: nameProject,
+    id: idProject,
+  };
+
+  emitEvent("NAME_PROJECT", payload);
+  router.push({
+    name: RouteName.ISSUES,
+    params: { id: idProject, key: keyP },
+  });
+}
+
+function handleCloseModal() {
+  isProjectDetail.value = false;
 }
 </script>
 
@@ -408,7 +426,7 @@ function handleOpenTask(idProject: number, nameProject: string, keyP: string) {
                     margin-right: 0.5rem;
                   "
                 />
-                <span> {{ record.lead }} </span>
+                <!-- <span> {{ record.lead }} </span> -->
               </div>
             </template>
 
@@ -460,11 +478,20 @@ function handleOpenTask(idProject: number, nameProject: string, keyP: string) {
                     <template #content>
                       <div
                         class="option"
-                        @click="handleOpenTask(record.id, record.key, record.name)"
+                        @click="
+                          handleOpenTask(record.id, record.key, record.name)
+                        "
                       >
                         Open Task
                       </div>
-                      <div class="option">Open Issue</div>
+                      <div
+                        class="option"
+                        @click="
+                          handleOpenIssue(record.id, record.key, record.name)
+                        "
+                      >
+                        Open Issue
+                      </div>
                       <div
                         class="option"
                         @click="handleDeleteProject(record.id)"
@@ -483,7 +510,7 @@ function handleOpenTask(idProject: number, nameProject: string, keyP: string) {
     </div>
 
     <!--  -->
-    <Drawer
+    <!-- <Drawer
       :title="titleProject"
       placement="right"
       :closable="false"
@@ -496,7 +523,15 @@ function handleOpenTask(idProject: number, nameProject: string, keyP: string) {
         :id-project="idProject"
         @refresh-projects="handleRefresh()"
       ></ProjectDetail>
-    </Drawer>
+    </Drawer> -->
+
+    <ProjectModal
+      :id-project="idProject"
+      :is-project-modal="isProjectDetail"
+      :is-type-project="typeDetail"
+      :count-project="countProject"
+      @close-project-modal="handleCloseModal()"
+    ></ProjectModal>
   </div>
 </template>
 

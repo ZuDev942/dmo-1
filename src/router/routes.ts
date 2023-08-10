@@ -1,7 +1,6 @@
 import type { RouteRecordRaw } from "vue-router";
 
 import { RouteName } from "@/shared/constants";
-import Homepage from "@/modules/homepage/index.vue";
 import NotFound from "@/modules/notFound/index.vue";
 
 const routes: RouteRecordRaw[] = [
@@ -12,21 +11,14 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: "",
-    name: RouteName.HOMEPAGE,
-    component: Homepage,
+    name: RouteName.LOGIN,
+    component: () => import("@/modules/login/index.vue"),
     meta: { layout: "defaultNoHeader" },
   },
   {
     path: "shop-lives",
     name: RouteName.SHOP_LIVES,
     component: () => import("@/modules/shopProblem/pages/Lives/index.vue"),
-    meta: { auth: true },
-  },
-  {
-    path: "new-registation",
-    name: RouteName.NEW_REGISTATION,
-    component: () =>
-      import("@/modules/shopProblem/pages/NewRegistation/index.vue"),
     meta: { auth: true },
   },
   {
@@ -75,6 +67,24 @@ const routes: RouteRecordRaw[] = [
     path: "absence",
     name: RouteName.ABSENCE,
     component: () => import("@/modules/absence/index.vue"),
+    meta: { auth: true },
+  },
+  {
+    path: "issues",
+    name: RouteName.ISSUES,
+    component: () => import("@/modules/issue/index.vue"),
+    meta: { auth: true },
+  },
+  {
+    path: "issue/:id",
+    name: RouteName.ISSUE,
+    component: () => import("@/modules/issue/issueDetail/index.vue"),
+    meta: { auth: true },
+  },
+  {
+    path: "yourworkV2",
+    name: RouteName.YOUR_WORK_V2,
+    component: () => import("@/modules/yourWorkV2/index.vue"),
     meta: { auth: true },
   },
 ];

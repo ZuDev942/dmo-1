@@ -10,9 +10,7 @@ import {
   SelectOption,
   DatePicker,
 } from "ant-design-vue";
-import {
-  CameraOutlined,
-} from "@ant-design/icons-vue";
+import { CameraOutlined } from "@ant-design/icons-vue";
 import { commonService, userService } from "@/services";
 import { cloneDeep, isEmpty, size } from "lodash";
 import type { Ref } from "vue";
@@ -235,12 +233,12 @@ const rules: Record<string, Rule[]> = {
   fullName: [
     { required: true, message: "Please enter your name", trigger: "change" },
   ],
-  personalEmail: [{ validator: checkEmail, trigger: "change" }],
+  companyEmail: [{ validator: checkEmail, trigger: "change" }],
   phoneNumber: [{ validator: checkPhone, trigger: "change" }],
 };
 
 async function onFinishChange() {
-  return;
+  // return;
   if (isType.value === "create") {
     handleCreateAccount();
   } else {
@@ -249,11 +247,17 @@ async function onFinishChange() {
 }
 
 async function handleCreateAccount() {
-  const res = await userService.createUser(userParams.value);
+  userParams.value.personalEmail = userParams.value.companyEmail;
 
-  if (res.status === "SUCCESS") {
-    message.success("Create account successfull");
-    emit("refreshList");
+  try {
+    const res = await userService.createUser(userParams.value);
+
+    if (res.status === "SUCCESS") {
+      message.success("Create account successfull");
+      emit("refreshList");
+    }
+  } catch (error) {
+    console.log("err");
   }
 }
 
@@ -329,8 +333,8 @@ async function handleUpdateAccount() {
                       Personal Email
                       <span class="text-red-600">&ast;</span>
                     </label>
-                    <FormItem name="personalEmail" class="w-full">
-                      <Input v-model:value="userParams.personalEmail"> </Input>
+                    <FormItem name="companyEmail" class="w-full">
+                      <Input v-model:value="userParams.companyEmail"> </Input>
                     </FormItem>
                   </div>
 

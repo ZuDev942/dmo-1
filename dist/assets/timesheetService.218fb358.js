@@ -1,0 +1,1 @@
+import{a1 as e}from"./index.675d893b.js";class s{async getDashboardPersonal(a){return(await e.get("/api/v1/dashboard/byPersonal",{params:a})).data}async getDashboardMember(a){return(await e.get("/api/v1/dashboard/byMember",{params:a})).data}async postReportDaily(a){return(await e.post("/api/v1/report/daily",a)).data}}const i=new s;export{i as t};

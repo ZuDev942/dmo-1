@@ -1,5 +1,5 @@
 export enum RouteName {
-  HOMEPAGE = "Homepage",
+  LOGIN = "Login",
   ABOUT = "About",
   NOT_FOUND = "NotFound",
   SHOP_LIVES = "ShopLives",
@@ -13,4 +13,7 @@ export enum RouteName {
   DAYOFF = "Dayoff",
   FORGOT = "Forgot",
   ABSENCE = "Absence",
+  ISSUES = "Issues",
+  ISSUE = "Issue",
+  YOUR_WORK_V2 = "YourworkV2",
 }

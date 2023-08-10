@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 // ==== Import ==== //
-import { reactive, ref, watch, onMounted, createVNode } from "vue";
+import { reactive, ref, watch, onMounted, createVNode, computed } from "vue";
 import {
   Button,
   Input,
@@ -16,6 +16,7 @@ import {
   DatePicker,
   Textarea,
   InputSearch,
+  InputNumber,
 } from "ant-design-vue";
 import {
   EllipsisOutlined,
@@ -114,11 +115,11 @@ const isAccount = ref<boolean>(false);
 const optionsContractType = ref<SelectProps["options"]>([
   {
     value: 0,
-    label: "Thu viec",
+    label: "Probationary",
   },
   {
     value: 1,
-    label: "Chinh thuc",
+    label: "Official",
   },
 ]);
 
@@ -133,18 +134,18 @@ const optionsStaffType = ref<SelectProps["options"]>([
   },
 ]);
 
-const optionsDepartment = ref<SelectProps["options"]>([
+const optionContractPeriod = ref<SelectProps["options"]>([
   {
     value: 0,
-    label: "Developer",
+    label: "6 Months",
   },
   {
     value: 1,
-    label: "QC/QA",
+    label: "1 Year",
   },
   {
     value: 2,
-    label: "Business Analyst",
+    label: "",
   },
   {
     value: 3,
@@ -329,7 +330,9 @@ async function createContract() {
   delete reqContract.value.id;
 
   reqContract.value.infoTransfer = infoBank.value;
-  const res = await userService.createContract(reqContract.value);
+  const res = await userService
+    .createContract(reqContract.value)
+    .catch((err) => console.log(err));
 
   if (res.status === "SUCCESS") {
     message.success("Create contract successfull");
@@ -376,7 +379,7 @@ function convertRole(role: string) {
   }
 
   if (role === "USER") {
-    return "User";
+    return "Staff";
   }
 
   return "Admin";
@@ -597,9 +600,19 @@ function handleActiveAccount() {
                 </div>
 
                 <div>
-                  <label class="mb-2"> Salary </label>
+                  <label class="mb-2"> Salary (VND)</label>
                   <FormItem>
-                    <Input v-model:value="reqContract.salaryGross" />
+                    <!-- <Input v-model:value="a" @input="handleP" /> -->
+                    <InputNumber
+                      class="w-full"
+                      v-model:value="reqContract.salaryBasic"
+                      :formatter="
+                        (value) =>
+                          `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                      "
+                      :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+                      :controls="false"
+                    />
                   </FormItem>
                 </div>
 
@@ -618,43 +631,32 @@ function handleActiveAccount() {
                   </FormItem>
                 </div>
 
-                <div class="flex items-center">
-                  <div class="mr-[10rem]">
-                    <label class="mb-2">
-                      Sign Day <span class="text-red-600">&ast;</span>
-                    </label>
-                    <FormItem>
-                      <DatePicker value-format="YYYY-MM-DD">
-                        <template #suffixIcon>
-                          <img
-                            src="@/assets/images/calender.png"
-                            alt=""
-                            class="calender__icon"
-                          />
-                        </template>
-                      </DatePicker>
-                    </FormItem>
-                  </div>
+                <div class="mr-[10rem]">
+                  <label class="mb-2"> Sign Day </label>
+                  <FormItem>
+                    <DatePicker value-format="YYYY-MM-DD">
+                      <template #suffixIcon>
+                        <img
+                          src="@/assets/images/calender.png"
+                          alt=""
+                          class="calender__icon"
+                        />
+                      </template>
+                    </DatePicker>
+                  </FormItem>
+                </div>
 
-                  <div>
-                    <label class="mb-2">
-                      Quit Day <span class="text-red-600">&ast;</span>
-                    </label>
-                    <FormItem>
-                      <DatePicker
-                        v-model:value="reqContract.endDay"
-                        value-format="YYYY-MM-DD"
-                      >
-                        <template #suffixIcon>
-                          <img
-                            src="@/assets/images/calender.png"
-                            alt=""
-                            class="calender__icon"
-                          />
-                        </template>
-                      </DatePicker>
-                    </FormItem>
-                  </div>
+                <div>
+                  <label class="mb-2"> Contract period </label>
+                  <FormItem class="w-full">
+                    <Select
+                      v-model:value="reqContract.paymentMethod"
+                      style="width: 100%"
+                    >
+                      <SelectOption value="Bank">6 Months</SelectOption>
+                      <SelectOption value="Receive">1 Year</SelectOption>
+                    </Select>
+                  </FormItem>
                 </div>
               </div>
             </div>

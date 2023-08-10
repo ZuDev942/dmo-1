@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import {
   Popover,
   Modal,
@@ -10,6 +10,11 @@ import {
   InputPassword,
   Badge,
   Avatar,
+  Tabs,
+  TabPane,
+  Empty,
+  Breadcrumb,
+  BreadcrumbItem,
 } from "ant-design-vue";
 import {
   MenuOutlined,
@@ -18,12 +23,13 @@ import {
   UnlockOutlined,
   SendOutlined,
   MessageOutlined,
+  BellOutlined,
 } from "@ant-design/icons-vue";
 import { useRouter } from "vue-router";
 import { RouteName } from "@/shared/constants";
 import { useUserPage } from "@/store/modules";
-import { userService } from "@/services";
-import { map, isEmpty, filter } from "lodash";
+import { notificationService, userService } from "@/services";
+import { map, isEmpty, filter, size } from "lodash";
 import eventBus from "@/eventBus";
 const { onEvent } = eventBus();
 
@@ -37,10 +43,12 @@ const userInfo = ref<any>({});
 const idProject = ref(0);
 const nameProject = ref("");
 const isNotification = ref(false);
+const isTabs = ref("1");
 
 // ==== Method ==== //
 onMounted(() => {
   getUser();
+  getNotification();
   onEvent("NAME_PROJECT", handle);
   const savedUser = localStorage.getItem("userInfo");
 
@@ -116,10 +124,10 @@ async function handleOk() {
 
 function handleLogout() {
   // Reset store infor user
-  // localStorage.removeItem("userInfo");
-  // localStorage.setItem(import.meta.env.VITE_ACCESS_TOKEN_NAME, "");
+  localStorage.removeItem("userInfo");
+  localStorage.setItem(import.meta.env.VITE_ACCESS_TOKEN_NAME, "");
 
-  router.push({ name: RouteName.HOMEPAGE });
+  router.push({ name: RouteName.LOGIN });
 }
 
 function handleChangePassword() {
@@ -162,6 +170,14 @@ const routeName = computed(() => {
 
   if (currentPage === "Absence") {
     return "DAYOFF DETAIL";
+  }
+
+  if (currentPage === "Issues") {
+    return "ISSUES";
+  }
+
+  if (currentPage === "Issue") {
+    return "ISSUE";
   }
 
   return "";
@@ -261,64 +277,50 @@ async function onFinishChange() {
 }
 
 // Notification
-const notiList = ref([
-  {
-    accountId: 1,
-    fullName: "Vũ Văn Đạt",
-    avatar:
-      "https://i.pinimg.com/564x/bb/5a/a9/bb5aa91e1cbf43d8f47502108c61838a.jpg",
-    messageTitle: "update issue and send for you",
-    messageContent: "Update issue detail",
-    time: "2023/08/07 16:42",
-    hasSeen: false,
-  },
-  {
-    accountId: 2,
-    fullName: "Nguyễn Thành Nam",
-    avatar:
-      "https://i.pinimg.com/564x/bb/5a/a9/bb5aa91e1cbf43d8f47502108c61838a.jpg",
-    messageTitle: "has approved off day for you",
-    messageContent: "Off day of you have been approved",
-    time: "2023/06/29 16:42",
-    hasSeen: false,
-  },
-  {
-    accountId: 3,
-    fullName: "Vũ Văn Đạt",
-    avatar:
-      "https://i.pinimg.com/564x/bb/5a/a9/bb5aa91e1cbf43d8f47502108c61838a.jpg",
-    messageTitle: "has seen issue for you",
-    messageContent: "Please check issue in your work",
-    time: "2023/06/29 16:42",
-    hasSeen: true,
-  },
-  {
-    accountId: 4,
-    fullName: "Vũ Văn Đạt",
-    avatar:
-      "https://i.pinimg.com/564x/bb/5a/a9/bb5aa91e1cbf43d8f47502108c61838a.jpg",
-    messageTitle: "has seen issue for you",
-    messageContent: "Please check issue in your work",
-    time: "2023/06/29 16:42",
-    hasSeen: true,
-  },
-  {
-    accountId: 5,
-    fullName: "Vũ Văn Đạt",
-    avatar:
-      "https://i.pinimg.com/564x/bb/5a/a9/bb5aa91e1cbf43d8f47502108c61838a.jpg",
-    messageTitle: "has seen issue for you",
-    messageContent: "Please check issue in your work",
-    time: "2023/06/29 16:42",
-    hasSeen: true,
-  },
-]);
+const notiListAll = ref<any>([]);
+const notiListUnread = ref<any>([]);
+const countNoti = ref(0);
+
+function handleOpenNoti() {
+  if (!isNotification.value) {
+    getNotification();
+  }
+}
 
 const convertTime = (time: any) => {
   return moment(time, "YYYY/MM/DD h:mm").fromNow();
 };
 
+async function getNotification() {
+  const req = {
+    pageIndex: 1,
+    pageSize: 50,
+  };
 
+  const res = await notificationService.getNotification(req);
+
+  if (res.status === "SUCCESS") {
+    notiListAll.value = res.data.data;
+    notiListUnread.value = filter(
+      res.data.data,
+      (item) => item.hasSeen === false
+    );
+
+    countNoti.value = size(notiListUnread.value);
+  }
+}
+
+async function handleSelectNoti(idNoti: number, index: number) {
+  const res = await notificationService
+    .putSeenNotification(idNoti)
+    .finally(() => {
+      notiListAll.value[index].hasSeen = true;
+    });
+}
+
+function replaceString(title: string) {
+  return title.replace(/'/g, "");
+}
 </script>
 
 <template>
@@ -329,6 +331,12 @@ const convertTime = (time: any) => {
         {{ routeName }}
       </span>
       <span v-else> {{ nameProject }}</span>
+
+      <!-- <Breadcrumb>
+        <BreadcrumbItem>Home</BreadcrumbItem>
+        <BreadcrumbItem><a href="">Application Center</a></BreadcrumbItem>
+        <BreadcrumbItem><a href="">Application List</a></BreadcrumbItem>
+      </Breadcrumb> -->
     </div>
 
     <div class="flex items-center">
@@ -336,7 +344,7 @@ const convertTime = (time: any) => {
         v-model:open="isNotification"
         trigger="click"
         style="width: 400px, padding: 0;"
-        placement="bottomRight"
+        placement="bottom"
         class="header__setting ml-5"
       >
         <template #title>
@@ -347,54 +355,96 @@ const convertTime = (time: any) => {
         </template>
 
         <template #content>
-          <div class="noti__action">
-            <div>
-              <Button type="primary" size="small" class="noti__action--select">
-                All
-              </Button>
-              <Button type="primary" size="small" class="">Unread</Button>
-            </div>
-            <div>
-              <img
-                src="@/assets/images/seen.png"
-                alt=""
-                style="width: 2rem; height: 2rem"
-              />
-            </div>
-          </div>
+          <Tabs v-model:activeKey="isTabs">
+            <TabPane key="1">
+              <template #tab>
+                <span> All </span>
+              </template>
+              <div class="noti">
+                <div
+                  class="noti__contain"
+                  v-for="(item, index) in notiListAll"
+                  :key="'notification' + index"
+                  @click="handleSelectNoti(item.id, index)"
+                >
+                  <div class="noti__avatar">
+                    <img
+                      src="https://i.pinimg.com/564x/a3/5f/37/a35f37a877e8b32497bf8e0e88581286.jpg"
+                      alt="avatar"
+                    />
+                  </div>
+                  <div class="noti__wrap">
+                    <div class="noti__title">
+                      {{ replaceString(item.messageTitle) }}
+                    </div>
 
-          <div class="noti">
-            <div
-              class="noti__contain"
-              v-for="(item, index) in notiList"
-              :key="'notification' + index"
-            >
-              <div class="noti__avatar">
-                <img :src="item.avatar" alt="avatar" />
-              </div>
-              <div class="noti__wrap">
-                <div class="noti__title">
-                  <span class="noti__name">{{ item.fullName }}</span>
-                  {{ item.messageTitle }}
-                </div>
-
-                <div class="noti__content noti__seen">
-                  <div>{{ item.messageContent }}</div>
-                  <div :class="{ unseen: item.hasSeen }">
-                    {{ convertTime(item.time) }}
+                    <div class="noti__content noti__seen">
+                      <div>{{ item.messageContent }}</div>
+                      <div :class="{ unseen: !item.hasSeen }">
+                        {{ convertTime(item.createTime) }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="noti__s">
+                    <div class="noti__dot" v-if="!item.hasSeen"></div>
                   </div>
                 </div>
               </div>
-              <div class="noti__s">
-                <div class="noti__dot" v-if="item.hasSeen"></div>
+            </TabPane>
+
+            <TabPane key="2">
+              <template #tab>
+                <span> Unread</span>
+              </template>
+              <div class="noti">
+                <div
+                  v-if="size(notiListUnread)"
+                  class="noti__contain"
+                  v-for="(item, index) in notiListUnread"
+                  :key="'notification' + index"
+                >
+                  <div class="noti__avatar">
+                    <img
+                      src="https://i.pinimg.com/564x/a3/5f/37/a35f37a877e8b32497bf8e0e88581286.jpg"
+                      alt="avatar"
+                    />
+                  </div>
+                  <div class="noti__wrap">
+                    <div class="noti__title">
+                      {{ replaceString(item.messageTitle) }}
+                    </div>
+
+                    <div class="noti__content noti__seen">
+                      <div>{{ item.messageContent }}</div>
+                      <div :class="{ unseen: !item.hasSeen }">
+                        {{ convertTime(item.createTime) }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="noti__s">
+                    <div class="noti__dot" v-if="!item.hasSeen"></div>
+                  </div>
+                </div>
+
+                <Empty
+                  v-else
+                  image="https://gw.alipayobjects.com/mdn/miniapp_social/afts/img/A*pevERLJC9v0AAAAAAAAAAABjAQAAAQ/original"
+                  :image-style="{
+                    height: '60px',
+                  }"
+                >
+                  <template #description>
+                    <span> Read it all </span>
+                  </template>
+                </Empty>
               </div>
-            </div>
-          </div>
+            </TabPane>
+          </Tabs>
         </template>
-        <Badge :count="5" title="Custom hover text">
-          <Avatar shape="square" :size="25">
-            <template #icon><MessageOutlined /></template>
-          </Avatar>
+        <Badge :count="countNoti" :overflow-count="10" @click="handleOpenNoti">
+          <div class="noti__not">
+            <img src="@/assets/images/notification.png" alt="" />
+          </div>
         </Badge>
       </Popover>
 
