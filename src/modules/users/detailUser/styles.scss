@@ -1,0 +1,288 @@
+// Detail user
+
+.box {
+  position: relative;
+  border: 1px solid #c1c7d0;
+  border-radius: 1rem;
+  min-height: 5rem;
+  padding: 1rem 2rem;
+
+  &__top {
+    // width: 45%;
+    margin-bottom: 2rem;
+
+    &--wrap {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 5rem;
+    }
+  }
+
+  &__title {
+    position: absolute;
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: #172b4d;
+    top: -14px;
+    margin-left: 16px;
+    padding: 1px 5px;
+    background: white;
+  }
+
+  &__name {
+    font-size: 1.4rem;
+    color: #172b4d;
+    margin-bottom: 4px;
+  }
+
+  &__img {
+    width: 10rem;
+    height: 10rem;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    position: relative;
+    cursor: pointer;
+
+    img {
+      width: 10rem;
+      height: 10rem;
+      border-radius: 50%;
+    }
+  }
+
+  &__avatar {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    padding-right: 4rem;
+    padding-left: 2rem;
+  }
+
+  &__container {
+    position: relative;
+
+    &::before {
+      position: absolute;
+      content: "";
+      width: 800px;
+      right: -24px;
+      height: 5rem;
+      top: -21px;
+      border-top-right-radius: 9px;
+      border-top-left-radius: 9px;
+      background: rgba(43, 196, 137, 0.2862745098);
+      z-index: 1;
+    }
+  }
+
+  &__save {
+    position: fixed;
+    z-index: 9999;
+    width: 100%;
+    bottom: 0;
+    background: white;
+    border-top: 1px solid #c1c7d0;
+    height: 4.2rem;
+    display: flex;
+    align-items: center;
+  }
+
+  &__btn {
+    height: 3.2rem;
+    background: #2bc48a;
+    color: white;
+    font-size: 1.5rem;
+    border: 1px solid #2bc48a;
+    border-radius: 5px;
+
+    &:hover {
+      border: 1px solid #2bc48a;
+    }
+  }
+}
+
+.ant-form :deep(.ant-col) {
+  display: flex;
+}
+
+.ant-table-wrapper :deep(.ant-table-container) {
+  height: 100%;
+}
+
+.ant-table-wrapper :deep(.ant-table-body) {
+  height: 100% !important;
+}
+
+.ant-table-wrapper :deep(.ant-table-thead > tr > th) {
+  text-align: center;
+}
+
+.ant-table-wrapper :deep(.ant-table-thead) {
+  height: 2.5rem;
+  background: white;
+  .ant-table-cell {
+    padding: 5px;
+  }
+}
+
+.ant-table-wrapper :deep(.ant-table-tbody) {
+  height: 2.5rem;
+  background: white;
+  .ant-table-cell {
+    padding: 5px;
+  }
+}
+
+.ant-table-wrapper :deep(.ant-table-tbody > tr > td) {
+  text-align: center;
+}
+
+.ant-table-wrapper :deep(.ant-table-footer) {
+  border-top: 1px solid #f0f0f0;
+  background: white;
+}
+
+.active {
+  color: $darkgray-color;
+  border: 1px solid $darkgray-color;
+  background: white;
+}
+
+th.column-money,
+td.column-money {
+  text-align: right !important;
+}
+
+.ant-table-wrapper {
+  border: 1px solid #f0f0f0;
+}
+
+.calender__icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+// Input file
+.custom-file-input {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  cursor: pointer;
+  z-index: -1;
+}
+
+.custom-file-input + label {
+  position: relative;
+}
+
+.custom {
+  position: relative;
+  width: 10rem;
+  height: 10rem;
+  transition: 0.1s all ease-in-out;
+  z-index: 2;
+
+  &__plus {
+    cursor: pointer;
+    position: absolute;
+    background: #7d6dd1;
+    width: 3.3rem;
+    height: 3.3rem;
+    border-radius: 50%;
+    border: 2px solid white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 8;
+    bottom: 0;
+    right: 0;
+  }
+
+  &::after {
+    position: absolute;
+    content: "";
+    width: 10.5rem;
+    height: 10.5rem;
+    border-radius: 50%;
+    border: 1px solid #7d6dd1;
+    top: 50%;
+    right: 50%;
+    transform: translate(50%, -50%);
+    z-index: -1;
+  }
+}
+
+.custom-file-input + label:hover {
+  &::before {
+    transition: 0.1s all ease-in-out;
+    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.cursor-pointer:hover + .custom__icon {
+  display: block;
+}
+
+label {
+  display: block;
+  color: #44546f;
+  font-weight: 500;
+  padding-bottom: 0.5rem;
+}
+
+.ant-select {
+  width: 100%;
+}
+
+.ant-btn-primary {
+  background-color: #2bc48a;
+
+  &:hover {
+    background: #2bc48a;
+  }
+}
+
+.phone {
+  position: relative;
+  &__validate {
+    position: absolute;
+    color: rgba(255, 0, 0, 0.773);
+  }
+}
+
+.ant-btn-primary {
+  background-color: #209653;
+
+  &:hover {
+    background: #209653;
+  }
+}
+
+.ant-form-item :deep(.ant-form-item-control-input) {
+  input {
+    border-width: 1px;
+  }
+}
+
+.ant-switch {
+  background: #1c9e6d;
+
+  &:hover {
+    background: #1c9e6d;
+  }
+}
+
+.ant-switch.ant-switch-checked {
+  background: rgba(255, 0, 0, 0.674);
+
+  &:hover {
+    background: rgba(255, 0, 0, 0.674);
+  }
+}

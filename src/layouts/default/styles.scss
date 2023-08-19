@@ -1,0 +1,33 @@
+#__main {
+  height: 100%;
+  display: flex;
+  font-family: "Poppins", sans-serif;
+  background: #edf1f5;
+}
+
+#__content {
+  overflow: auto;
+  width: 100%;
+  height: 100%;
+  background: #f7f8f9;
+  padding-left: 22rem;
+}
+
+#__menu {
+  background: #2a3e4c;
+  width: 22rem;
+  height: 100vh;
+  position: fixed;
+  z-index: 5;
+}
+
+#__header {
+  cursor: pointer;
+  position: fixed;
+  top: 0;
+  height: 5rem;
+  background: white;
+  width: calc(100% - 22rem);
+  border-bottom: 1px solid #d9d9d9;
+  z-index: 999;
+}
