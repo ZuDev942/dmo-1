@@ -16,3 +16,4 @@ npm run prepare
 npm run dev
 ```
 
+open home route, type `Ctrl q` and submit token
