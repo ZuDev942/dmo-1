@@ -139,30 +139,26 @@ async function getDayoff() {
   if (res.status === "SUCCESS") {
     const dateToday = new Date();
 
-    const filterDate1 = filter(
+    // dataSource.data = filterDate1;
+
+    dataSource.data = filter(
       res.data.data,
-      (item) => dateToday < new Date(item.time)
+      (item) => item.status === "TO_APPROVE"
     );
 
-    const filterDate2 = filter(
+    dataSource2.data = filter(
       res.data.data,
-      (item) => dateToday > new Date(item.time)
+      (item) => item.status !== "TO_APPROVE"
     );
 
-    console.log(filterDate1);
+    const a = filter(res.data.data, (item) => item.status !== "TO_APPROVE");
 
-    dataSource.data = filterDate1;
-
-    // dataSource.data = filter(
-    //   res.data.data,
-    //   (item) => item.status === "TO_APPROVE"
-    // );
+    const b = sortByDateBefore(a);
+    console.log(b);
 
     dataSource.data = sortBy(dataSource.data, (item) => new Date(item.time));
 
-    dataSource2.data = filterDate2;
-
-    dataSource2.data = sortBy(dataSource2.data, (item) => new Date(item.time));
+    dataSource2.data = b;
   }
 }
 
@@ -243,26 +239,63 @@ async function updateStatusDayoff(type: number, id: number) {
   });
 }
 
+async function updateStatusDayoff2(status: string, id: number) {
+  const req = {
+    id: id,
+    approveStatus: status,
+    accountId: null,
+  };
+
+  Modal.confirm({
+    title: "Do you want to reject this holiday?",
+    icon: createVNode(ExclamationCircleOutlined),
+    async onOk() {
+      const res = await dayoffService.putDayoff(req);
+
+      if (res.status === "SUCCESS") {
+        message.success("Update status absents successfull!");
+        getDayoff();
+      }
+    },
+    onCancel() {},
+  });
+}
+
 const activeKey = ref("1");
 const type = ref("");
 const status = ref("");
 const data = reactive(["ACCEPT", "REJECT"]);
 const valuea = ref<any>("ACCEPT");
 
-function handleChangeStatus(idDayoff: number) {
-  Modal.confirm({
-    title: "Do you want to reject this holiday?",
-    icon: createVNode(ExclamationCircleOutlined),
-    // async onOk() {
-    //   const res = await dayoffService.putDayoff(req);
+function handleChangeStatus(idDayoff: number) {}
 
-    //   if (res.status === "SUCCESS") {
-    //     message.success("Update status absents successfull!");
-    //     getDayoff();
-    //   }
-    // },
-    onCancel() {},
+function checkDueDate(date) {
+  const today = new Date();
+
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() - 1);
+
+  const tomorrowDate = tomorrow.toISOString().split("T")[0];
+
+  const currentDate = new Date(tomorrowDate);
+  const dateToCompare = new Date(date);
+
+  if (currentDate >= dateToCompare) {
+    return false;
+  }
+
+  return true;
+}
+
+function sortByDateBefore(dateArray) {
+  const targetTimestamp = new Date().getTime();
+
+  const sortedDates = sortBy(dateArray, (date) => {
+    const dateTimestamp = new Date(date).getTime();
+    return dateTimestamp < targetTimestamp ? 0 : 1;
   });
+
+  return sortedDates;
 }
 </script>
 
@@ -279,31 +312,18 @@ function handleChangeStatus(idDayoff: number) {
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.dataIndex === 'status'">
-              <!-- <template v-if="record.status === 'TO_APPROVE'"> -->
-              <!-- <Button
-                  class="text-[1.3rem] mr-5"
-                  @click="updateStatusDayoff(0, record.id)"
-                >
-                  Accept
-                </Button>
-                <Button
-                  class="text-[1.3rem]"
-                  @click="updateStatusDayoff(1, record.id)"
-                >
-                  Reject
-                </Button> -->
-              <Segmented
-                v-model:value="record.status"
-                :options="data"
-                @change="handleChangeStatus(record.id)"
-              />
-              <!-- </template> -->
-              <!-- <template v-else>
-                <Select v-model:value="record.status">
-                  <SelectOption value="ACCEPT">Accept</SelectOption>
-                  <SelectOption value="REJECT">Reject</SelectOption>
-                </Select>
-              </template> -->
+              <Button
+                class="text-[1.3rem] mr-5"
+                @click="updateStatusDayoff(0, record.id)"
+              >
+                Accept
+              </Button>
+              <Button
+                class="text-[1.3rem]"
+                @click="updateStatusDayoff(1, record.id)"
+              >
+                Reject
+              </Button>
             </template>
 
             <template v-if="column.dataIndex === 'name'">
@@ -349,16 +369,28 @@ function handleChangeStatus(idDayoff: number) {
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.dataIndex === 'status'">
-              <Tag color="#F0EEFB" v-if="record.status === 'ACCEPT'">
-                <span class="text-[#968cd8] font-[600] text-[1.2rem]">
-                  {{ record.status }}
-                </span>
-              </Tag>
-              <Tag color="#e6f4f2" v-else>
-                <span class="text-[#54b3a5] font-[600] text-[1.2rem]">
-                  {{ record.status }}
-                </span>
-              </Tag>
+              <template v-if="checkDueDate(record.time)">
+                <Select
+                  v-model:value="record.status"
+                  @change="updateStatusDayoff2(record.status, record.id)"
+                >
+                  <SelectOption value="ACCEPT">ACCEPT</SelectOption>
+                  <SelectOption value="REJECT">REJECT</SelectOption>
+                </Select>
+              </template>
+
+              <template v-else>
+                <Tag color="#F0EEFB" v-if="record.status === 'ACCEPT'">
+                  <span class="text-[#968cd8] font-[600] text-[1.2rem]">
+                    {{ record.status }}
+                  </span>
+                </Tag>
+                <Tag color="#e6f4f2" v-else>
+                  <span class="text-[#54b3a5] font-[600] text-[1.2rem]">
+                    {{ record.status }}
+                  </span>
+                </Tag>
+              </template>
             </template>
 
             <template v-if="column.dataIndex === 'name'">

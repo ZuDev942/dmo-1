@@ -197,6 +197,7 @@ async function getProjectDetail(projectID: number) {
   try {
     const res = await projectService.detailProject(projectID);
 
+    projectDetail.value = res.data;
     statusProject.value = res.data.status;
   } catch (err) {}
 }
@@ -240,11 +241,19 @@ watch(currentPage, (val) => {
 });
 
 async function listTask() {
-  const res = await taskService.getTask(reqListTask.value);
+  dataSource.loading = true;
+
+  const res = await taskService.getTask(reqListTask.value).finally(() => {
+    dataSource.loading = false;
+  });
 
   if (res.status === "SUCCESS") {
     // Sort due date
-    const dueThisWeek = sortBy(res.data.data, (item) => new Date(item.dueDate));
+    const dueThisWeek = sortBy(
+      res.data.data,
+      (item) => new Date(item.dueDate)
+    ).reverse();
+
     dataSource.data = dueThisWeek;
 
     dataList.value = res.data.data;
@@ -414,6 +423,25 @@ function checkDueDate(date) {
 function handleCloseModal() {
   listTask();
   isTaskModal.value = true;
+  updateProgress();
+}
+
+// Xử lí progress
+const projectDetail = ref<any>();
+
+async function updateProgress() {
+  const filterDone = filter(
+    dataSource.data,
+    (item) => item.status === "DONE"
+  ).length;
+
+  const progress = (filterDone / size(dataSource.data)) * 100;
+
+  const processProject = parseInt(progress.toFixed(2));
+
+  projectDetail.value.progress = processProject;
+
+  const res = await projectService.updateProject(projectDetail.value);
 }
 </script>
 
@@ -550,6 +578,7 @@ function handleCloseModal() {
         :data-source="dataSource.data"
         class="custom-table"
         :scroll="{ x: 1500, y: 480 }"
+        :loading="dataSource.loading"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.dataIndex === 'key'">
@@ -613,25 +642,37 @@ function handleCloseModal() {
           </template>
 
           <template v-if="column.dataIndex === 'due'">
-            <Tag
-              color="#F4F5F7"
-              class="cursor-pointer"
-              v-if="checkDueDate(record.dueDate)"
-            >
-              <span
-                class="cursor-pointer text-[#42526E] font-[500] text-[1.3rem]"
-              >
-                {{ convertDate(record.dueDate) }}
-              </span>
-            </Tag>
+            <template v-if="record.status === 'DONE'">
+              <Tag color="#F4F5F7" class="cursor-pointer">
+                <span
+                  class="cursor-pointer text-[#42526E] font-[500] text-[1.3rem]"
+                >
+                  {{ convertDate(record.dueDate) }}
+                </span>
+              </Tag>
+            </template>
 
-            <Tag color="#FFEBE6" class="cursor-pointer" v-else>
-              <span
-                class="cursor-pointer text-[#BF2600] font-[500] text-[1.3rem]"
+            <template v-else>
+              <Tag
+                color="#F4F5F7"
+                class="cursor-pointer"
+                v-if="checkDueDate(record.dueDate)"
               >
-                {{ convertDate(record.dueDate) }}
-              </span>
-            </Tag>
+                <span
+                  class="cursor-pointer text-[#42526E] font-[500] text-[1.3rem]"
+                >
+                  {{ convertDate(record.dueDate) }}
+                </span>
+              </Tag>
+
+              <Tag color="#FFEBE6" class="cursor-pointer" v-else>
+                <span
+                  class="cursor-pointer text-[#BF2600] font-[500] text-[1.3rem]"
+                >
+                  {{ convertDate(record.dueDate) }}
+                </span>
+              </Tag>
+            </template>
           </template>
 
           <template v-if="column.dataIndex === 'process'">

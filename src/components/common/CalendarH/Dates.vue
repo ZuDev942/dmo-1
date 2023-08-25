@@ -205,7 +205,7 @@ async function selectedDate(dateSelected: any) {
 
       dataSource.data = sortBy(a, (item) => !item.isSelected);
       dataSource2.data = convertData2;
-      console.log(dataSource2.data)
+      console.log(dataSource2.data);
     }
   } else {
     dataSource.data = dataYourWork;
@@ -255,6 +255,12 @@ const dataSource2 = reactive<IDataSource>({
       width: 70,
     },
     {
+      title: "Note",
+      dataIndex: "note",
+      scopedSlots: "note",
+      width: 40,
+    },
+    {
       title: "Effort",
       dataIndex: "effort",
       scopedSlots: "effort",
@@ -262,10 +268,10 @@ const dataSource2 = reactive<IDataSource>({
       fixed: "right",
     },
     {
-      title: "Note",
-      dataIndex: "note",
-      scopedSlots: "note",
-      width: 40,
+      title: "Status",
+      dataIndex: "status",
+      scopedSlots: "status",
+      width: 50,
       fixed: "right",
     },
   ],
@@ -383,7 +389,7 @@ async function handleReportDaily() {
       effort: item.effort,
       progress: 0,
       deadLine: item.dueDate,
-      status: item.projectStatus,
+      status: item.status,
       deliveryStatus: "NOT_YET",
       note: item.note,
     };
@@ -754,6 +760,17 @@ watch(
               <template v-if="column.dataIndex === 'effort'">
                 <div class="column__item">
                   <Input v-model:value="record.effort" suffix="h" />
+                </div>
+              </template>
+
+              <template v-if="column.dataIndex === 'status'">
+                <div class="flex items-center justify-center">
+                  <Select v-model:value="record.status" style="width: 12rem">
+                  <SelectOption value="OPEN">Open</SelectOption>
+                  <SelectOption value="PENDING">Pending</SelectOption>
+                  <SelectOption value="INPROGRESS">In Progress</SelectOption>
+                  <SelectOption value="DONE">Done</SelectOption>
+                </Select>
                 </div>
               </template>
 

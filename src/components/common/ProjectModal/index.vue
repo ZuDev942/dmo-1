@@ -300,7 +300,7 @@ function onFinishProject() {
 async function createProject() {
   const filterManager = {
     id: 111,
-    accountId: 4,
+    accountId: 7,
     fullName: "Vũ Văn Đạt",
     departmentId: 1,
     departmentName: 0,
@@ -319,6 +319,18 @@ async function createProject() {
 }
 
 async function updateProject() {
+  const filterManager = {
+    id: 111,
+    accountId: 7,
+    fullName: "Vũ Văn Đạt",
+    departmentId: 1,
+    departmentName: 0,
+    roleId: "MEMBER",
+    effort: 0,
+  };
+
+  projectParams.value.projectUserList.push(filterManager);
+
   const res = await projectService.updateProject(projectParams.value);
 
   if (res.status === "SUCCESS") {
@@ -338,7 +350,7 @@ async function detailProject(id: number) {
 
     projectParams.value.projectUserList = filter(
       projectParams.value.projectUserList,
-      (item) => item.accountId !== 4
+      (item) => item.accountId !== 7
     );
 
     if (!isEmpty(projectParams.value.projectUserList)) {

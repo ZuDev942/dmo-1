@@ -195,7 +195,7 @@ label {
     justify-content: center;
     width: 25rem;
   }
-  
+
   .ant-tabs-tab-btn {
     color: #ceced2;
     font-size: 1.5rem;
@@ -203,7 +203,7 @@ label {
   }
 }
 
-.ant-tabs :deep(.ant-tabs-nav){
+.ant-tabs :deep(.ant-tabs-nav) {
   margin-bottom: 1rem;
 }
 
@@ -213,4 +213,12 @@ label {
 
 .ant-tabs :deep(.ant-tabs-ink-bar) {
   background: #209653;
+}
+
+.ant-segmented :deep(.ant-segmented-group) {
+  .ant-segmented-item-selected {
+    background: #209653;
+    color: white;
+    font-weight: 500;
+  }
 }

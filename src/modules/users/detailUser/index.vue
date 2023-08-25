@@ -525,7 +525,7 @@ watch(
                     </div>
 
                     <div class="w-[49%]">
-                      <label for="" class="w-[20rem]">Gender</label>
+                      <label for="" class="w-[20rem]">Gender <span class="text-red-600">&ast;</span></label>
                       <FormItem class="w-full">
                         <Select
                           v-model:value="userParams.gender"

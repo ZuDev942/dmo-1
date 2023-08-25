@@ -133,9 +133,9 @@ function resetTask() {
     content: "",
     taskCode: "",
     workCd: "",
-    status: "NOT_STARTED",
+    status: "OPEN",
     assigneeId: null,
-    assginorId: 4,
+    assginorId: 7,
     effort: 0,
     startDate: "",
     deadLine: "",
@@ -161,7 +161,7 @@ const taskDetail = ref<any>({
   content: "",
   taskCode: "",
   workCd: "",
-  status: "NOT_STARTED",
+  status: "OPEN",
   assigneeId: 0,
   assginorId: 0,
   effort: 0,
@@ -190,6 +190,7 @@ const taskDetail = ref<any>({
 });
 
 const taskCode = ref("");
+const isProgress = ref<boolean>(false);
 
 async function getTaskDetail() {
   typeTask.value = false;
@@ -212,6 +213,17 @@ async function getTaskDetail() {
     }
 
     getProjectUser(taskDetail.value.projectDto.projectId);
+
+    // console.log(isEmpty(taskDetail.value.subTask));
+    checkProgress();
+  }
+}
+
+function checkProgress() {
+  if (isEmpty(taskDetail.value.subTask)) {
+    isProgress.value = false;
+  } else {
+    isProgress.value = true;
   }
 }
 
@@ -224,8 +236,9 @@ async function addSubtask(params: any) {
   const res = await taskService.createSubtask(req);
 
   if (res.status === "SUCCESS") {
-    taskDetail.value.subTask = params;
+    taskDetail.value.subTask.push(params);
     message.success("Add subtask successfull");
+    isProgress.value = true;
   }
 }
 
@@ -320,7 +333,6 @@ async function handleCreateTask() {
 async function handleUpdateTask() {
   try {
     taskDetail.value.projectId = idProject.value;
-    console.log(taskDetail.value);
 
     const res = await taskService.updateTask(taskDetail.value);
 
@@ -366,9 +378,9 @@ function handleCreateSubtask() {
     id: 0,
     priority: "LOW",
     content: textCreateSubtask.value,
-    taskCode: `${taskCode.value}1`,
+    taskCode: `${taskCode.value}${size(taskDetail.value.subTask)}`,
     workCd: "",
-    status: "NOT_STARTED",
+    status: "OPEN",
     assigneeId: 0,
     assginorId: 0,
     effort: 0,
@@ -397,26 +409,12 @@ function handleCanceled() {
   isCreateSubtask.value = false;
 }
 
-async function handleChangeStatusSubtask(statusSubtask: string) {
-  let status = "";
-  if (statusSubtask === "NOT_STARTED") {
-    status = "OPEN";
-  }
-  if (statusSubtask === "PENDING") {
-    status = "PENDING";
-  }
-  if (statusSubtask === "PROCESSING") {
-    status = "IN PROGRESS";
-  }
-  if (statusSubtask === "COMPLETED") {
-    status = "DONE";
-  }
-  if (statusSubtask === "CANCELED") {
-    status = "REOPEN";
-  }
-
+async function handleChangeStatusSubtask(
+  statusSubtask: string,
+  isSubtask: number
+) {
   const req = {
-    id: taskDetail.value.subTask.id,
+    id: isSubtask,
     progress: 0,
     status: statusSubtask,
   };
@@ -424,52 +422,39 @@ async function handleChangeStatusSubtask(statusSubtask: string) {
   taskDetail.value.subTask.status = statusSubtask;
 
   taskDetail.value.process = setProgressTask();
+  // checkProgress();
+  if (taskDetail.value.process === 100) {
+    isProgress.value = false;
+  }
 
-  // return;
   const res = await taskService.updateStatusTask(req);
 }
 
 function setProgressTask() {
-  const subtask: any = [];
+  let subtask: any = [];
 
-  subtask.push(taskDetail.value.subTask);
+  subtask = taskDetail.value.subTask;
 
-  const filterDone = filter(
-    subtask,
-    (item) => item.status === "COMPLETED"
-  ).length;
+  const filterDone = filter(subtask, (item) => item.status === "DONE").length;
 
   const progress = (filterDone / size(subtask)) * 100;
 
-  return progress;
+  return parseInt(progress.toFixed(2));
 }
-
-function convertStatus(status: string) {
-  if (status === "NOT_STARTED") {
-    return "OPEN";
-  }
-  if (status === "PENDING") {
-    return "PENDING";
-  }
-  if (status === "PROCESSING") {
-    return "IN PROGRESS";
-  }
-  if (status === "COMPLETED") {
-    return "DONE";
-  }
-  if (status === "CANCELED") {
-    return "REOPEN";
-  }
-  return "";
-}
-
-function checkStatus(status: string) {}
 
 function disabledDate(current) {
   const set = new Date(taskDetail.value.startDate);
   set.setHours(0, 0, 0, 0);
 
   return current && current.valueOf() < set;
+}
+
+function handleChangeStatus() {
+  if (taskDetail.value.status === "DONE") {
+    taskDetail.value.process = 100;
+  } else {
+    taskDetail.value.process = 0;
+  }
 }
 </script>
 
@@ -528,32 +513,37 @@ function disabledDate(current) {
             </template>
 
             <div class="subtask__list" v-if="!isEmpty(taskDetail.subTask)">
-              <div class="subtask__item flex justify-between items-center">
+              <div
+                class="subtask__item flex justify-between items-center"
+                v-for="item in taskDetail.subTask"
+              >
                 <div class="subtask__content">
                   <img
                     src="https://hoondea.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10557?size=medium"
                   />
                   <div class="subtask__code">
-                    {{ taskDetail.subTask?.taskCode }}
+                    {{ item.taskCode }}
                   </div>
                   <div class="subtask__name">
-                    {{ taskDetail.subTask?.content }}
+                    {{ item.content }}
                   </div>
                 </div>
 
                 <div class="subtask__status">
-                  <Popover trigger="click">
+                  <!-- <Popover trigger="click">
                     <template #content>
                       <div
-                        v-if="taskDetail.subTask.status !== 'NOT_STARTED'"
-                        @click="handleChangeStatusSubtask('NOT_STARTED')"
+                        v-if="item.status !== 'NOT_STARTED'"
+                        @click="
+                          handleChangeStatusSubtask('NOT_STARTED', item.id)
+                        "
                         class="mb-2"
                       >
                         <Tag color="#E3FCEF">
                           <span
                             style="color: #006644"
                             class="font-[500]"
-                            v-if="taskDetail.subTask.status === 'COMPLETED'"
+                            v-if="item.status === 'DONE'"
                           >
                             REOPEN
                           </span>
@@ -568,8 +558,8 @@ function disabledDate(current) {
                       </div>
 
                       <div
-                        v-if="taskDetail.subTask.status !== 'PENDING'"
-                        @click="handleChangeStatusSubtask('PENDING')"
+                        v-if="item.status !== 'PENDING'"
+                        @click="handleChangeStatusSubtask('PENDING', item.id)"
                         class="mb-2"
                       >
                         <Tag color="#E3FCEF">
@@ -580,8 +570,10 @@ function disabledDate(current) {
                       </div>
 
                       <div
-                        v-if="taskDetail.subTask.status !== 'PROCESSING'"
-                        @click="handleChangeStatusSubtask('PROCESSING')"
+                        v-if="item.status !== 'INPROGRESS'"
+                        @click="
+                          handleChangeStatusSubtask('INPROGRESS', item.id)
+                        "
                         class="mb-2"
                       >
                         <Tag color="#E3FCEF">
@@ -592,8 +584,8 @@ function disabledDate(current) {
                       </div>
 
                       <div
-                        v-if="taskDetail.subTask.status !== 'COMPLETED'"
-                        @click="handleChangeStatusSubtask('COMPLETED')"
+                        v-if="item.status !== 'DONE'"
+                        @click="handleChangeStatusSubtask('DONE', item.id)"
                       >
                         <Tag color="#E3FCEF">
                           <span style="color: #006644" class="font-[500]">
@@ -607,12 +599,45 @@ function disabledDate(current) {
                         <span
                           class="cursor-pointer text-[#0052CC] font-[600] text-[1.2rem]"
                         >
-                          {{ convertStatus(taskDetail.subTask.status) }}
+                          {{ item.status }}
                           <DownOutlined />
                         </span>
                       </Tag>
                     </div>
-                  </Popover>
+                  </Popover> -->
+                  <Select
+                    v-if="item.status === 'DONE'"
+                    v-model:value="item.status"
+                    style="width: 12rem"
+                    @change="handleChangeStatusSubtask(item.status, item.id)"
+                  >
+                    <SelectOption value="REOPEN">ReOpen</SelectOption>
+                    <SelectOption value="DONE">Done</SelectOption>
+                  </Select>
+
+                  <Select
+                    v-else-if="item.status === 'REOPEN'"
+                    v-model:value="item.status"
+                    style="width: 12rem"
+                    @change="handleChangeStatusSubtask(item.status, item.id)"
+                  >
+                    <SelectOption value="REOPEN">ReOpen</SelectOption>
+                    <SelectOption value="PENDING">Pending</SelectOption>
+                    <SelectOption value="INPROGRESS">In Progress</SelectOption>
+                    <SelectOption value="DONE">Done</SelectOption>
+                  </Select>
+
+                  <Select
+                    v-else
+                    v-model:value="item.status"
+                    style="width: 12rem"
+                    @change="handleChangeStatusSubtask(item.status, item.id)"
+                  >
+                    <SelectOption value="OPEN">Open</SelectOption>
+                    <SelectOption value="PENDING">Pending</SelectOption>
+                    <SelectOption value="INPROGRESS">In Progress</SelectOption>
+                    <SelectOption value="DONE">Done</SelectOption>
+                  </Select>
                 </div>
               </div>
             </div>
@@ -728,14 +753,17 @@ function disabledDate(current) {
             </Select>
 
             <Select
-              v-model:value="taskDetail.status"
               v-else
+              v-model:value="taskDetail.status"
               style="width: 15rem"
+              @change="handleChangeStatus"
             >
-              <SelectOption value="NOT_STARTED">Open</SelectOption>
+              <SelectOption value="OPEN">Open</SelectOption>
               <SelectOption value="PENDING">Pending</SelectOption>
-              <SelectOption value="PROCESSING">In Progress</SelectOption>
-              <SelectOption value="COMPLETED">Done</SelectOption>
+              <SelectOption value="INPROGRESS">In Progress</SelectOption>
+              <SelectOption value="DONE" :disabled="isProgress"
+                >Done</SelectOption
+              >
             </Select>
           </div>
 
