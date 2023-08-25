@@ -8,6 +8,7 @@ import {
   Tag,
   Pagination,
   Progress,
+  Empty,
 } from "ant-design-vue";
 import {
   PaperClipOutlined,
@@ -279,13 +280,13 @@ function getTaskDetail(id: number) {
     <div class="project">
       <div class="flex justify-between items-center mb-4">
         <h1 class="project__title">Projects</h1>
-        <Button @click="toggleShowAll()" class="">
+        <Button @click="toggleShowAll()" v-if="size(projects)">
           {{ showAll ? "Hide All" : "View All" }}
         </Button>
       </div>
 
       <!-- List project -->
-      <div class="show-all-show-less">
+      <div class="show-all-show-less" v-if="size(projects)">
         <div class="project__contain" :class="{ 'show-all': showAll }">
           <div
             class="project__me"
@@ -308,6 +309,18 @@ function getTaskDetail(id: number) {
           </div>
         </div>
       </div>
+
+      <Empty
+        v-else
+        image="https://cache.giaohangtietkiem.vn/d/0c1f1141680ddb65b6a88a8f23f21fea.png"
+        :image-style="{
+          height: '60px',
+        }"
+      >
+        <template #description>
+          <span class="text-[#B4B4B4]"> No project </span>
+        </template>
+      </Empty>
     </div>
 
     <div class="taskwork">
@@ -402,6 +415,21 @@ function getTaskDetail(id: number) {
               <SelectOption value="CANCELED">Canceled</SelectOption>
             </Select>
           </template>
+        </template>
+
+        <template #emptyText>
+          <div class="h-[30rem] flex items-center justify-center">
+            <Empty
+              image="https://cache.giaohangtietkiem.vn/d/0c1f1141680ddb65b6a88a8f23f21fea.png"
+              :image-style="{
+                height: '60px',
+              }"
+            >
+              <template #description>
+                <span class="text-[#B4B4B4]"> No data </span>
+              </template>
+            </Empty>
+          </div>
         </template>
       </Table>
     </div>

@@ -73,7 +73,7 @@ const onFinish = async (values: any) => {
         router.push({ name: RouteName.PROJECTS });
       }
 
-      if (userInfo.role === "USER") {
+      if (userInfo.role === "STAFF") {
         router.push({ name: RouteName.YOUR_WORK });
       }
 

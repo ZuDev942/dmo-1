@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, reactive, ref, watch, watchEffect } from "vue";
+import { createVNode, onMounted, reactive, ref, watch, watchEffect } from "vue";
 import {
   Button,
   Progress,
@@ -8,12 +8,15 @@ import {
   Tag,
   Tooltip,
   Dropdown,
+  Modal,
 } from "ant-design-vue";
 import {
   PlusOutlined,
   SearchOutlined,
   CloseOutlined,
   FilterOutlined,
+  ExclamationCircleOutlined,
+DeleteOutlined,
 } from "@ant-design/icons-vue";
 import type { IDataSource } from "@/components";
 import { issueService } from "@/services";
@@ -99,6 +102,11 @@ const dataSource = reactive<IDataSource>({
       title: "Fix Date",
       dataIndex: "fixdate",
       width: 50,
+    },
+    {
+      title: "",
+      dataIndex: "delete",
+      width: 20,
     },
   ],
 });
@@ -195,6 +203,15 @@ function handleGetIssueDetail(idIssue: number) {
   router.push({
     name: RouteName.ISSUE,
     params: { id: idIssue },
+  });
+}
+
+async function deleteTask(id: number) {
+  Modal.confirm({
+    title: "Do you want to delete issue?",
+    icon: createVNode(ExclamationCircleOutlined),
+    async onOk() {},
+    onCancel() {},
   });
 }
 </script>
@@ -392,6 +409,11 @@ function handleGetIssueDetail(idIssue: number) {
                 {{ convertDate(record.fixDate) }}
               </span>
             </Tag>
+          </template>
+          <template v-if="column.dataIndex === 'delete'">
+            <div @click="deleteTask(record.id)">
+              <DeleteOutlined />
+            </div>
           </template>
         </template>
       </Table>

@@ -37,12 +37,12 @@ function resetReqParams() {
       "https://cache.giaohangtietkiem.vn/d/1a1f5b5facda81cd956cad8cb51518d4.png",
     userName: "",
     password: "",
-    roleId: 1,
-    position: 1,
+    roleId: null,
+    position: null,
     phoneNumber: "",
     fullName: "",
     shortName: "",
-    gender: "MALE",
+    gender: "",
     birthday: "",
     personalEmail: "",
     address: "",
@@ -283,6 +283,12 @@ const rules: Record<string, Rule[]> = {
   fullName: [{ validator: checkName, trigger: "change" }],
   personalEmail: [{ validator: checkEmail, trigger: "change" }],
   phoneNumber: [{ validator: checkPhone, trigger: "change" }],
+  position: [
+    { required: true, message: "Please select position", trigger: "change" },
+  ],
+  roleId: [
+    { required: true, message: "Please select role", trigger: "change" },
+  ],
 };
 
 async function onFinishChange() {
@@ -451,11 +457,11 @@ watch(
                       <label class="w-[23rem]">
                         Role <span class="text-red-600">&ast;</span></label
                       >
-                      <FormItem name="roles" class="w-full">
+                      <FormItem name="roleId" class="w-full">
                         <Select
                           v-model:value="userParams.roleId"
                           :options="optionsRole"
-                          placeholder="please select your role"
+                          placeholder="Please select role"
                           class="w-full"
                           @change="handleChangeRole"
                         >
@@ -493,11 +499,11 @@ watch(
                       <label class="w-[23rem]">
                         Position <span class="text-red-600">&ast;</span></label
                       >
-                      <FormItem name="department" class="w-full">
+                      <FormItem name="position" class="w-full">
                         <Select
                           v-model:value="userParams.position"
                           :options="optionsPosition"
-                          placeholder="please select your role"
+                          placeholder="Please select position"
                           class="w-full"
                         >
                         </Select>
@@ -523,7 +529,7 @@ watch(
                       <FormItem class="w-full">
                         <Select
                           v-model:value="userParams.gender"
-                          placeholder="please select your role"
+                          placeholder="Please select gender"
                           class="w-full"
                           @change="handleChangeGender"
                         >

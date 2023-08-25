@@ -49,7 +49,7 @@ const isIssue = ref(false);
 
 // ==== Method ==== //
 onMounted(() => {
-  getUser();
+  // getUser();
   getNotification();
   onEvent("NAME_PROJECT", handle);
   const savedUser = localStorage.getItem("userInfo");

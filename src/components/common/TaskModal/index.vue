@@ -508,7 +508,7 @@ function disabledDate(current) {
               type="file"
               @change="handleFileChange"
             />
-            <label for="fileInput"> <PaperClipOutlined /> Attach</label>
+            <label for="fileInput"> <PaperClipOutlined /> Attachment</label>
 
             <div class="task__btn" v-if="isTypeTask === 'detail'">
               <Button
@@ -765,7 +765,7 @@ function disabledDate(current) {
               </div>
 
               <div class="flex">
-                <label class="p-0 w-[23rem]">Assginor</label>
+                <label class="p-0 w-[23rem]">Reviewer</label>
                 <FormItem name="reporter" class="mb-4 w-full">
                   <Select
                     ref="selectAssign"

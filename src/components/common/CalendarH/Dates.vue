@@ -15,6 +15,7 @@ import {
   message,
   Progress,
   Popover,
+  Tooltip,
 } from "ant-design-vue";
 import { timesheetService, yourworkService } from "@/services";
 import {
@@ -73,6 +74,8 @@ const timeZone = ref<string>("");
 const dateParam = ref<string>("");
 const dataList = ref<any>([]);
 const isCreate = ref<boolean>(false);
+const currentMonth = ref<number>(0);
+const selectedMonth = ref<number>(0);
 
 onMounted(() => {
   generateDatesForThatMonth();
@@ -80,6 +83,10 @@ onMounted(() => {
   const today = new Date();
   const day = today.getDate();
   dateToday.value = day;
+
+  currentMonth.value = today.getMonth();
+  selectedMonth.value = currentMonth.value;
+
   getYourTask();
 });
 
@@ -88,6 +95,7 @@ watch(
   () => dateProps.selectedValues,
   (v) => {
     date.value = null;
+    selectedMonth.value = v.month;
     generateDatesForThatMonth(v.month, v.year);
   },
   {
@@ -164,6 +172,12 @@ async function selectedDate(dateSelected: any) {
       );
 
       const convertData2 = map(commonItems, (item) => {
+        forEach(taskList, (item2) => {
+          if (item.id === item2.taskId) {
+            item.effort = item2.effort;
+          }
+        });
+
         return {
           ...item,
           isSelected: false,
@@ -191,6 +205,7 @@ async function selectedDate(dateSelected: any) {
 
       dataSource.data = sortBy(a, (item) => !item.isSelected);
       dataSource2.data = convertData2;
+      console.log(dataSource2.data)
     }
   } else {
     dataSource.data = dataYourWork;
@@ -243,13 +258,15 @@ const dataSource2 = reactive<IDataSource>({
       title: "Effort",
       dataIndex: "effort",
       scopedSlots: "effort",
-      width: 60,
+      width: 40,
+      fixed: "right",
     },
     {
       title: "Note",
       dataIndex: "note",
       scopedSlots: "note",
-      width: 100,
+      width: 40,
+      fixed: "right",
     },
   ],
 });
@@ -434,6 +451,16 @@ function convertEffort(taskList: any) {
   return "";
 }
 
+const effortTotal = (taskList: any) => {
+  if (!isEmpty(taskList)) {
+    const totalEffort = taskList.reduce((sum, item) => sum + item.effort, 0);
+
+    return totalEffort;
+  }
+
+  return 0;
+};
+
 watch(
   searchTodo,
   debounce(() => {
@@ -499,24 +526,42 @@ watch(
 
           <div class="date__bot flex justify-between items-center">
             <div class="date__time" v-if="d.taskList">
-              <img src="@/assets/images/clock.png" alt="" />
-              <span>{{ convertEffort(d.taskList) }}h</span>
+              <template v-if="effortTotal(d.taskList) < 8">
+                <img src="@/assets/images/clock-error.png" alt="" />
+
+                <span>
+                  <Tooltip>
+                    <template #title>Work time not enough</template>
+                    <span class="effort-err">
+                      {{ convertEffort(d.taskList) }}h
+                    </span>
+                  </Tooltip>
+                </span>
+              </template>
+
+              <template v-else>
+                <img src="@/assets/images/clock.png" alt="" />
+
+                <span> {{ convertEffort(d.taskList) }}h </span>
+              </template>
             </div>
 
-            <template v-if="d.date <= dateToday">
-              <Button
-                class="date__btn"
-                :class="{ 'date__btn--report': d.haveReported }"
-                @click="selectedDate(d)"
-                v-if="!d.off"
-              >
-                Report
-              </Button>
-            </template>
-            <template v-else>
-              <Button class="date__btn" v-if="!d.off" :disabled="true">
-                Report
-              </Button>
+            <template v-if="currentMonth === selectedMonth">
+              <template v-if="d.date <= dateToday">
+                <Button
+                  class="date__btn"
+                  :class="{ 'date__btn--report': d.haveReported }"
+                  @click="selectedDate(d)"
+                  v-if="!d.off"
+                >
+                  Report
+                </Button>
+              </template>
+              <template v-else>
+                <Button class="date__btn" v-if="!d.off" :disabled="true">
+                  Report
+                </Button>
+              </template>
             </template>
           </div>
         </div>
@@ -587,7 +632,7 @@ watch(
                   :class="{ select: record.isSelected }"
                 >
                   <!-- {{ record.progress }} -->
-                  <Progress :stroke-color="'#0DAF60'" :percent="10"></Progress>
+                  <Progress :stroke-color="'#0DAF60'" :percent="0"></Progress>
                 </div>
               </template>
 
@@ -708,7 +753,7 @@ watch(
 
               <template v-if="column.dataIndex === 'effort'">
                 <div class="column__item">
-                  <Input v-model:value="record.effort" suffix="h"/>
+                  <Input v-model:value="record.effort" suffix="h" />
                 </div>
               </template>
 
@@ -729,6 +774,10 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+.effort-err {
+  color: red;
+}
+
 .todo {
   border: 1px solid #dfe1e6;
   padding: 1rem 2rem;

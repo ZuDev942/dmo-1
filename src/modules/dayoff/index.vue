@@ -9,6 +9,9 @@ import {
   Tabs,
   TabPane,
   Modal,
+  Select,
+  SelectOption,
+  Segmented,
 } from "ant-design-vue";
 import type { IDataSource } from "@/components";
 import { dayoffService } from "@/services";
@@ -134,19 +137,30 @@ async function getDayoff() {
   });
 
   if (res.status === "SUCCESS") {
-    dataSource.data = res.data.data;
+    const dateToday = new Date();
 
-    dataSource.data = filter(
+    const filterDate1 = filter(
       res.data.data,
-      (item) => item.status === "TO_APPROVE"
+      (item) => dateToday < new Date(item.time)
     );
+
+    const filterDate2 = filter(
+      res.data.data,
+      (item) => dateToday > new Date(item.time)
+    );
+
+    console.log(filterDate1);
+
+    dataSource.data = filterDate1;
+
+    // dataSource.data = filter(
+    //   res.data.data,
+    //   (item) => item.status === "TO_APPROVE"
+    // );
 
     dataSource.data = sortBy(dataSource.data, (item) => new Date(item.time));
 
-    dataSource2.data = filter(
-      res.data.data,
-      (item) => item.status !== "TO_APPROVE"
-    );
+    dataSource2.data = filterDate2;
 
     dataSource2.data = sortBy(dataSource2.data, (item) => new Date(item.time));
   }
@@ -232,6 +246,24 @@ async function updateStatusDayoff(type: number, id: number) {
 const activeKey = ref("1");
 const type = ref("");
 const status = ref("");
+const data = reactive(["ACCEPT", "REJECT"]);
+const valuea = ref<any>("ACCEPT");
+
+function handleChangeStatus(idDayoff: number) {
+  Modal.confirm({
+    title: "Do you want to reject this holiday?",
+    icon: createVNode(ExclamationCircleOutlined),
+    // async onOk() {
+    //   const res = await dayoffService.putDayoff(req);
+
+    //   if (res.status === "SUCCESS") {
+    //     message.success("Update status absents successfull!");
+    //     getDayoff();
+    //   }
+    // },
+    onCancel() {},
+  });
+}
 </script>
 
 <template>
@@ -247,17 +279,31 @@ const status = ref("");
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.dataIndex === 'status'">
-              <Button
-                class="text-[1.3rem] mr-5"
-                @click="updateStatusDayoff(0, record.id)"
-              >
-                Accept
-              </Button>
-              <Button
-                class="text-[1.3rem]"
-                @click="updateStatusDayoff(1, record.id)"
-                >Reject</Button
-              >
+              <!-- <template v-if="record.status === 'TO_APPROVE'"> -->
+              <!-- <Button
+                  class="text-[1.3rem] mr-5"
+                  @click="updateStatusDayoff(0, record.id)"
+                >
+                  Accept
+                </Button>
+                <Button
+                  class="text-[1.3rem]"
+                  @click="updateStatusDayoff(1, record.id)"
+                >
+                  Reject
+                </Button> -->
+              <Segmented
+                v-model:value="record.status"
+                :options="data"
+                @change="handleChangeStatus(record.id)"
+              />
+              <!-- </template> -->
+              <!-- <template v-else>
+                <Select v-model:value="record.status">
+                  <SelectOption value="ACCEPT">Accept</SelectOption>
+                  <SelectOption value="REJECT">Reject</SelectOption>
+                </Select>
+              </template> -->
             </template>
 
             <template v-if="column.dataIndex === 'name'">
