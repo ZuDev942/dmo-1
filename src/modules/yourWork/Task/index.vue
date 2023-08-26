@@ -3,6 +3,7 @@ import {
   Ref,
   computed,
   createVNode,
+  h,
   onMounted,
   reactive,
   ref,
@@ -33,6 +34,7 @@ import {
   Menu,
   MenuItem,
   MenuDivider,
+  notification,
 } from "ant-design-vue";
 import {
   PlusOutlined,
@@ -47,6 +49,7 @@ import {
   CloseOutlined,
   CheckOutlined,
   DiffOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons-vue";
 import type { IDataSource } from "@/components";
 import {
@@ -300,9 +303,7 @@ const titleTask = ref("Add task");
 
 function openTaskModal() {
   const newKey = generateUniqueHRKey();
-  console.log(newKey);
   iTaskCode.value = newKey;
-  console.log(iTaskCode.value);
 
   on.value = true;
   isTypeTask.value = "create";

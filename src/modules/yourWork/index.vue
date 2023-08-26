@@ -327,6 +327,7 @@ function getTaskDetail(id: number) {
       <div>
         <h1 class="project__title">Tasks</h1>
       </div>
+      
       <Table
         :columns="dataSource.columns"
         :data-source="dataSource.data"

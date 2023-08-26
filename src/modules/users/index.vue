@@ -561,7 +561,9 @@ watch(isActive, () => {
                 </div>
 
                 <div>
-                  <label class="mb-2"> Contract Type <span class="text-red-600">&ast;</span></label>
+                  <label class="mb-2">
+                    Contract Type <span class="text-red-600">&ast;</span></label
+                  >
                   <FormItem>
                     <Select
                       v-model:value="reqContract.contractType"
@@ -573,7 +575,9 @@ watch(isActive, () => {
                 </div>
 
                 <div>
-                  <label class="mb-2"> Staff Type <span class="text-red-600">&ast;</span></label>
+                  <label class="mb-2">
+                    Staff Type <span class="text-red-600">&ast;</span></label
+                  >
                   <FormItem>
                     <Select
                       v-model:value="reqContract.staffType"
@@ -629,7 +633,10 @@ watch(isActive, () => {
                 </div>
 
                 <div>
-                  <label class="mb-2">Payment Method <span class="text-red-600">&ast;</span></label>
+                  <label class="mb-2"
+                    >Payment Method
+                    <span class="text-red-600">&ast;</span></label
+                  >
                   <FormItem>
                     <Select
                       v-model:value="reqContract.paymentMethod"
@@ -644,7 +651,9 @@ watch(isActive, () => {
                 </div>
 
                 <div class="mr-[10rem]">
-                  <label class="mb-2"> Sign Day <span class="text-red-600">&ast;</span></label>
+                  <label class="mb-2">
+                    Sign Day <span class="text-red-600">&ast;</span></label
+                  >
                   <FormItem>
                     <DatePicker value-format="YYYY-MM-DD">
                       <template #suffixIcon>
@@ -659,7 +668,10 @@ watch(isActive, () => {
                 </div>
 
                 <div>
-                  <label class="mb-2"> Contract Period <span class="text-red-600">&ast;</span></label>
+                  <label class="mb-2">
+                    Contract Period
+                    <span class="text-red-600">&ast;</span></label
+                  >
                   <FormItem class="w-full">
                     <Select
                       v-model:value="reqContract.contractPeriod"

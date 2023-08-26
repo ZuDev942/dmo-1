@@ -72,6 +72,10 @@ const optionsRole = ref<SelectProps["options"]>([
     value: 2,
     label: "Manager",
   },
+  // {
+  //   value: 3,
+  //   label: "Admin",
+  // },
 ]);
 
 const optionsPosition = ref<SelectProps["options"]>([

@@ -260,12 +260,40 @@
   }
 }
 
-.taskdetail__status .ant-select :deep(.ant-select-selector) {
-  background: #edeff2;
+.status_open .ant-select :deep(.ant-select-selector) {
+  background: #f0eefb;
   border: none;
-  color: #172b4d;
-  font-weight: 400;
-  border-radius: 5px;
+  color: #887ecd;
+  font-weight: bold;
+  font-size: 1.4rem;
+
+  .ant-select-selection-item {
+    font-weight: 600;
+  }
+}
+
+.status_pending .ant-select :deep(.ant-select-selector) {
+  background: #DCF2FE;
+  border: none;
+  color: #0084C7;
+  font-weight: bold;
+  font-size: 1.4rem;
+
+  .ant-select-selection-item {
+    font-weight: 600;
+  }
+}
+
+.status_done .ant-select :deep(.ant-select-selector) {
+  background: #e3fcef;
+  border: none;
+  color: #006544;
+  font-weight: bold;
+  font-size: 1.4rem;
+
+  .ant-select-selection-item {
+    font-weight: 600;
+  }
 }
 
 .taskdetail__assignee .ant-select :deep(.ant-select-arrow) {
@@ -314,12 +342,15 @@
       font-weight: 600;
     }
   }
+
   &__img {
     width: 10rem;
     margin-right: 1rem;
     position: relative;
     cursor: pointer;
     transition: 0.1s all linear;
+    box-shadow: 0 1px 1px rgba(9, 30, 66, 0.31), 0 0 1px 0 rgba(9, 30, 66, 0.31);
+    border-radius: 3px;
 
     img {
       width: 10rem;
@@ -327,7 +358,7 @@
       border-radius: 5px;
     }
 
-    &::before {
+    &::after {
       transition: 0.1s all linear;
       position: absolute;
       content: "";
@@ -396,6 +427,7 @@
     padding: 1px;
     border-radius: 2px;
     cursor: pointer;
+    z-index: 9999;
   }
 
   &__attach {
@@ -709,4 +741,14 @@
 
 .ant-modal {
   top: 65px;
+}
+
+.taskDetail__select.ant-select :deep(.ant-select-selection-item) {
+  font-weight: 500;
+}
+
+.form-task label {
+  color: #42526e;
+  font-weight: 600;
+  font-size: 1.3rem;
 }

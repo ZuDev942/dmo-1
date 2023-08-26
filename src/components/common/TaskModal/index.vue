@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Ref, computed, onMounted, ref, toRefs, watch } from "vue";
+import { Ref, computed, h, onMounted, ref, toRefs, watch } from "vue";
 import {
   Button,
   Progress,
@@ -16,12 +16,15 @@ import {
   Tag,
   Popover,
   notification,
+  Image,
 } from "ant-design-vue";
 import {
   DeleteOutlined,
   PaperClipOutlined,
   DiffOutlined,
   DownOutlined,
+  CheckCircleOutlined,
+  InfoCircleOutlined,
 } from "@ant-design/icons-vue";
 import { commonService, projectService, taskService } from "@/services";
 import { cloneDeep, map, size, isEmpty, filter } from "lodash";
@@ -149,7 +152,7 @@ function resetTask() {
     description: "",
     taskAttachmentList: [],
     taskActivityList: [],
-    subTask: {},
+    subTask: [],
     projectDto: {},
   };
 }
@@ -186,7 +189,7 @@ const taskDetail = ref<any>({
     },
   ],
   projectDto: {},
-  subTask: {},
+  subTask: [],
 });
 
 const taskCode = ref("");
@@ -236,7 +239,12 @@ async function addSubtask(params: any) {
   const res = await taskService.createSubtask(req);
 
   if (res.status === "SUCCESS") {
+    if (isEmpty(taskDetail.value.subTask)) {
+      taskDetail.value.subTask = [];
+    }
+
     taskDetail.value.subTask.push(params);
+
     message.success("Add subtask successfull");
     isProgress.value = true;
   }
@@ -261,6 +269,10 @@ function handleEditor() {
 
 function handleSaveActivity() {
   isEditor.value = false;
+
+  if (isEmpty(editorContent.value)) {
+    return;
+  }
 
   taskDetail.value.taskActivityList.push({
     content: editorContent.value,
@@ -317,27 +329,69 @@ async function handleCreateTask() {
     taskDetail.value.projectId = idProject.value;
     taskDetail.value.taskCode = iTaskCode.value;
 
-    const res = await taskService.createTask(taskDetail.value);
+    const res = await taskService.createTask(taskDetail.value).catch((err) => {
+      if (err.response) {
+        notification.open({
+          message: "Create failed",
+          description: "New task creation failed",
+          style: {
+            marginLeft: `${335 - 600}px`,
+            color: "#42526e",
+          },
+          icon: () => h(InfoCircleOutlined, { style: "color: #DD360C" }),
+        });
+      }
+    });
 
     if (res.status === "SUCCESS") {
-      message.success("Create task successfull");
+      notification.open({
+        message: "Create successfully",
+        description: "New task has been added to the project",
+        style: {
+          marginLeft: `${335 - 600}px`,
+          color: "#42526e",
+        },
+        icon: () => h(CheckCircleOutlined, { style: "color: #209653" }),
+      });
       isTask.value = false;
       useModal.setTaskModal(false);
       emit("closeTaskModal");
     }
-  } catch (error) {
-    message.error("Error");
-  }
+  } catch (error) {}
 }
 
 async function handleUpdateTask() {
   try {
-    taskDetail.value.projectId = idProject.value;
+    if (idProject.value) {
+      taskDetail.value.projectId = idProject.value;
+    } else {
+      taskDetail.value.projectId = taskDetail.value.projectDto.projectId;
+    }
 
-    const res = await taskService.updateTask(taskDetail.value);
+    const res = await taskService.updateTask(taskDetail.value).catch((err) => {
+      if (err.response) {
+        notification.open({
+          message: "Update failed",
+          description: err.response.data.data,
+          style: {
+            marginLeft: `${335 - 600}px`,
+            color: "#42526e",
+          },
+          icon: () => h(InfoCircleOutlined, { style: "color: #DD360C" }),
+        });
+      }
+    });
 
     if (res.status === "SUCCESS") {
-      message.success("Update task successfull");
+      notification.open({
+        message: "Update successfully",
+        description: "The task information has been updated",
+        style: {
+          marginLeft: `${335 - 600}px`,
+          color: "#42526e",
+        },
+        icon: () => h(CheckCircleOutlined, { style: "color: #209653" }),
+      });
 
       useModal.setTaskModal(false);
       emit("closeTaskModal");
@@ -423,6 +477,7 @@ async function handleChangeStatusSubtask(
 
   taskDetail.value.process = setProgressTask();
   // checkProgress();
+
   if (taskDetail.value.process === 100) {
     isProgress.value = false;
   }
@@ -449,6 +504,27 @@ function disabledDate(current) {
   return current && current.valueOf() < set;
 }
 
+function disabledDateActualStart(current) {
+  const set = new Date(taskDetail.value.startDate);
+  set.setHours(0, 0, 0, 0);
+
+  return current && current.valueOf() < set;
+}
+
+function disabledDateStart(current) {
+  const set = new Date(taskDetail.value.deadLine);
+  set.setHours(0, 0, 0, 0);
+
+  return current && current.valueOf() > set;
+}
+
+function disabledDateActualEnd(current) {
+  const set = new Date(taskDetail.value.deadLine);
+  set.setHours(0, 0, 0, 0);
+
+  return current && current.valueOf() > set;
+}
+
 function handleChangeStatus() {
   if (taskDetail.value.status === "DONE") {
     taskDetail.value.process = 100;
@@ -464,8 +540,8 @@ function handleChangeStatus() {
     wrapClassName="newStyle"
     @ok="handleOkTask"
     :bodyStyle="{ padding: 0, 'border-radius': '10px' }"
-    :footer="null"
     width="1200px"
+    :footer="null"
     :title="titleTask"
   >
     <Form
@@ -492,6 +568,7 @@ function handleChangeStatus() {
               class="custom-file-input"
               type="file"
               @change="handleFileChange"
+              accept="image/*, .jpg, .png, .doc"
             />
             <label for="fileInput"> <PaperClipOutlined /> Attachment</label>
 
@@ -680,7 +757,14 @@ function handleChangeStatus() {
                   >
                     <DeleteOutlined style="font-size: 2rem" />
                   </div>
-                  <img :src="item.fileAttachUrl" alt="" />
+                  <!-- <div v-html="item.fileAttachUrl" ></div> -->
+
+                  <!-- <img :src="item.fileAttachUrl" alt="" /> -->
+                  <Image
+                    :width="100"
+                    :src="item.fileAttachUrl"
+                    class="image_preview"
+                  />
                 </div>
               </template>
             </div>
@@ -743,13 +827,22 @@ function handleChangeStatus() {
         </div>
 
         <div class="max-w-[44rem] w-[44rem] ml-5">
-          <div class="mb-4">
+          <div
+            class="mb-4 taskdetail__status"
+            :class="{
+              status_open: taskDetail.status === 'OPEN',
+              status_pending:
+                taskDetail.status === 'PENDING' ||
+                taskDetail.status === 'INPROGRESS',
+              status_done: taskDetail.status === 'DONE',
+            }"
+          >
             <Select
               v-model:value="taskDetail.status"
               v-if="typeTask"
               style="width: 15rem"
             >
-              <SelectOption value="NOT_STARTED">Open</SelectOption>
+              <SelectOption value="OPEN"> OPEN </SelectOption>
             </Select>
 
             <Select
@@ -773,7 +866,7 @@ function handleChangeStatus() {
             </div>
 
             <div class="taskdetail__details">
-              <div class="flex">
+              <div class="form-task flex">
                 <label class="w-[23rem]">Assignee</label>
                 <FormItem name="assignee" class="mb-4 w-full">
                   <Select
@@ -792,8 +885,8 @@ function handleChangeStatus() {
                 </FormItem>
               </div>
 
-              <div class="flex">
-                <label class="p-0 w-[23rem]">Reviewer</label>
+              <div class="form-task flex">
+                <label class="p-0 w-[23rem]">Assigner</label>
                 <FormItem name="reporter" class="mb-4 w-full">
                   <Select
                     ref="selectAssign"
@@ -811,7 +904,7 @@ function handleChangeStatus() {
                 </FormItem>
               </div>
 
-              <div class="flex mb-4">
+              <div class="form-task flex mb-4">
                 <label class="w-[15rem]">Work Type</label>
                 <Select v-model:value="taskDetail.workType" class="w-[17rem]">
                   <SelectOption value="CODING">Coding</SelectOption>
@@ -825,6 +918,7 @@ function handleChangeStatus() {
                 <DatePicker
                   v-model:value="taskDetail.startDate"
                   value-format="YYYY-MM-DD"
+                  :disabledDate="disabledDateStart"
                 >
                   <template #suffixIcon>
                     <img
@@ -873,6 +967,7 @@ function handleChangeStatus() {
                 <DatePicker
                   v-model:value="taskDetail.actualStartDate"
                   value-format="YYYY-MM-DD"
+                  :disabledDate="disabledDateActualStart"
                 >
                   <template #suffixIcon>
                     <img
@@ -889,6 +984,7 @@ function handleChangeStatus() {
                 <DatePicker
                   v-model:value="taskDetail.actualEndDate"
                   value-format="YYYY-MM-DD"
+                  :disabledDate="disabledDateActualEnd"
                 >
                   <template #suffixIcon>
                     <img
