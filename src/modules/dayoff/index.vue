@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 // ==== Import ==== //
-import { computed, createVNode, onMounted, reactive, ref, watch } from "vue";
+import { createVNode, onMounted, reactive, ref, watch } from "vue";
 import {
   Button,
   Table,
@@ -11,7 +11,6 @@ import {
   Modal,
   Select,
   SelectOption,
-  Segmented,
 } from "ant-design-vue";
 import type { IDataSource } from "@/components";
 import { dayoffService } from "@/services";
@@ -139,8 +138,6 @@ async function getDayoff() {
   if (res.status === "SUCCESS") {
     const dateToday = new Date();
 
-    // dataSource.data = filterDate1;
-
     dataSource.data = filter(
       res.data.data,
       (item) => item.status === "TO_APPROVE"
@@ -262,8 +259,6 @@ async function updateStatusDayoff2(status: string, id: number) {
 }
 
 const activeKey = ref("1");
-const type = ref("");
-const status = ref("");
 const data = reactive(["ACCEPT", "REJECT"]);
 const valuea = ref<any>("ACCEPT");
 

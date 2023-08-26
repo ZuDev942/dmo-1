@@ -9,6 +9,9 @@ import {
   Pagination,
   Progress,
   Empty,
+  Skeleton,
+  SkeletonInput,
+  SkeletonButton,
 } from "ant-design-vue";
 import {
   PaperClipOutlined,
@@ -100,6 +103,8 @@ const dataSource = reactive<IDataSource>({
 });
 
 const current = ref(2);
+const isLoadingProject = ref<boolean>(false);
+const isLoadingTask = ref<boolean>(false);
 
 // ==== Method ==== //
 onMounted(() => {
@@ -147,7 +152,11 @@ async function getAcc() {
 const projects = ref<any>([]);
 
 async function yourProject() {
-  const res = await projectService.projectYourWork();
+  isLoadingProject.value = true;
+
+  const res = await projectService.projectYourWork().finally(() => {
+    isLoadingProject.value = false;
+  });
 
   if (res.status === "SUCCESS") {
     projects.value = res.data;
@@ -286,6 +295,13 @@ function getTaskDetail(id: number) {
       </div>
 
       <!-- List project -->
+      <!-- <SkeletonButton
+        :loading="false"
+        :active="true"
+        :block="true"
+        style="width: 1000px"
+        size="large"
+      > -->
       <div class="show-all-show-less" v-if="size(projects)">
         <div class="project__contain" :class="{ 'show-all': showAll }">
           <div
@@ -301,7 +317,9 @@ function getTaskDetail(id: number) {
               />
             </div>
             <div class="project__des">
-              <h3 class="project__des--name uppercase mb-2">{{ item.key }}</h3>
+              <h3 class="project__des--name uppercase mb-2">
+                {{ item.key }}
+              </h3>
               <p>{{ item.type }}</p>
 
               <div class="project__link"></div>
@@ -321,13 +339,14 @@ function getTaskDetail(id: number) {
           <span class="text-[#B4B4B4]"> No project </span>
         </template>
       </Empty>
+      <!-- </SkeletonButton> -->
     </div>
 
     <div class="taskwork">
       <div>
         <h1 class="project__title">Tasks</h1>
       </div>
-      
+
       <Table
         :columns="dataSource.columns"
         :data-source="dataSource.data"

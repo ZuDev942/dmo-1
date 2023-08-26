@@ -251,7 +251,7 @@
 
   &__btn {
     .ant-btn-primary {
-      background-color: #209653;
+      background-color: #1c9e6d;
 
       &:hover {
         background: #209653;
@@ -710,4 +710,13 @@
 
 .ant-modal {
   top: 65px;
+}
+
+
+.ant-btn-primary {
+  background-color: #209653;
+
+  &:hover {
+    background: #209653;
+  }
 }

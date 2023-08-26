@@ -286,7 +286,17 @@
     height: 2.7rem;
   }
 
+  &__cont {
+    position: relative;
+    height: 100%;
+  }
+
   &__time {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    justify-content: flex-end;
+    padding-right: 2px;
     display: flex;
     align-items: center;
 
@@ -296,6 +306,14 @@
       margin-right: 5px;
       margin-bottom: 2px;
     }
+  }
+
+  &__off {
+    background: #2a3d4c71;
+  }
+
+  &__errEffort {
+    color: red;
   }
 }
 

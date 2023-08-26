@@ -67,6 +67,7 @@ import {
   filter,
   debounce,
   sortBy,
+  union,
 } from "lodash";
 import { watchEffect } from "vue";
 import { useRouter } from "vue-router";
@@ -132,12 +133,6 @@ const dataSource = reactive<IDataSource>({
       dataIndex: "process",
       width: "100px",
     },
-    {
-      title: "",
-      key: "delete",
-      dataIndex: "delete",
-      width: "25px",
-    },
   ],
 });
 
@@ -157,6 +152,11 @@ const isTypeTask = ref("");
 const countTask = ref(0);
 const on = ref(false);
 const iTaskCode = ref("");
+const isTask = ref<boolean>(false);
+const value1 = ref();
+const total = ref(1);
+
+const dataList = ref([]);
 
 // ==== Method ==== //
 onMounted(() => {
@@ -173,9 +173,16 @@ onMounted(() => {
 });
 
 watchEffect(() => {
+  console.log(idProject.value);
   idProject.value = Number(router.currentRoute.value.params.id);
   const a = router.currentRoute.value.params.key;
   keyProject.value = a;
+});
+
+const reqListTask = ref({
+  pageIndex: 1,
+  pageSize: 100,
+  projectId: idProject.value,
 });
 
 async function getProjectUser() {
@@ -215,10 +222,6 @@ const isStatusCanceled = computed(() => {
   return statusProject.value === "CANCELED" ? false : true;
 });
 
-function handleOkTask() {
-  isTask.value = false;
-}
-
 const convertCate = (status: string) => {
   if (status === "MOCKUP") {
     return "Mockup";
@@ -228,16 +231,6 @@ const convertCate = (status: string) => {
   }
 };
 
-const value1 = ref();
-const total = ref(1);
-const reqListTask = ref({
-  pageIndex: 1,
-  pageSize: 100,
-  projectId: idProject.value,
-});
-
-const dataList = ref([]);
-
 watch(currentPage, (val) => {
   reqListTask.value.pageIndex = val;
   listTask();
@@ -245,19 +238,28 @@ watch(currentPage, (val) => {
 
 async function listTask() {
   dataSource.loading = true;
+  console.log(reqListTask.value);
 
   const res = await taskService.getTask(reqListTask.value).finally(() => {
     dataSource.loading = false;
   });
 
   if (res.status === "SUCCESS") {
-    // Sort due date
-    const dueThisWeek = sortBy(
+    // Get done
+    const tasksDone = filter(res.data.data, (item) => item.status === "DONE");
+    const tasksDoneDue = sortBy(tasksDone, (item) => new Date(item.dueDate));
+
+    // Get not done
+    const tasksNotDone = filter(
       res.data.data,
+      (item) => item.status !== "DONE"
+    );
+    const tasksNotDoneDue = sortBy(
+      tasksNotDone,
       (item) => new Date(item.dueDate)
     ).reverse();
 
-    dataSource.data = dueThisWeek;
+    dataSource.data = union(tasksNotDoneDue, tasksDoneDue);
 
     dataList.value = res.data.data;
     dataSource.pagination.totalPage = res.data.totalRecords;
@@ -281,7 +283,6 @@ async function deleteTask(id: number) {
     onCancel() {},
   });
 }
-const isTask = ref<boolean>(false);
 
 function getTaskDetail(id: number) {
   idTask.value = id;
@@ -298,8 +299,6 @@ function openIssueOfTask(idTask: number) {
     params: { id: idTask },
   });
 }
-
-const titleTask = ref("Add task");
 
 function openTaskModal() {
   const newKey = generateUniqueHRKey();

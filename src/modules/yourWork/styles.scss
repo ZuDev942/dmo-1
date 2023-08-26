@@ -608,5 +608,10 @@
 }
 
 .ant-progress :deep(.ant-progress-inner) {
-  background: #CDEFDE;
+  background: #cdefde;
+}
+
+.ant-skeleton :deep(.ant-skeleton-button) {
+  width: 100%;
+  height: 63.5px;
 }

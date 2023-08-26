@@ -244,6 +244,7 @@ async function addSubtask(params: any) {
     }
 
     taskDetail.value.subTask.push(params);
+    taskDetail.value.process = setProgressTask();
 
     message.success("Add subtask successfull");
     isProgress.value = true;
@@ -525,13 +526,32 @@ function disabledDateActualEnd(current) {
   return current && current.valueOf() > set;
 }
 
-function handleChangeStatus() {
-  if (taskDetail.value.status === "DONE") {
-    taskDetail.value.process = 100;
-  } else {
-    taskDetail.value.process = 0;
+function focusChangeStatus() {
+  if (!isEmpty(taskDetail.value.subTask)) {
+    if (taskDetail.value.process === 100) {
+      isProgress.value = false;
+    } else {
+      isProgress.value = true;
+    }
   }
 }
+
+function handleChangeStatus() {
+  if (isEmpty(taskDetail.value.subTask)) {
+    // Ko có subtask
+    if (taskDetail.value.status === "DONE") {
+      taskDetail.value.process = 100;
+    } else {
+      taskDetail.value.process = 0;
+    }
+  } else {
+    // Có subtask
+  }
+}
+
+const convertTime = (time: any) => {
+  return moment(time, "YYYY/MM/DD h:mm").fromNow();
+};
 </script>
 
 <template>
@@ -570,13 +590,13 @@ function handleChangeStatus() {
               @change="handleFileChange"
               accept="image/*, .jpg, .png, .doc"
             />
-            <label for="fileInput"> <PaperClipOutlined /> Attachment</label>
+            <label for="fileInput"> <PaperClipOutlined /> Attachment </label>
 
             <div class="task__btn" v-if="isTypeTask === 'detail'">
               <Button
                 class="subtask__create--btn h-[3.4rem]"
                 @click="handleAddSubTask()"
-                :disabled="!isStatusCanceled"
+                :disabled="!isStatusCanceled || taskDetail.status === 'DONE'"
               >
                 <DiffOutlined /> Create Subtask
               </Button>
@@ -607,86 +627,12 @@ function handleChangeStatus() {
                 </div>
 
                 <div class="subtask__status">
-                  <!-- <Popover trigger="click">
-                    <template #content>
-                      <div
-                        v-if="item.status !== 'NOT_STARTED'"
-                        @click="
-                          handleChangeStatusSubtask('NOT_STARTED', item.id)
-                        "
-                        class="mb-2"
-                      >
-                        <Tag color="#E3FCEF">
-                          <span
-                            style="color: #006644"
-                            class="font-[500]"
-                            v-if="item.status === 'DONE'"
-                          >
-                            REOPEN
-                          </span>
-                          <span
-                            style="color: #006644"
-                            class="font-[500]"
-                            v-else
-                          >
-                            OPEN
-                          </span>
-                        </Tag>
-                      </div>
-
-                      <div
-                        v-if="item.status !== 'PENDING'"
-                        @click="handleChangeStatusSubtask('PENDING', item.id)"
-                        class="mb-2"
-                      >
-                        <Tag color="#E3FCEF">
-                          <span style="color: #006644" class="font-[500]">
-                            PENDING
-                          </span>
-                        </Tag>
-                      </div>
-
-                      <div
-                        v-if="item.status !== 'INPROGRESS'"
-                        @click="
-                          handleChangeStatusSubtask('INPROGRESS', item.id)
-                        "
-                        class="mb-2"
-                      >
-                        <Tag color="#E3FCEF">
-                          <span style="color: #006644" class="font-[500]">
-                            IN PROGRESS
-                          </span>
-                        </Tag>
-                      </div>
-
-                      <div
-                        v-if="item.status !== 'DONE'"
-                        @click="handleChangeStatusSubtask('DONE', item.id)"
-                      >
-                        <Tag color="#E3FCEF">
-                          <span style="color: #006644" class="font-[500]">
-                            DONE
-                          </span>
-                        </Tag>
-                      </div>
-                    </template>
-                    <div>
-                      <Tag color="#DDEBFF" class="cursor-pointe">
-                        <span
-                          class="cursor-pointer text-[#0052CC] font-[600] text-[1.2rem]"
-                        >
-                          {{ item.status }}
-                          <DownOutlined />
-                        </span>
-                      </Tag>
-                    </div>
-                  </Popover> -->
                   <Select
                     v-if="item.status === 'DONE'"
                     v-model:value="item.status"
                     style="width: 12rem"
                     @change="handleChangeStatusSubtask(item.status, item.id)"
+                    :disabled="taskDetail.status === 'DONE'"
                   >
                     <SelectOption value="REOPEN">ReOpen</SelectOption>
                     <SelectOption value="DONE">Done</SelectOption>
@@ -810,8 +756,11 @@ function handleChangeStatus() {
                 <img src="@/assets/images/default-wg-member.jpeg" alt="" />
               </div>
               <div class="taskdetail__comment">
-                <div class="text-[#172b4d] font-medium mb-1">
-                  {{ userInfo.fullname }}
+                <div class="mb-1">
+                  <span class="text-[#172b4d] font-medium mr-5">
+                    {{ userInfo.fullname }}
+                  </span>
+                  <span class="text-[#091e42ae] font-[400]">{{ convertTime(acti.updateTime) }}</span>
                 </div>
                 <p v-html="acti.content" class="text-sm mb-2"></p>
                 <div class="btn__text flex items-center">
@@ -850,6 +799,7 @@ function handleChangeStatus() {
               v-model:value="taskDetail.status"
               style="width: 15rem"
               @change="handleChangeStatus"
+              @focus="focusChangeStatus"
             >
               <SelectOption value="OPEN">Open</SelectOption>
               <SelectOption value="PENDING">Pending</SelectOption>

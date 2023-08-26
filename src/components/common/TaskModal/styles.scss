@@ -296,6 +296,18 @@
   }
 }
 
+.subtask_done .ant-select :deep(.ant-select-selector) {
+  background: #e3fcef;
+  border: none;
+  color: #006544;
+  font-weight: bold;
+  font-size: 1.4rem;
+
+  .ant-select-selection-item {
+    font-weight: 600;
+  }
+}
+
 .taskdetail__assignee .ant-select :deep(.ant-select-arrow) {
   position: absolute;
   left: 1%;

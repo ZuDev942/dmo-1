@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import dayjs from "dayjs";
-import { watch, onMounted, ref, reactive } from "vue";
+import { watch, onMounted, ref, reactive, h } from "vue";
 import {
   Button,
   Modal,
@@ -16,6 +16,8 @@ import {
   Progress,
   Popover,
   Tooltip,
+  notification,
+  Spin,
 } from "ant-design-vue";
 import { timesheetService, yourworkService } from "@/services";
 import {
@@ -33,6 +35,7 @@ import {
 import type { IDataSource } from "@/components";
 import moment from "moment";
 import {
+  CheckCircleOutlined,
   CheckOutlined,
   DownCircleOutlined,
   EditOutlined,
@@ -76,7 +79,11 @@ const dataList = ref<any>([]);
 const isCreate = ref<boolean>(false);
 const currentMonth = ref<number>(0);
 const selectedMonth = ref<number>(0);
+const isLoad = ref<boolean>(false);
+const delayTime = 500;
+const originData2 = ref<any>([]);
 
+// ==== Method ==== //
 onMounted(() => {
   generateDatesForThatMonth();
 
@@ -145,8 +152,6 @@ async function generateDatesForThatMonth(
   dates.value = aa;
 }
 
-function createReportDaily() {}
-
 async function selectedDate(dateSelected: any) {
   date.value = dateSelected.date;
   isReport.value = true;
@@ -205,7 +210,7 @@ async function selectedDate(dateSelected: any) {
 
       dataSource.data = sortBy(a, (item) => !item.isSelected);
       dataSource2.data = convertData2;
-      console.log(dataSource2.data);
+      originData2.value = convertData2;
     }
   } else {
     dataSource.data = dataYourWork;
@@ -261,17 +266,16 @@ const dataSource2 = reactive<IDataSource>({
       width: 40,
     },
     {
-      title: "Effort",
-      dataIndex: "effort",
-      scopedSlots: "effort",
-      width: 40,
-      fixed: "right",
-    },
-    {
       title: "Status",
       dataIndex: "status",
       scopedSlots: "status",
       width: 50,
+    },
+    {
+      title: "Effort",
+      dataIndex: "effort",
+      scopedSlots: "effort",
+      width: 40,
       fixed: "right",
     },
   ],
@@ -359,7 +363,7 @@ async function getYourTask() {
     };
   });
 
-  dataList.value = dataYourWork;
+  dataList.value = dataYourWork.value;
 }
 
 function handleDown(idTask: number, index: number) {
@@ -379,6 +383,8 @@ async function handleReportDaily() {
     message.warning("Please select task and work notes for today");
     return;
   }
+
+  isLoad.value = true;
 
   const req = map(dataSource2.data, (item) => {
     return {
@@ -408,21 +414,41 @@ async function handleReportDaily() {
 }
 
 async function postReport(reqParams: any) {
-  const res = await timesheetService.postReportDaily(reqParams);
+  const res = await timesheetService.postReportDaily(reqParams).finally(() => {
+    isLoad.value = false;
+  });
 
   if (res.status === "SUCCESS") {
     isReport.value = false;
-    message.success("Report daily successfull");
+    notification.open({
+      message: "Report daily successfully",
+      description: "Daily report has been updated",
+      style: {
+        // marginLeft: `${335 - 600}px`,
+        color: "#42526e",
+      },
+      icon: () => h(CheckCircleOutlined, { style: "color: #209653" }),
+    });
     generateDatesForThatMonth();
   }
 }
 
 async function putReport(reqParams: any) {
-  const res = await timesheetService.putReportDaily(reqParams);
+  const res = await timesheetService.putReportDaily(reqParams).finally(() => {
+    isLoad.value = false;
+  });
 
   if (res.status === "SUCCESS") {
     isReport.value = false;
-    message.success("Update report successfull");
+    notification.open({
+      message: "Update report  successfully",
+      description: "Daily report has been updated",
+      style: {
+        // marginLeft: `${335 - 600}px`,
+        color: "#42526e",
+      },
+      icon: () => h(CheckCircleOutlined, { style: "color: #209653" }),
+    });
     generateDatesForThatMonth();
   }
 }
@@ -470,19 +496,18 @@ const effortTotal = (taskList: any) => {
 watch(
   searchTodo,
   debounce(() => {
-    // console.log("1", searchTodo.value);
-    // const a = filter(dataList.value, (item: any) =>
-    //   item.content.toLowerCase().includes(searchTodo.value)
-    // );
+    dataSource.data = filter(dataList.value, (item: any) =>
+      item.content.toLowerCase().includes(searchTodo.value)
+    );
   }, 300)
 );
 
 watch(
   searchDaily,
   debounce(() => {
-    // dataSource2.data = filter(dataList.value, (item: any) =>
-    //   item.content.toLowerCase().includes(searchDaily.value)
-    // );
+    dataSource2.data = filter(originData2.value, (item: any) =>
+      item.content.toLowerCase().includes(searchDaily.value)
+    );
   }, 300)
 );
 </script>
@@ -582,210 +607,220 @@ watch(
       @ok="handleOkReport"
       title="DAILY REPORT"
     >
-      <div class="modal__wrap pt-[2rem]">
-        <div class="todo">
-          <h3 class="todo__title">TO DO TASK</h3>
-          <div class="todo__search">
-            <Input v-model:value="searchTodo" placeholder="Search task..." />
+      <Spin :spinning="isLoad" :delay="delayTime">
+        <div class="modal__wrap pt-[2rem]">
+          <div class="todo">
+            <h3 class="todo__title">TO DO TASK</h3>
+            <div class="todo__search">
+              <Input v-model:value="searchTodo" placeholder="Search task..." />
+            </div>
+
+            <Table
+              class="table__top"
+              :columns="dataSource.columns"
+              :data-source="dataSource.data"
+              :pagination="false"
+              :scroll="{ y: 125, x: 1500 }"
+              bordered
+            >
+              <template #bodyCell="{ column, record, index }">
+                <template v-if="column.dataIndex === 'action'">
+                  <div
+                    class="column__item"
+                    :class="{ select: record.isSelected }"
+                  >
+                    <Button
+                      class="flex items-center w-full justify-center"
+                      @click="handleDown(record.id, index)"
+                      :disabled="record.isSelected"
+                      type="text"
+                    >
+                      <DownCircleOutlined />
+                    </Button>
+                  </div>
+                </template>
+
+                <template v-if="column.dataIndex === 'key'">
+                  <div
+                    class="column__item"
+                    :class="{ select: record.isSelected }"
+                  >
+                    {{ record.taskCode }}
+                  </div>
+                </template>
+
+                <template v-if="column.dataIndex === 'task'">
+                  <div
+                    class="column__item px-[1rem]"
+                    :class="{ select: record.isSelected }"
+                  >
+                    {{ record.content }}
+                  </div>
+                </template>
+
+                <template v-if="column.dataIndex === 'progress'">
+                  <div
+                    class="column__item px-[1rem]"
+                    :class="{ select: record.isSelected }"
+                  >
+                    <!-- {{ record.progress }} -->
+                    <Progress
+                      :stroke-color="'#0DAF60'"
+                      :percent="record.progress"
+                    ></Progress>
+                  </div>
+                </template>
+
+                <template v-if="column.dataIndex === 'duedate'">
+                  <div
+                    class="column__item"
+                    :class="{ select: record.isSelected }"
+                  >
+                    <Tag
+                      color="#F4F5F7"
+                      class="cursor-pointer"
+                      v-if="checkDueDate(record.dueDate)"
+                    >
+                      <span
+                        class="cursor-pointer text-[#42526E] font-[500] text-[1.3rem]"
+                      >
+                        {{ convertDate(record.dueDate) }}
+                      </span>
+                    </Tag>
+
+                    <Tag color="#FFEBE6" class="cursor-pointer" v-else>
+                      <span
+                        class="cursor-pointer text-[#BF2600] font-[500] text-[1.3rem]"
+                      >
+                        {{ convertDate(record.dueDate) }}
+                      </span>
+                    </Tag>
+                  </div>
+                </template>
+
+                <template v-if="column.dataIndex === 'effort'">
+                  <div
+                    class="column__item"
+                    :class="{ select: record.isSelected }"
+                  >
+                    {{ record.effort }}
+                  </div>
+                </template>
+
+                <template v-if="column.dataIndex === 'note'">
+                  <div
+                    class="column__item"
+                    :class="{ select: record.isSelected }"
+                  ></div>
+                </template>
+              </template>
+            </Table>
           </div>
 
-          <Table
-            class="table__top"
-            :columns="dataSource.columns"
-            :data-source="dataSource.data"
-            :pagination="false"
-            :scroll="{ y: 125, x: 1500 }"
-            bordered
-          >
-            <template #bodyCell="{ column, record, index }">
-              <template v-if="column.dataIndex === 'action'">
-                <div
-                  class="column__item"
-                  :class="{ select: record.isSelected }"
-                >
-                  <Button
-                    class="flex items-center w-full justify-center"
-                    @click="handleDown(record.id, index)"
-                    :disabled="record.isSelected"
-                    type="text"
-                  >
-                    <DownCircleOutlined />
-                  </Button>
-                </div>
-              </template>
-
-              <template v-if="column.dataIndex === 'key'">
-                <div
-                  class="column__item"
-                  :class="{ select: record.isSelected }"
-                >
-                  {{ record.taskCode }}
-                </div>
-              </template>
-
-              <template v-if="column.dataIndex === 'task'">
-                <div
-                  class="column__item px-[1rem]"
-                  :class="{ select: record.isSelected }"
-                >
-                  {{ record.content }}
-                </div>
-              </template>
-
-              <template v-if="column.dataIndex === 'progress'">
-                <div
-                  class="column__item px-[1rem]"
-                  :class="{ select: record.isSelected }"
-                >
-                  <!-- {{ record.progress }} -->
-                  <Progress :stroke-color="'#0DAF60'" :percent="0"></Progress>
-                </div>
-              </template>
-
-              <template v-if="column.dataIndex === 'duedate'">
-                <div
-                  class="column__item"
-                  :class="{ select: record.isSelected }"
-                >
-                  <Tag
-                    color="#F4F5F7"
-                    class="cursor-pointer"
-                    v-if="checkDueDate(record.dueDate)"
-                  >
-                    <span
-                      class="cursor-pointer text-[#42526E] font-[500] text-[1.3rem]"
+          <br />
+          <!--  -->
+          <div class="todo">
+            <h3 class="todo__title">DAILY REPORT</h3>
+            <div class="todo__search">
+              <Input v-model:value="searchDaily" placeholder="Search task..." />
+            </div>
+            <Table
+              :columns="dataSource2.columns"
+              :data-source="dataSource2.data"
+              :pagination="false"
+              bordered
+              :scroll="{ y: 125, x: 1500 }"
+            >
+              <template #bodyCell="{ column, record, index }">
+                <template v-if="column.dataIndex === 'action'">
+                  <div class="column__item">
+                    <Button
+                      class="flex items-center w-full justify-center"
+                      @click="handleUp(record.id, index)"
+                      type="text"
                     >
-                      {{ convertDate(record.dueDate) }}
-                    </span>
-                  </Tag>
+                      <UpCircleOutlined />
+                    </Button>
+                  </div>
+                </template>
 
-                  <Tag color="#FFEBE6" class="cursor-pointer" v-else>
-                    <span
-                      class="cursor-pointer text-[#BF2600] font-[500] text-[1.3rem]"
+                <template v-if="column.dataIndex === 'key'">
+                  <div class="column__item">
+                    {{ record.taskCode }}
+                  </div>
+                </template>
+
+                <template v-if="column.dataIndex === 'task'">
+                  <div class="column__item px-[1rem]">
+                    {{ record.content }}
+                  </div>
+                </template>
+
+                <template v-if="column.dataIndex === 'progress'">
+                  <div class="column__item px-[1rem]">
+                    <Progress
+                      :stroke-color="'#0DAF60'"
+                      :percent="record.progress"
+                    ></Progress>
+                  </div>
+                </template>
+
+                <template v-if="column.dataIndex === 'duedate'">
+                  <div class="column__item">
+                    <Tag
+                      color="#F4F5F7"
+                      class="cursor-pointer"
+                      v-if="checkDueDate(record.dueDate)"
                     >
-                      {{ convertDate(record.dueDate) }}
-                    </span>
-                  </Tag>
-                </div>
-              </template>
+                      <span
+                        class="cursor-pointer text-[#42526E] font-[500] text-[1.3rem]"
+                      >
+                        {{ convertDate(record.dueDate) }}
+                      </span>
+                    </Tag>
 
-              <template v-if="column.dataIndex === 'effort'">
-                <div
-                  class="column__item"
-                  :class="{ select: record.isSelected }"
-                >
-                  {{ record.effort }}
-                </div>
-              </template>
+                    <Tag color="#FFEBE6" class="cursor-pointer" v-else>
+                      <span
+                        class="cursor-pointer text-[#BF2600] font-[500] text-[1.3rem]"
+                      >
+                        {{ convertDate(record.dueDate) }}
+                      </span>
+                    </Tag>
+                  </div>
+                </template>
 
-              <template v-if="column.dataIndex === 'note'">
-                <div
-                  class="column__item"
-                  :class="{ select: record.isSelected }"
-                ></div>
-              </template>
-            </template>
-          </Table>
-        </div>
+                <template v-if="column.dataIndex === 'effort'">
+                  <div class="column__item">
+                    <Input v-model:value="record.effort" suffix="h" />
+                  </div>
+                </template>
 
-        <br />
-        <!--  -->
-        <div class="todo">
-          <h3 class="todo__title">DAILY REPORT</h3>
-          <div class="todo__search">
-            <Input v-model:value="searchDaily" placeholder="Search task..." />
+                <template v-if="column.dataIndex === 'status'">
+                  <div class="flex items-center justify-center">
+                    <Select v-model:value="record.status" style="width: 12rem">
+                      <SelectOption value="OPEN">Open</SelectOption>
+                      <SelectOption value="PENDING">Pending</SelectOption>
+                      <SelectOption value="INPROGRESS"
+                        >In Progress</SelectOption
+                      >
+                      <SelectOption value="DONE">Done</SelectOption>
+                    </Select>
+                  </div>
+                </template>
+
+                <template v-if="column.dataIndex === 'note'">
+                  <div class="column__item">
+                    <Input v-model:value="record.note" />
+                  </div>
+                </template>
+              </template>
+            </Table>
           </div>
-          <Table
-            :columns="dataSource2.columns"
-            :data-source="dataSource2.data"
-            :pagination="false"
-            bordered
-            :scroll="{ y: 125, x: 1500 }"
-          >
-            <template #bodyCell="{ column, record, index }">
-              <template v-if="column.dataIndex === 'action'">
-                <div class="column__item">
-                  <Button
-                    class="flex items-center w-full justify-center"
-                    @click="handleUp(record.id, index)"
-                    type="text"
-                  >
-                    <UpCircleOutlined />
-                  </Button>
-                </div>
-              </template>
-
-              <template v-if="column.dataIndex === 'key'">
-                <div class="column__item">
-                  {{ record.taskCode }}
-                </div>
-              </template>
-
-              <template v-if="column.dataIndex === 'task'">
-                <div class="column__item px-[1rem]">
-                  {{ record.content }}
-                </div>
-              </template>
-
-              <template v-if="column.dataIndex === 'progress'">
-                <div class="column__item px-[1rem]">
-                  <Progress :stroke-color="'#0DAF60'" :percent="10"></Progress>
-                </div>
-              </template>
-
-              <template v-if="column.dataIndex === 'duedate'">
-                <div class="column__item">
-                  <Tag
-                    color="#F4F5F7"
-                    class="cursor-pointer"
-                    v-if="checkDueDate(record.dueDate)"
-                  >
-                    <span
-                      class="cursor-pointer text-[#42526E] font-[500] text-[1.3rem]"
-                    >
-                      {{ convertDate(record.dueDate) }}
-                    </span>
-                  </Tag>
-
-                  <Tag color="#FFEBE6" class="cursor-pointer" v-else>
-                    <span
-                      class="cursor-pointer text-[#BF2600] font-[500] text-[1.3rem]"
-                    >
-                      {{ convertDate(record.dueDate) }}
-                    </span>
-                  </Tag>
-                </div>
-              </template>
-
-              <template v-if="column.dataIndex === 'effort'">
-                <div class="column__item">
-                  <Input v-model:value="record.effort" suffix="h" />
-                </div>
-              </template>
-
-              <template v-if="column.dataIndex === 'status'">
-                <div class="flex items-center justify-center">
-                  <Select v-model:value="record.status" style="width: 12rem">
-                  <SelectOption value="OPEN">Open</SelectOption>
-                  <SelectOption value="PENDING">Pending</SelectOption>
-                  <SelectOption value="INPROGRESS">In Progress</SelectOption>
-                  <SelectOption value="DONE">Done</SelectOption>
-                </Select>
-                </div>
-              </template>
-
-              <template v-if="column.dataIndex === 'note'">
-                <div class="column__item">
-                  <Input v-model:value="record.note" />
-                </div>
-              </template>
-            </template>
-          </Table>
         </div>
-      </div>
-      <div class="flex justify-center w-full pt-[2rem]">
-        <Button @click="handleReportDaily()" type="primary">Report</Button>
-      </div>
+        <div class="flex justify-center w-full pt-[2rem]">
+          <Button @click="handleReportDaily()" type="primary">Report</Button>
+        </div>
+      </Spin>
     </Modal>
   </div>
 </template>
@@ -840,10 +875,6 @@ watch(
     overflow: auto;
   }
 
-  // &:hover {
-  //   background: #cae4d584;
-  // }
-
   &-active {
     background: #cae4d584;
     border: 0.5px solid #cae4d584;
@@ -865,7 +896,9 @@ watch(
     height: 2rem;
     margin-bottom: 5px;
     padding-left: 4px;
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   &__pop {

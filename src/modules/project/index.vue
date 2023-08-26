@@ -22,7 +22,7 @@ import {
   ExclamationCircleOutlined,
 } from "@ant-design/icons-vue";
 import type { IDataSource } from "@/components";
-import { ProjectModal } from "@/components";
+import { ProjectModal, Loading } from "@/components";
 import { projectService } from "@/services";
 import useEventBus from "../../eventBus";
 import { debounce, isEmpty, size } from "lodash";
@@ -226,7 +226,13 @@ function handleSelectDetail(idPro: number) {
 }
 
 async function getListProject() {
-  const res = await projectService.getListProject(reqParams.value);
+  dataSource.loading = true;
+
+  const res = await projectService
+    .getListProject(reqParams.value)
+    .finally(() => {
+      dataSource.loading = false;
+    });
 
   if (res.status === "SUCCESS") {
     const data = res.data.data;
@@ -338,6 +344,10 @@ function handleOpenIssue(idProject: number, nameProject: string, keyP: string) {
 }
 
 function handleCloseModal() {
+  isProjectDetail.value = false;
+}
+
+function handleRefresh(){
   isProjectDetail.value = false;
   getListProject();
 }
@@ -559,7 +569,7 @@ const avatarUrls = [
       :is-type-project="typeDetail"
       :count-project="countProject"
       @close-project-modal="handleCloseModal()"
-      @refresh-projects="handleCloseModal()"
+      @refresh-projects="handleRefresh()"
     ></ProjectModal>
   </div>
 </template>

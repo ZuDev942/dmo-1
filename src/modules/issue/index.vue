@@ -16,7 +16,7 @@ import {
   CloseOutlined,
   FilterOutlined,
   ExclamationCircleOutlined,
-DeleteOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons-vue";
 import type { IDataSource } from "@/components";
 import { issueService } from "@/services";
@@ -128,11 +128,15 @@ function handleClear() {
 }
 
 async function handleGetIssues() {
+  dataSource.loading = true;
+
   const req = {
     projectId: useIssue.idProject,
   };
 
-  const res = await issueService.getIssueByProject(req);
+  const res = await issueService.getIssueByProject(req).finally(() => {
+    dataSource.loading = false;
+  });
 
   if (res.status === "SUCCESS") {
     dataSource.data = res.data;
@@ -265,6 +269,7 @@ async function deleteTask(id: number) {
         :data-source="dataSource.data"
         class="custom-table"
         :scroll="{ x: 2300, y: 480 }"
+        :loading="dataSource.loading"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.dataIndex === 'project'">

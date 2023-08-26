@@ -174,11 +174,19 @@
     padding-bottom: 1rem;
   }
 
-  &__top{
+  &__top {
     padding-top: 1rem;
   }
 
   em {
     font-weight: 500;
+  }
+}
+
+.ant-btn-primary {
+  background-color: #209653;
+
+  &:hover {
+    background: #209653;
   }
 }

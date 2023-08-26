@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch } from "vue";
-import { Tabs, TabPane, Button } from "ant-design-vue";
+import { Tabs, TabPane, Button, Affix, Tooltip } from "ant-design-vue";
 import { CalendarH } from "@/components";
 import moment from "moment";
 import { DoubleLeftOutlined, DoubleRightOutlined } from "@ant-design/icons-vue";
@@ -63,6 +63,16 @@ function getWeekDates(weekNumber, year) {
   return weekDates;
 }
 
+function handleSelectToday() {
+  numberWeek.value = getWeekNumber(new Date());
+  dateInWeek.value = getWeekDates(numberWeek.value, 2023);
+
+  reqParamsMember.value.startDate = dateInWeek.value[0];
+  reqParamsMember.value.endDate = dateInWeek.value[6];
+
+  getBoardMember();
+}
+
 function handlePre() {
   const num = --numberWeek.value;
   const date = getWeekDates(num, 2023);
@@ -91,10 +101,9 @@ async function getBoardMember() {
   const res = await timesheetService.getDashboardMember(reqParamsMember.value);
 
   if (res.status === "SUCCESS") {
-    console.log(res.data);
     const filterUser = filter(
       res.data,
-      (item: any) => item.accountId !== 2 && item.accountId !== 3
+      (item: any) => item.accountId !== 14 && item.accountId !== 7
     );
 
     listReportMember.value = filterUser;
@@ -163,6 +172,18 @@ function convertEffort(taskList: any) {
 
   return "";
 }
+
+const effortTotal = (taskList: any) => {
+  if (!isEmpty(taskList)) {
+    const totalEffort = taskList.reduce((sum, item) => sum + item.effort, 0);
+
+    return totalEffort;
+  }
+
+  return 0;
+};
+
+const top = ref<number>(50);
 </script>
 
 <template>
@@ -191,7 +212,9 @@ function convertEffort(taskList: any) {
               </Button>
             </div>
             <div class="flex items-center">
-              <Button class="schedule__btn">Today</Button>
+              <Button class="schedule__btn" @click="handleSelectToday()">
+                Today
+              </Button>
             </div>
           </div>
         </template>
@@ -203,16 +226,18 @@ function convertEffort(taskList: any) {
       <!-- List member report -->
       <TabPane key="2" tab="Members" v-if="isManager">
         <div class="branch h-full">
-          <div class="grid grid-cols-8">
-            <div class="branch__day text-center">Member</div>
-            <div
-              v-for="(date, dateIndex) in dateInWeek"
-              :key="'week' + dateIndex"
-              class="branch__day text-center"
-            >
-              {{ convertTime(date) }} {{ convertDate(dateIndex) }}
+          <Affix :offset-top="top">
+            <div class="grid grid-cols-8 bg-white">
+              <div class="branch__day text-center">Member</div>
+              <div
+                v-for="(date, dateIndex) in dateInWeek"
+                :key="'week' + dateIndex"
+                class="branch__day text-center"
+              >
+                {{ convertTime(date) }} {{ convertDate(dateIndex) }}
+              </div>
             </div>
-          </div>
+          </Affix>
 
           <div
             class="grid grid-cols-8"
@@ -225,6 +250,7 @@ function convertEffort(taskList: any) {
             </div>
 
             <template
+              v-if="!isEmpty(mem.days)"
               v-for="(day, dayIndex) in mem.days"
               :key="'day' + dayIndex"
             >
@@ -232,11 +258,12 @@ function convertEffort(taskList: any) {
                 class="branch__per flex flex-col justify-between"
                 :class="{
                   branch__active: compareDay(day.dayOfMonth, dateToday),
+                  branch__off: day.off,
                 }"
               >
                 <div class="branch__cont">
                   <div class="branch__title2">
-                    <h3>Task</h3>
+                    <h3 class="hidden">{{ dayIndex }}</h3>
                   </div>
 
                   <div class="branch__task h-full">
@@ -246,8 +273,38 @@ function convertEffort(taskList: any) {
                   </div>
 
                   <div class="branch__time" v-if="!isEmpty(day.taskList)">
-                    <img src="@/assets/images/clock.png" alt="" />
-                    <span>{{ convertEffort(day.taskList) }}h</span>
+                    <template v-if="effortTotal(day.taskList) < 8">
+                      <img src="@/assets/images/clock-error.png" alt="" />
+
+                      <span>
+                        <Tooltip>
+                          <template #title>Work time not enough</template>
+                          <span class="branch__errEffort">
+                            {{ convertEffort(day.taskList) }}h
+                          </span>
+                        </Tooltip>
+                      </span>
+                    </template>
+
+                    <template v-else>
+                      <img src="@/assets/images/clock.png" alt="" />
+
+                      <span> {{ convertEffort(day.taskList) }}h </span>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <template
+              v-else
+              v-for="(day, dayIndexNull) in 7"
+              :key="'dayNull' + dayIndexNull"
+            >
+              <div class="branch__per flex flex-col justify-between">
+                <div class="branch__cont">
+                  <div class="branch__title2">
+                    <h3 class="hidden">{{ day }}</h3>
                   </div>
                 </div>
               </div>

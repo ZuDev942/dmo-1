@@ -438,9 +438,11 @@ watch(
                 >
                   <Switch
                     v-model:checked="userParams.activeFlag"
-                    checked-children="Deactive"
-                    un-checked-children="Active"
+                    checked-children="Active"
+                    un-checked-children="Deactive"
                   />
+
+                  <!-- {{ userParams.activeFlag }} -->
                 </div>
               </div>
 
