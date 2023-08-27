@@ -272,7 +272,31 @@
   }
 }
 
+.sub_open .ant-select :deep(.ant-select-selector) {
+  background: #f0eefb;
+  border: none;
+  color: #887ecd;
+  font-weight: bold;
+  font-size: 1.4rem;
+
+  .ant-select-selection-item {
+    font-weight: 600;
+  }
+}
+
 .status_pending .ant-select :deep(.ant-select-selector) {
+  background: #DCF2FE;
+  border: none;
+  color: #0084C7;
+  font-weight: bold;
+  font-size: 1.4rem;
+
+  .ant-select-selection-item {
+    font-weight: 600;
+  }
+}
+
+.sub_pending .ant-select :deep(.ant-select-selector) {
   background: #DCF2FE;
   border: none;
   color: #0084C7;
@@ -296,7 +320,7 @@
   }
 }
 
-.subtask_done .ant-select :deep(.ant-select-selector) {
+.sub_done .ant-select :deep(.ant-select-selector) {
   background: #e3fcef;
   border: none;
   color: #006544;
@@ -763,4 +787,12 @@
   color: #42526e;
   font-weight: 600;
   font-size: 1.3rem;
+}
+
+.sk_activity :deep(.ant-skeleton-button){
+  height: 100px;
+}
+
+.sk_content :deep(.ant-skeleton-button){
+  height: 41.5px;
 }

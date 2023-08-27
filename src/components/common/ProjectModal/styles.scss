@@ -204,3 +204,7 @@ textarea::placeholder {
 .error{
   color: red;
 }
+
+.sk_textarea :deep(.ant-skeleton-button){
+  height: 12rem;
+}

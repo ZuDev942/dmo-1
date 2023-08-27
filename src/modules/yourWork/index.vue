@@ -116,7 +116,6 @@ onMounted(() => {
 
   if (savedUser) {
     userInfo.value = JSON.parse(savedUser);
-    console.log(userInfo.value);
   }
 });
 
@@ -167,12 +166,16 @@ async function yourProject() {
 const tasks = ref<any>([]);
 
 async function listTask() {
+  dataSource.loading = true;
+
   const req = {
     pageIndex: 1,
     pageSize: 100,
   };
 
-  const res = await yourworkService.getListTask(req);
+  const res = await yourworkService.getListTask(req).finally(() => {
+    dataSource.loading = false;
+  });
 
   if (res.status === "SUCCESS") {
     dataSource.data = sortBy(res.data.data, (item) => new Date(item.dueDate));
@@ -295,51 +298,63 @@ function getTaskDetail(id: number) {
       </div>
 
       <!-- List project -->
-      <!-- <SkeletonButton
-        :loading="false"
-        :active="true"
-        :block="true"
-        style="width: 1000px"
-        size="large"
-      > -->
-      <div class="show-all-show-less" v-if="size(projects)">
-        <div class="project__contain" :class="{ 'show-all': showAll }">
-          <div
-            class="project__me"
-            v-for="item in projects"
-            :key="'project' + item.id"
-            @click="handleOpenTask(item.key, item.id, item.name)"
-          >
-            <div class="project__blur">
-              <img
-                src="https://hoondea.atlassian.net/secure/viewavatar?size=xxxlarge@2x&avatarId=10425&avatarType=project"
-                alt=""
-              />
-            </div>
-            <div class="project__des">
-              <h3 class="project__des--name uppercase mb-2">
-                {{ item.key }}
-              </h3>
-              <p>{{ item.type }}</p>
+      <template v-if="isLoadingProject">
+        <SkeletonButton
+          :active="true"
+          :block="true"
+          style="width: 700px"
+          size="large"
+          class="mb-3"
+        >
+        </SkeletonButton>
+        <SkeletonButton
+          :active="true"
+          :block="true"
+          style="width: 1000px"
+          size="large"
+        >
+        </SkeletonButton>
+      </template>
 
-              <div class="project__link"></div>
+      <template v-else>
+        <div class="show-all-show-less" v-if="size(projects)">
+          <div class="project__contain" :class="{ 'show-all': showAll }">
+            <div
+              class="project__me"
+              v-for="item in projects"
+              :key="'project' + item.id"
+              @click="handleOpenTask(item.key, item.id, item.name)"
+            >
+              <div class="project__blur">
+                <img
+                  src="https://hoondea.atlassian.net/secure/viewavatar?size=xxxlarge@2x&avatarId=10425&avatarType=project"
+                  alt=""
+                />
+              </div>
+              <div class="project__des">
+                <h3 class="project__des--name uppercase mb-2">
+                  {{ item.key }}
+                </h3>
+                <p>{{ item.type }}</p>
+
+                <div class="project__link"></div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <Empty
-        v-else
-        image="https://cache.giaohangtietkiem.vn/d/0c1f1141680ddb65b6a88a8f23f21fea.png"
-        :image-style="{
-          height: '60px',
-        }"
-      >
-        <template #description>
-          <span class="text-[#B4B4B4]"> No project </span>
-        </template>
-      </Empty>
-      <!-- </SkeletonButton> -->
+        <Empty
+          v-else
+          image="https://cache.giaohangtietkiem.vn/d/0c1f1141680ddb65b6a88a8f23f21fea.png"
+          :image-style="{
+            height: '60px',
+          }"
+        >
+          <template #description>
+            <span class="text-[#B4B4B4]"> No project </span>
+          </template>
+        </Empty>
+      </template>
     </div>
 
     <div class="taskwork">
@@ -352,6 +367,7 @@ function getTaskDetail(id: number) {
         :data-source="dataSource.data"
         class="custom-table"
         :scroll="{ x: 1500, y: 480 }"
+        :loading="dataSource.loading"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.dataIndex === 'key'">

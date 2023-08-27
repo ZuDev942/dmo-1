@@ -158,7 +158,6 @@ const optionContractPeriod = ref<SelectProps["options"]>([
 
 // ==== Method ==== //
 onMounted(() => {
-  console.log("redirict list user...");
   getListUser();
 });
 

@@ -19,7 +19,7 @@ import {
   notification,
   Spin,
 } from "ant-design-vue";
-import { timesheetService, yourworkService } from "@/services";
+import { projectService, timesheetService, yourworkService } from "@/services";
 import {
   debounce,
   filter,
@@ -82,6 +82,7 @@ const selectedMonth = ref<number>(0);
 const isLoad = ref<boolean>(false);
 const delayTime = 500;
 const originData2 = ref<any>([]);
+const isLoadingView = ref<boolean>(false);
 
 // ==== Method ==== //
 onMounted(() => {
@@ -124,6 +125,8 @@ async function generateDatesForThatMonth(
   m = dayjs().month(),
   y = dayjs().year()
 ) {
+  isLoadingView.value = true;
+
   dates.value = [];
   let d = dayjs().month(m).year(y);
 
@@ -137,7 +140,9 @@ async function generateDatesForThatMonth(
 
   timeZone.value = `${y}-${m + 1}`;
 
-  const res = await timesheetService.getDashboardPersonal(req);
+  const res = await timesheetService.getDashboardPersonal(req).finally(() => {
+    isLoadingView.value = false;
+  });
 
   const aa = map(res.data, (item, index: number) => {
     return {
@@ -359,6 +364,7 @@ async function getYourTask() {
   dataYourWork.value = map(dueThisWeek, (item) => {
     return {
       ...item,
+      progress: item.process,
       isSelected: false,
     };
   });
@@ -380,7 +386,7 @@ function handleUp(idTask: number, index: number) {
 
 async function handleReportDaily() {
   if (isEmpty(dataSource2.data)) {
-    message.warning("Please select task and work notes for today");
+    message.warning("Please select task and log time for today");
     return;
   }
 
@@ -393,7 +399,7 @@ async function handleReportDaily() {
       taskName: item.content,
       priority: "LOW",
       effort: item.effort,
-      progress: 0,
+      progress: item.process,
       deadLine: item.dueDate,
       status: item.status,
       deliveryStatus: "NOT_YET",
@@ -424,7 +430,6 @@ async function postReport(reqParams: any) {
       message: "Report daily successfully",
       description: "Daily report has been updated",
       style: {
-        // marginLeft: `${335 - 600}px`,
         color: "#42526e",
       },
       icon: () => h(CheckCircleOutlined, { style: "color: #209653" }),

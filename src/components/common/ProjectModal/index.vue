@@ -16,6 +16,7 @@ import {
   Tooltip,
   Progress,
   Spin,
+  SkeletonButton,
 } from "ant-design-vue";
 import {
   PlusSquareOutlined,
@@ -131,6 +132,7 @@ const isHide = ref<boolean>(false);
 const isNotstarted = ref<boolean>(false);
 const isProgressFull = ref<boolean>(false);
 const isLoadProject = ref<boolean>(false);
+const isLoadDetail = ref<boolean>(false);
 const delayTime = 500;
 
 // ==== Method ==== //
@@ -308,7 +310,7 @@ async function createProject() {
     fullName: "Vũ Văn Đạt",
     departmentId: 1,
     departmentName: 0,
-    roleId: "MEMBER",
+    roleId: "LEADER",
     effort: 0,
   };
 
@@ -329,17 +331,8 @@ async function createProject() {
 async function updateProject() {
   isLoadProject.value = true;
 
-  const filterManager = {
-    id: 111,
-    accountId: 7,
-    fullName: "Vũ Văn Đạt",
-    departmentId: 1,
-    departmentName: 0,
-    roleId: "MEMBER",
-    effort: 0,
-  };
-
-  projectParams.value.projectUserList.push(filterManager);
+  console.log(projectParams.value.projectUserList);
+  return;
 
   const res = await projectService
     .updateProject(projectParams.value)
@@ -356,15 +349,18 @@ async function updateProject() {
 async function detailProject(id: number) {
   isErrorDate.value = false;
   isErrorEnd.value = false;
+  isLoadDetail.value = true;
 
-  const res = await projectService.detailProject(id);
+  const res = await projectService.detailProject(id).finally(() => {
+    isLoadDetail.value = false;
+  });
 
   if (res.status === "SUCCESS") {
     projectParams.value = cloneDeep(res.data);
 
     projectParams.value.projectUserList = filter(
       projectParams.value.projectUserList,
-      (item) => item.accountId !== 7
+      (item) => item.accountId !== 7  
     );
 
     if (!isEmpty(projectParams.value.projectUserList)) {
@@ -404,6 +400,8 @@ async function detailProject(id: number) {
     } else {
       isHide.value = false;
     }
+
+    console.log(projectParams.value)
   }
 }
 
@@ -581,14 +579,17 @@ function handleFocus(accountId: number) {
                 Name <span class="text-red-600">&ast;</span>
               </label>
               <FormItem class="mb-[2rem] mt-2" name="content">
-                <Input v-model:value="projectParams.content" />
+                <SkeletonButton active :block="true" v-if="isLoadDetail" />
+                <Input v-model:value="projectParams.content" v-else />
               </FormItem>
             </div>
 
             <div class="flex justify-between mb-4">
               <div class="w-1/2 mr-5">
                 <label for=""> Type </label>
+                <SkeletonButton active :block="true" v-if="isLoadDetail" />
                 <Select
+                  v-else
                   ref="selectType"
                   v-model:value="projectParams.type"
                   @change="handleChangeType"
@@ -614,7 +615,9 @@ function handleFocus(accountId: number) {
 
               <div class="w-1/2">
                 <label for="">Customer</label>
+                <SkeletonButton active :block="true" v-if="isLoadDetail" />
                 <Input
+                  v-else
                   v-model:value="projectParams.customer"
                   :disabled="!isTypeCustomer"
                 />
@@ -623,7 +626,15 @@ function handleFocus(accountId: number) {
 
             <div class="mb-4">
               <label for="">Description</label>
+              <SkeletonButton
+                active
+                :block="true"
+                v-if="isLoadDetail"
+                class="sk_textarea"
+              />
+
               <Textarea
+                v-else
                 v-model:value="projectParams.note"
                 :rows="5"
                 placeholder="Description of the project"
@@ -649,7 +660,9 @@ function handleFocus(accountId: number) {
                 <span class="text-red-600">&ast;</span>
               </div>
               <FormItem class="mb-[2rem] mt-2" name="name">
+                <SkeletonButton active :block="true" v-if="isLoadDetail" />
                 <Input
+                  v-else
                   v-model:value="projectParams.name"
                   @input="handleChaneKey"
                 />
@@ -659,7 +672,8 @@ function handleFocus(accountId: number) {
             <div class="flex mb-4">
               <div class="w-1/2 mr-5">
                 <label for="">Priority</label>
-                <Select v-model:value="projectParams.priority">
+                <SkeletonButton active :block="true" v-if="isLoadDetail" />
+                <Select v-model:value="projectParams.priority" v-else>
                   <SelectOption value="LOW">Low</SelectOption>
                   <SelectOption value="MEDIUM">Medium</SelectOption>
                   <SelectOption value="HIGH">High</SelectOption>
@@ -669,7 +683,9 @@ function handleFocus(accountId: number) {
 
               <div class="w-1/2">
                 <label for="">Status</label>
+                <SkeletonButton active :block="true" v-if="isLoadDetail" />
                 <Select
+                  v-else
                   ref="statusRef"
                   v-model:value="projectParams.status"
                   @change="handleSelectStatus"
@@ -717,7 +733,9 @@ function handleFocus(accountId: number) {
                   <span class="text-red-600" v-if="!isSelectStatus">&ast;</span>
                 </label>
                 <FormItem name="periodStart">
+                  <SkeletonButton active :block="true" v-if="isLoadDetail" />
                   <DatePicker
+                    v-else
                     v-model:value="projectParams.periodStart"
                     value-format="YYYY-MM-DD"
                     class="w-full"
@@ -743,7 +761,9 @@ function handleFocus(accountId: number) {
                   <span class="text-red-600" v-if="!isSelectStatus">&ast;</span>
                 </label>
                 <FormItem name="periodEnd" class="w-full">
+                  <SkeletonButton active :block="true" v-if="isLoadDetail" />
                   <DatePicker
+                    v-else
                     v-model:value="projectParams.periodEnd"
                     value-format="YYYY-MM-DD"
                     class="w-full"
@@ -841,7 +861,7 @@ function handleFocus(accountId: number) {
 
               <template v-else-if="column.key === 'role'">
                 <Select ref="select" v-model:value="record.roleId">
-                  <SelectOption value="SUB">Sub Leader</SelectOption>
+                  <SelectOption value="SUB_LEADER">Sub Leader</SelectOption>
                   <SelectOption value="MEMBER">Member</SelectOption>
                 </Select>
               </template>

@@ -20,7 +20,7 @@ import {
 } from "@ant-design/icons-vue";
 import type { IDataSource } from "@/components";
 import { issueService } from "@/services";
-import { isEmpty } from "lodash";
+import { debounce, filter, isEmpty } from "lodash";
 import moment from "moment";
 import router from "@/router";
 import { RouteName } from "@/shared/constants";
@@ -103,20 +103,25 @@ const dataSource = reactive<IDataSource>({
       dataIndex: "fixdate",
       width: 50,
     },
-    {
-      title: "",
-      dataIndex: "delete",
-      width: 20,
-    },
   ],
 });
 const value = ref<string>("");
 const searchText = ref("");
 const idProject = ref<number>();
+const positionId = ref<number>(0);
+const originIssues = ref<any>([]);
 
 // ==== Method ==== //
 onMounted(() => {
   handleGetIssues();
+
+  const savedUser = localStorage.getItem("userInfo");
+
+  if (savedUser) {
+    const userInfo = JSON.parse(savedUser);
+
+    positionId.value = userInfo.position;
+  }
 });
 
 watchEffect(() => {
@@ -139,6 +144,7 @@ async function handleGetIssues() {
   });
 
   if (res.status === "SUCCESS") {
+    originIssues.value = res.data;
     dataSource.data = res.data;
   }
 }
@@ -172,22 +178,42 @@ const convertDate = (date) => {
   return "";
 };
 
-const convertStatus = (status: string) => {
-  if (status === "NOT_STARTED") {
-    return "NOT STARTED";
+const convertReason = (reason: string) => {
+  if (reason === "1") {
+    return "Bug";
   }
-  if (status === "PENDING") {
-    return "PENDING";
+
+  if (reason === "2") {
+    return "Document";
   }
-  if (status === "PROCESSING") {
-    return "PROCESSING";
+
+  if (reason === "3") {
+    return "Lackage";
   }
-  if (status === "COMPLETED") {
-    return "COMPLETED";
+
+  return "";
+};
+
+const convertStatus = (status: number) => {
+  if (status === 1) {
+    return "NEW";
   }
-  if (status === "CANCELED") {
-    return "CANCELED";
+  if (status === 2) {
+    return "RE OPEN";
   }
+  if (status === 3) {
+    return "DEVELOPING";
+  }
+  if (status === 4) {
+    return "RESOLVE";
+  }
+  if (status === 5) {
+    return "CLOSED";
+  }
+  if (status === 6) {
+    return "REJECT";
+  }
+  return "";
 };
 
 function handleCreateTask() {}
@@ -218,6 +244,19 @@ async function deleteTask(id: number) {
     onCancel() {},
   });
 }
+
+watch(
+  searchText,
+  debounce(() => {
+    handleSearch();
+  }, 300)
+);
+
+function handleSearch() {
+  dataSource.data = filter(originIssues.value, (item: any) =>
+    item.taskName.toLowerCase().includes(searchText.value)
+  );
+}
 </script>
 
 <template>
@@ -241,7 +280,7 @@ async function deleteTask(id: number) {
           </div>
         </div>
 
-        <Dropdown :trigger="['click']">
+        <!-- <Dropdown :trigger="['click']">
           <Button class="btn__filter" @click.prevent>
             <FilterOutlined /> Filter
           </Button>
@@ -254,12 +293,13 @@ async function deleteTask(id: number) {
               saepe atque adipisci.
             </div>
           </template>
-        </Dropdown>
+        </Dropdown> -->
       </div>
-      <div>
-        <Button type="primary" @click="handleOpenIssue()"
-          ><PlusOutlined /> Create Issue</Button
-        >
+
+      <div v-if="positionId === 2">
+        <Button type="primary" @click="handleOpenIssue()">
+          <PlusOutlined /> Create Issue {{ positionId }}
+        </Button>
       </div>
     </div>
 
@@ -297,7 +337,7 @@ async function deleteTask(id: number) {
           <template v-if="column.dataIndex === 'reason'">
             <div class="issue__reason">
               <!-- <img src="@/assets/images/docs.png" alt="" /> -->
-              <span>{{ record.reason }}</span>
+              <span>{{ convertReason(record.reason) }}</span>
             </div>
           </template>
 
@@ -311,7 +351,7 @@ async function deleteTask(id: number) {
           </template>
 
           <template v-if="column.dataIndex === 'contentbug'">
-            <div v-html="shortenText(record.contentBug)"></div>
+            <div v-html="shortenText(record.contentBug)" class="flex"></div>
           </template>
 
           <template v-if="column.dataIndex === 'bugrepeat'">
@@ -341,18 +381,14 @@ async function deleteTask(id: number) {
           </template>
 
           <template v-if="column.dataIndex === 'status'">
-            <!-- <div>
-              <Tag
-                v-if="record.status === 'NOT_STARTED'"
-                color="#DFE1E6"
-                class="cursor-pointer"
+            <Tag color="#DFE1E6" class="cursor-pointer">
+              <span
+                class="cursor-pointer text-[#44546f] font-[700] text-[1.1rem]"
               >
-                <span
-                  class="cursor-pointer text-[#44546f] font-[700] text-[1.1rem]"
-                >
-                  {{ convertStatus("NOT_STARTED") }}
-                </span>
-              </Tag>
+                {{ convertStatus(record.status) }}
+              </span>
+            </Tag>
+            <!-- <div>
 
               <Tag
                 v-else-if="record.status === 'CANCELED'"

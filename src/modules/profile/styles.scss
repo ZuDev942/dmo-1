@@ -255,3 +255,27 @@ table {
     background: #2bc48a;
   }
 }
+
+.custom-file-input {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+.custom-file-input + label {
+  border: none;
+  background: #edeff2;
+  color: #172b4d;
+  font-weight: 500;
+  font-size: 1.4rem;
+  border-radius: 5px;
+  padding: 6px 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  display: inline-block;
+}

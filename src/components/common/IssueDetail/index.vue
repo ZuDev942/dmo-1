@@ -15,7 +15,6 @@ import {
   message,
   Divider,
   SelectProps,
-  SkeletonButton,
 } from "ant-design-vue";
 import { InboxOutlined } from "@ant-design/icons-vue";
 import { QuillEditor } from "@vueup/vue-quill";
@@ -115,33 +114,6 @@ const statusOption = ref<SelectProps["options"]>([
 ]);
 const statusOptionDev = ref<SelectProps["options"]>([
   {
-    value: 1,
-    label: "New",
-  },
-  {
-    value: 3,
-    label: "Developing",
-  },
-  {
-    value: 4,
-    label: "Resolve",
-  },
-  // {
-  //   value: 5,
-  //   label: "Closed",
-  // },
-  {
-    value: 6,
-    label: "Reject",
-  },
-]);
-
-const statusOptionReOpen = ref<SelectProps["options"]>([
-  {
-    value: 2,
-    label: "ReOpen",
-  },
-  {
     value: 3,
     label: "Developing",
   },
@@ -152,28 +124,6 @@ const statusOptionReOpen = ref<SelectProps["options"]>([
   {
     value: 5,
     label: "Closed",
-  },
-  {
-    value: 6,
-    label: "Reject",
-  },
-]);
-
-const statusOptionClosed = ref<SelectProps["options"]>([
-  {
-    value: 2,
-    label: "ReOpen",
-  },
-  {
-    value: 5,
-    label: "Closed",
-  },
-]);
-
-const statusOptionReject = ref<SelectProps["options"]>([
-  {
-    value: 2,
-    label: "ReOpen",
   },
   {
     value: 6,
@@ -184,7 +134,7 @@ const statusOptionReject = ref<SelectProps["options"]>([
 const statusOptionCreate = ref<SelectProps["options"]>([
   {
     value: 1,
-    label: "ReOpen",
+    label: "New",
   },
 ]);
 
@@ -204,8 +154,6 @@ const reasonOption = ref<SelectProps["options"]>([
 ]);
 const router = useRouter();
 const idIssue = ref<number>(0);
-const positionId = ref<number>(0);
-const isLoadIssue = ref<boolean>(false);
 
 // ==== Method ==== //
 
@@ -217,12 +165,11 @@ onMounted(() => {
 
   if (savedUser) {
     userInfo.value = JSON.parse(savedUser);
-
-    positionId.value = userInfo.value.position;
   }
 });
 
 watchEffect(() => {
+  console.log(router.currentRoute.value);
   if (router.currentRoute.value.name === "Issue") {
     if (router.currentRoute.value.params.id) {
       idIssue.value = Number(router.currentRoute.value.params.id);
@@ -236,10 +183,7 @@ watchEffect(() => {
 
 async function getDetailIssue() {
   try {
-    isLoadIssue.value = true;
-    const res = await issueService.detailIssue(idIssue.value).finally(() => {
-      isLoadIssue.value = false;
-    });
+    const res = await issueService.detailIssue(idIssue.value);
 
     if (res.status === "SUCCESS") {
       for (const key in issueParams.value) {
@@ -393,7 +337,7 @@ async function handleUpdateIssue() {
 
   if (res.status === "SUCCESS") {
     message.success("Update issue successfull");
-    getDetailIssue();
+    getDetailIssue()
   }
 }
 
@@ -471,14 +415,7 @@ const convertReason = (history: any) => {
         <div class="issueDetail__left">
           <div class="mb-[2rem]">
             <FormItem name="projectID" class="mb-4 text-hrm-color">
-              <SkeletonButton
-                active
-                :block="true"
-                v-if="isLoadIssue"
-                style="height: 46px"
-              />
               <Input
-                v-else
                 v-model:value="issueParams.titleBug"
                 placeholder="Title bug"
                 size="large"
@@ -574,77 +511,29 @@ const convertReason = (history: any) => {
         <div class="issueDetail__right">
           <div class="select__status flex justify-between">
             <FormItem class="w-[20rem]">
-              <SkeletonButton active :block="true" v-if="isLoadIssue" />
+              <Select
+                v-if="isCreate"
+                ref="selectStatus"
+                v-model:value="issueParams.status"
+                class="w-[20rem]"
+                :options="statusOptionCreate"
+              >
+              </Select>
               <template v-else>
-                <!-- Create -->
                 <Select
-                  v-if="isCreate"
+                  v-if="issueParams.status === 1"
                   ref="selectStatus"
                   v-model:value="issueParams.status"
                   class="w-[20rem]"
-                  :options="statusOptionCreate"
-                >
-                </Select>
-
-                <!-- Update -->
-                <template v-else>
-                  <!-- Tester -->
-                  <template v-if="positionId === 2">
-                    <!-- New -->
-                    <Select
-                      v-if="issueParams.status === 1"
-                      ref="selectStatus"
-                      v-model:value="issueParams.status"
-                      class="w-[20rem]"
-                      :options="statusOption"
-                    ></Select>
-                  </template>
-
-                  <!-- Normal -->
-                  <template v-else>
-                    <!-- New -->
-                    <Select
-                      v-if="issueParams.status === 1"
-                      ref="selectStatus"
-                      v-model:value="issueParams.status"
-                      class="w-[20rem]"
-                      :options="statusOptionDev"
-                    >
-                    </Select>
-
-                    <Select
-                      v-else-if="issueParams.status === 5"
-                      ref="selectStatus"
-                      v-model:value="issueParams.status"
-                      class="w-[20rem]"
-                      :options="statusOptionClosed"
-                    ></Select>
-
-                    <Select
-                      v-else-if="issueParams.status === 6"
-                      ref="selectStatus"
-                      v-model:value="issueParams.status"
-                      class="w-[20rem]"
-                      :options="statusOptionReject"
-                    ></Select>
-
-                    <Select
-                      v-else-if="issueParams.status === 2"
-                      ref="selectStatus"
-                      v-model:value="issueParams.status"
-                      class="w-[20rem]"
-                      :options="statusOptionReOpen"
-                    ></Select>
-
-                    <Select
-                      v-else
-                      ref="selectStatus"
-                      v-model:value="issueParams.status"
-                      class="w-[20rem]"
-                      :options="statusOptionDev"
-                    ></Select>
-                  </template>
-                </template>
+                  :options="statusOption"
+                ></Select>
+                <Select
+                  v-if="issueParams.status === 3"
+                  ref="selectStatus"
+                  v-model:value="issueParams.status"
+                  class="w-[20rem]"
+                  :options="statusOptionDev"
+                ></Select>
               </template>
             </FormItem>
 
@@ -665,44 +554,46 @@ const convertReason = (history: any) => {
 
             <div class="p-[10px]">
               <div class="flex">
-                <label class="w-[15rem]"
-                  >Project ID <span class="text-red-600">&ast;</span></label
-                >
+                <label class="w-[15rem]">Project ID <span class="text-red-600">&ast;</span></label>
                 <FormItem name="assignee" class="mb-4 issueDetail__formitem">
-                  <SkeletonButton active :block="true" v-if="isLoadIssue" />
                   <Select
-                    v-else
                     v-model:value="issueParams.projectId"
                     :options="optionsProject"
                     @change="handleChangeProject"
                   >
+                    <template #suffixIcon>
+                      <img
+                        class="w-8 h-8 rounded-full"
+                        src="@/assets/images/default-wg-member.jpeg"
+                        alt=""
+                      />
+                    </template>
                   </Select>
                 </FormItem>
               </div>
 
               <div class="flex">
-                <label class="w-[15rem]"
-                  >Task ID <span class="text-red-600">&ast;</span></label
-                >
+                <label class="w-[15rem]">Task ID <span class="text-red-600">&ast;</span></label>
                 <FormItem name="assignee" class="mb-4 issueDetail__formitem">
-                  <SkeletonButton active :block="true" v-if="isLoadIssue" />
                   <Select
-                    v-else
                     v-model:value="issueParams.taskId"
                     :options="optionsTask"
                   >
+                    <template #suffixIcon>
+                      <img
+                        class="w-8 h-8 rounded-full"
+                        src="@/assets/images/default-wg-member.jpeg"
+                        alt=""
+                      />
+                    </template>
                   </Select>
                 </FormItem>
               </div>
 
               <div class="flex items-center">
-                <label class="w-[15rem]"
-                  >Reviewer <span class="text-red-600">&ast;</span></label
-                >
+                <label class="w-[15rem]">Reviewer <span class="text-red-600">&ast;</span></label>
                 <FormItem name="reviewer" class="mb-4 issueDetail__formitem">
-                  <SkeletonButton active :block="true" v-if="isLoadIssue" />
-
-                  <Select v-else v-model:value="userInfo.fullname" disabled>
+                  <Select v-model:value="userInfo.fullname" disabled>
                     <template #suffixIcon>
                       <img
                         class="w-8 h-8 rounded-full"
@@ -715,17 +606,12 @@ const convertReason = (history: any) => {
               </div>
 
               <div class="flex">
-                <label class="w-[15rem]"
-                  >Assignee <span class="text-red-600">&ast;</span></label
-                >
+                <label class="w-[15rem]">Assignee <span class="text-red-600">&ast;</span></label>
                 <FormItem
                   name="reviewer"
                   class="issueDetail__formitem assignee"
                 >
-                  <SkeletonButton active :block="true" v-if="isLoadIssue" />
-
                   <Select
-                    v-else
                     ref="selectReview"
                     v-model:value="issueParams.assignee"
                     :options="optionsAccount"
@@ -740,14 +626,7 @@ const convertReason = (history: any) => {
                   </Select>
 
                   <FormItem class="mb-3">
-                    <SkeletonButton
-                      active
-                      :block="true"
-                      v-if="isLoadIssue"
-                      style="height: 20px"
-                    />
-
-                    <Checkbox v-else v-model:checked="issueParams.noti">
+                    <Checkbox v-model:checked="issueParams.noti">
                       <div class="issueDetail__checkbox">
                         Notification to assignee
                       </div>
@@ -757,13 +636,9 @@ const convertReason = (history: any) => {
               </div>
 
               <div class="flex">
-                <label class="w-[15rem]"
-                  >Review Date <span class="text-red-600">&ast;</span></label
-                >
+                <label class="w-[15rem]">Review Date <span class="text-red-600">&ast;</span></label>
                 <FormItem class="issueDetail__formitem">
-                  <SkeletonButton active :block="true" v-if="isLoadIssue" />
                   <DatePicker
-                    v-else
                     v-model:value="issueParams.reviewDate"
                     value-format="YYYY-MM-DD"
                   >
@@ -779,13 +654,9 @@ const convertReason = (history: any) => {
               </div>
 
               <div class="flex">
-                <label class="w-[15rem]"
-                  >Reason <span class="text-red-600">&ast;</span></label
-                >
+                <label class="w-[15rem]">Reason <span class="text-red-600">&ast;</span></label>
                 <FormItem name="classiff" class="mb-4 issueDetail__formitem">
-                  <SkeletonButton active :block="true" v-if="isLoadIssue" />
                   <Select
-                    v-else
                     v-model:value="issueParams.reason"
                     :options="reasonOption"
                   >
@@ -795,15 +666,8 @@ const convertReason = (history: any) => {
 
               <div class="flex mb-4 w-full justify-between">
                 <div class="flex items-center">
-                  <label class="w-[15rem]">Update times</label>
-                  <SkeletonButton
-                    active
-                    :block="true"
-                    v-if="isLoadIssue"
-                    style="width: 5rem"
-                  />
+                  <label class="w-[15rem]">Bug Repeat</label>
                   <Input
-                    v-else
                     v-model:value="issueParams.bugRepeat"
                     disabled
                     size="small"
@@ -813,15 +677,7 @@ const convertReason = (history: any) => {
 
                 <div class="flex items-center">
                   <label class="w-[100px]">Bug Code</label>
-                  <SkeletonButton
-                    active
-                    :block="true"
-                    v-if="isLoadIssue"
-                    style="width: 11rem"
-                  />
-
                   <Input
-                    v-else
                     v-model:value="issueParams.bugCode"
                     disabled
                     class="h-[32px] w-[11rem] border-none"
@@ -832,10 +688,7 @@ const convertReason = (history: any) => {
               <div class="flex">
                 <label class="w-[15rem]">Fixer</label>
                 <FormItem name="assignee" class="mb-4 issueDetail__formitem">
-                  <SkeletonButton active :block="true" v-if="isLoadIssue" />
-
                   <Select
-                    v-else
                     v-model:value="issueParams.fixer"
                     :options="optionsAccount"
                   >
@@ -853,10 +706,7 @@ const convertReason = (history: any) => {
               <div class="flex">
                 <label class="w-[15rem]">Fix Date</label>
                 <FormItem class="issueDetail__formitem">
-                  <SkeletonButton active :block="true" v-if="isLoadIssue" />
-
                   <DatePicker
-                    v-else
                     v-model:value="issueParams.fixDate"
                     value-format="YYYY-MM-DD"
                   >

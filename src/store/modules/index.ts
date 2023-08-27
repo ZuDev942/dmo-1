@@ -6,3 +6,4 @@ export * from "./session/state";
 export * from "./projectStore/state";
 export * from "./visiableModal/state";
 export * from "./issueStore/state";
+export * from "./subtaskStore/state";

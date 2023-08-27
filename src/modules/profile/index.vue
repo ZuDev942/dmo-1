@@ -20,6 +20,7 @@ import {
   Checkbox,
   InputNumber,
   Modal,
+  SkeletonButton,
 } from "ant-design-vue";
 import {
   ExclamationCircleOutlined,
@@ -28,7 +29,7 @@ import {
 
 const value = ref<string>("account006");
 const activeKey = ref<string>("1");
-import { userService } from "@/services";
+import { commonService, userService } from "@/services";
 import { cloneDeep, defaultsDeep } from "lodash";
 import moment from "moment";
 
@@ -174,6 +175,7 @@ const infoBank = ref({
 });
 
 const profileParams = ref<any>({});
+const isLoadProfile = ref<boolean>(false);
 
 import { notification } from "ant-design-vue";
 
@@ -183,7 +185,11 @@ onMounted(() => {
 });
 
 async function getProfile() {
-  const res = await userService.profileUser();
+  isLoadProfile.value = true;
+
+  const res = await userService.profileUser().finally(() => {
+    isLoadProfile.value = false;
+  });
 
   if (res.status === "SUCCESS") {
     const a = cloneDeep(res.data);
@@ -228,6 +234,27 @@ async function handleUpdateProfile() {
     onCancel() {},
   });
 }
+
+const file = ref<any>();
+
+const handleFileChange = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  file.value = target.files?.[0];
+
+  if (!file.value) return;
+
+  try {
+    const formData = new FormData();
+    formData.append("file", file.value);
+
+    const res = await commonService.uploadFile(formData);
+
+    if (res.status === "SUCCESS") {
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
 </script>
 
 <template>
@@ -246,6 +273,15 @@ async function handleUpdateProfile() {
                     <div class="box__img">
                       <img :src="reqParams.avatar" alt="" />
                     </div>
+
+                    <input
+                      id="fileInput"
+                      class="custom-file-input"
+                      type="file"
+                      @change="handleFileChange"
+                      accept="image/*, .jpg, .png, .doc"
+                    />
+                    <label for="fileInput"> Upload </label>
                   </div>
                 </div>
 
@@ -257,21 +293,40 @@ async function handleUpdateProfile() {
                     :wrapper-col="{ span: 16 }"
                   >
                     <FormItem label="Username" class="mb-3">
+                      <SkeletonButton
+                        active
+                        :block="true"
+                        v-if="isLoadProfile"
+                      />
+
                       <Input
+                        v-else
                         v-model:value="reqParams.userName"
                         :disabled="true"
                       />
                     </FormItem>
 
                     <FormItem label="Password" class="mb-3">
+                      <SkeletonButton
+                        active
+                        :block="true"
+                        v-if="isLoadProfile"
+                      />
                       <InputPassword
+                        v-else
                         v-model:value="reqParams.password"
                         :disabled="true"
                       />
                     </FormItem>
 
                     <FormItem label="Roles" class="mb-3">
+                      <SkeletonButton
+                        active
+                        :block="true"
+                        v-if="isLoadProfile"
+                      />
                       <Select
+                        v-else
                         v-model:value="reqParams.roleId"
                         :options="optionsRole"
                         placeholder="please select your role"
@@ -281,7 +336,13 @@ async function handleUpdateProfile() {
                     </FormItem>
 
                     <FormItem label="Position" class="mb-3">
+                      <SkeletonButton
+                        active
+                        :block="true"
+                        v-if="isLoadProfile"
+                      />
                       <Select
+                        v-else
                         v-model:value="reqParams.position"
                         placeholder="please select your permission"
                         :options="optionsPosition"
@@ -302,14 +363,18 @@ async function handleUpdateProfile() {
                     Fullname <span class="text-red-600">&ast;</span>
                   </label>
                   <FormItem class="w-full">
-                    <Input v-model:value="reqParams.fullName" />
+                    <SkeletonButton active :block="true" v-if="isLoadProfile" />
+                    <Input v-else v-model:value="reqParams.fullName" />
                   </FormItem>
                 </div>
 
                 <div class="flex">
                   <label for="" class="w-[15rem]">Shortname</label>
+
                   <FormItem class="w-full">
+                    <SkeletonButton active :block="true" v-if="isLoadProfile" />
                     <Input
+                      v-else
                       v-model:value="reqParams.shortName"
                       :disabled="true"
                     />
@@ -319,7 +384,9 @@ async function handleUpdateProfile() {
                 <div class="flex mb-8 justify-between w-full pr-[2.2rem]">
                   <div class="w-1/2">
                     <label for="" class="mr-[6.8rem]">Gender</label>
+                    <SkeletonButton active :block="true" v-if="isLoadProfile" style="width: 72px"/>
                     <Select
+                      v-else
                       v-model:value="reqParams.gender"
                       placeholder="please select your role"
                     >
@@ -330,7 +397,9 @@ async function handleUpdateProfile() {
 
                   <div class="">
                     <label for="" class="mr-10">Birthday</label>
+                    <SkeletonButton active :block="true" v-if="isLoadProfile" style="width: 130px"/>
                     <DatePicker
+                      v-else
                       v-model:value="reqParams.birthday"
                       value-format="YYYY-MM-DD"
                     >
@@ -346,23 +415,31 @@ async function handleUpdateProfile() {
                 </div>
 
                 <div class="flex">
-                  <label for="" class="w-[15rem]">Personal Email <span class="text-red-600">&ast;</span></label>
+                  <label for="" class="w-[15rem]"
+                    >Personal Email
+                    <span class="text-red-600">&ast;</span></label
+                  >
                   <FormItem class="w-full">
-                    <Input v-model:value="reqParams.personalEmail" />
+                    <SkeletonButton active :block="true" v-if="isLoadProfile" />
+                    <Input v-else v-model:value="reqParams.personalEmail" />
                   </FormItem>
                 </div>
 
                 <div class="flex">
-                  <label for="" class="w-[15rem]">Phone <span class="text-red-600">&ast;</span></label>
+                  <label for="" class="w-[15rem]"
+                    >Phone <span class="text-red-600">&ast;</span></label
+                  >
                   <FormItem class="w-full">
-                    <Input v-model:value="reqParams.phoneNumber" />
+                    <SkeletonButton active :block="true" v-if="isLoadProfile" />
+                    <Input v-else v-model:value="reqParams.phoneNumber" />
                   </FormItem>
                 </div>
 
                 <div class="flex">
                   <label for="" class="w-[15rem]">Address</label>
                   <FormItem class="w-full">
-                    <Input v-model:value="reqParams.address" />
+                    <SkeletonButton active :block="true" v-if="isLoadProfile" />
+                    <Input v-else v-model:value="reqParams.address" />
                   </FormItem>
                 </div>
               </Form>
@@ -378,6 +455,9 @@ async function handleUpdateProfile() {
                 :columns="columns"
                 :pagination="false"
               >
+                <template #emptyText>
+                  <div class="h-[1rem] flex items-center justify-center"></div>
+                </template>
               </Table>
             </div>
           </div>

@@ -17,6 +17,7 @@ import {
   Popover,
   notification,
   Image,
+  SkeletonButton,
 } from "ant-design-vue";
 import {
   DeleteOutlined,
@@ -30,11 +31,13 @@ import { commonService, projectService, taskService } from "@/services";
 import { cloneDeep, map, size, isEmpty, filter } from "lodash";
 import { watchEffect } from "vue";
 import { useRouter } from "vue-router";
-import { useProjectStore, visiableModal } from "@/store";
+import { useProjectStore, visiableModal, subtaskStore } from "@/store";
+import { SubTaskModal } from "@/components";
 
 // ==== Data ==== //
 const useProject = useProjectStore();
 const useModal = visiableModal();
+const useSubtask = subtaskStore();
 
 const value = ref<string>("");
 const userInfo = ref<any>({});
@@ -45,6 +48,10 @@ const router = useRouter();
 const keyProject = ref<any>("");
 const statusProject = ref<string>("");
 const isRoleManager = ref<boolean>(false);
+const isLoadTask = ref<boolean>(false);
+
+//
+const idSub = ref<number>(0);
 
 const props = defineProps<{
   isTaskModal?: boolean;
@@ -74,7 +81,7 @@ watch(useModal.$state, () => {
       getTaskDetail();
     }
   } else {
-    console.log("false");
+    console.log();
   }
 });
 
@@ -198,8 +205,11 @@ const isProgress = ref<boolean>(false);
 async function getTaskDetail() {
   typeTask.value = false;
   isTask.value = true;
+  isLoadTask.value = true;
 
-  const res = await taskService.taskDetail(idTask?.value);
+  const res = await taskService.taskDetail(idTask?.value).finally(() => {
+    isLoadTask.value = false;
+  });
 
   if (res.status === "SUCCESS") {
     const data = res.data;
@@ -217,7 +227,6 @@ async function getTaskDetail() {
 
     getProjectUser(taskDetail.value.projectDto.projectId);
 
-    // console.log(isEmpty(taskDetail.value.subTask));
     checkProgress();
   }
 }
@@ -246,6 +255,8 @@ async function addSubtask(params: any) {
     taskDetail.value.subTask.push(params);
     taskDetail.value.process = setProgressTask();
 
+    console.log(taskDetail.value);
+    getTaskDetail();
     message.success("Add subtask successfull");
     isProgress.value = true;
   }
@@ -436,11 +447,11 @@ function handleCreateSubtask() {
     taskCode: `${taskCode.value}${size(taskDetail.value.subTask)}`,
     workCd: "",
     status: "OPEN",
-    assigneeId: 0,
-    assginorId: 0,
+    assigneeId: taskDetail.value.assigneeId,
+    assginorId: taskDetail.value.assginorId,
     effort: 0,
-    startDate: "",
-    deadLine: "",
+    startDate: taskDetail.value.startDate,
+    deadLine: taskDetail.value.deadLine,
     process: 0,
     actualStartDate: "",
     actualEndDate: "",
@@ -449,8 +460,8 @@ function handleCreateSubtask() {
     workType: "CODING",
     category: "MOCKUP",
     description: "",
-    taskAttachmentList: [],
-    taskActivityList: [],
+    taskAttachmentList: null,
+    taskActivityList: null,
     projectDto: taskDetail.value.projectDto,
     subTask: null,
   };
@@ -552,6 +563,20 @@ function handleChangeStatus() {
 const convertTime = (time: any) => {
   return moment(time, "YYYY/MM/DD h:mm").fromNow();
 };
+
+// Subtask
+function handleSelectSubtask(idSubtask: number) {
+  console.log(idSubtask);
+  idSub.value = idSubtask;
+
+  const a = true;
+  useSubtask.setOpenModal(a);
+  useSubtask.$state.idSubtask = idSubtask;
+}
+
+function handleUpdateSubTask() {
+  getTaskDetail();
+}
 </script>
 
 <template>
@@ -621,12 +646,24 @@ const convertTime = (time: any) => {
                   <div class="subtask__code">
                     {{ item.taskCode }}
                   </div>
-                  <div class="subtask__name">
+                  <div
+                    class="subtask__name"
+                    @click="handleSelectSubtask(item.id)"
+                  >
                     {{ item.content }}
                   </div>
                 </div>
 
-                <div class="subtask__status">
+                <div
+                  class="subtask__status"
+                  :class="{
+                    sub_open:
+                      item.status === 'OPEN' || item.status === 'REOPEN',
+                    sub_pending:
+                      item.status === 'PENDING' || item.status === 'INPROGRESS',
+                    sub_done: item.status === 'DONE',
+                  }"
+                >
                   <Select
                     v-if="item.status === 'DONE'"
                     v-model:value="item.status"
@@ -760,7 +797,9 @@ const convertTime = (time: any) => {
                   <span class="text-[#172b4d] font-medium mr-5">
                     {{ userInfo.fullname }}
                   </span>
-                  <span class="text-[#091e42ae] font-[400]">{{ convertTime(acti.updateTime) }}</span>
+                  <span class="text-[#091e42ae] font-[400]">{{
+                    convertTime(acti.updateTime)
+                  }}</span>
                 </div>
                 <p v-html="acti.content" class="text-sm mb-2"></p>
                 <div class="btn__text flex items-center">
@@ -779,35 +818,62 @@ const convertTime = (time: any) => {
           <div
             class="mb-4 taskdetail__status"
             :class="{
-              status_open: taskDetail.status === 'OPEN',
+              status_open:
+                taskDetail.status === 'OPEN' || taskDetail.status === 'REOPEN',
               status_pending:
                 taskDetail.status === 'PENDING' ||
                 taskDetail.status === 'INPROGRESS',
               status_done: taskDetail.status === 'DONE',
             }"
           >
-            <Select
-              v-model:value="taskDetail.status"
-              v-if="typeTask"
-              style="width: 15rem"
-            >
-              <SelectOption value="OPEN"> OPEN </SelectOption>
-            </Select>
+            <template v-if="typeTask">
+              <Select v-model:value="taskDetail.status" style="width: 15rem">
+                <SelectOption value="OPEN"> OPEN </SelectOption>
+              </Select>
+            </template>
 
-            <Select
-              v-else
-              v-model:value="taskDetail.status"
-              style="width: 15rem"
-              @change="handleChangeStatus"
-              @focus="focusChangeStatus"
-            >
-              <SelectOption value="OPEN">Open</SelectOption>
-              <SelectOption value="PENDING">Pending</SelectOption>
-              <SelectOption value="INPROGRESS">In Progress</SelectOption>
-              <SelectOption value="DONE" :disabled="isProgress"
-                >Done</SelectOption
+            <template v-else>
+              <Select
+                v-if="taskDetail.status === 'DONE'"
+                v-model:value="taskDetail.status"
+                style="width: 15rem"
+                @change="handleChangeStatus"
+                @focus="focusChangeStatus"
               >
-            </Select>
+                <SelectOption value="REOPEN">ReOpen</SelectOption>
+                <SelectOption value="DONE">Done</SelectOption>
+              </Select>
+
+              <Select
+                v-else-if="taskDetail.status === 'REOPEN'"
+                v-model:value="taskDetail.status"
+                style="width: 15rem"
+                @change="handleChangeStatus"
+                @focus="focusChangeStatus"
+              >
+                <SelectOption value="REOPEN">ReOpen</SelectOption>
+                <SelectOption value="PENDING">Pending</SelectOption>
+                <SelectOption value="INPROGRESS">In Progress</SelectOption>
+                <SelectOption value="DONE" :disabled="isProgress">
+                  Done
+                </SelectOption>
+              </Select>
+
+              <Select
+                v-else
+                v-model:value="taskDetail.status"
+                style="width: 15rem"
+                @change="handleChangeStatus"
+                @focus="focusChangeStatus"
+              >
+                <SelectOption value="OPEN">Open</SelectOption>
+                <SelectOption value="PENDING">Pending</SelectOption>
+                <SelectOption value="INPROGRESS">In Progress</SelectOption>
+                <SelectOption value="DONE" :disabled="isProgress">
+                  Done
+                </SelectOption>
+              </Select>
+            </template>
           </div>
 
           <div class="taskdetail__border">
@@ -964,6 +1030,13 @@ const convertTime = (time: any) => {
         </div>
       </FormItem>
     </Form>
+
+    <SubTaskModal
+      :id-sub="idSub"
+      :id-project-subtask="idProject"
+      :user-list="userOptions"
+      @update-subtask="handleUpdateSubTask"
+    ></SubTaskModal>
   </Modal>
 </template>
 

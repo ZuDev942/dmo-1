@@ -1,0 +1,192 @@
+.issueDetail {
+  padding: 4rem;
+  padding-top: 8rem;
+  width: 100%;
+  background: white;
+  border: 1px solid rgb(236, 233, 233);
+
+  &__left {
+    width: 57%;
+  }
+  &__right {
+    width: 40%;
+  }
+
+  &__label {
+    width: 12rem;
+    padding-top: 1rem;
+  }
+
+  &__border {
+    border: 1px solid rgb(228, 228, 227);
+    border-radius: 10px;
+    padding: 1rem;
+  }
+
+  label {
+    color: #172b4d;
+    font-size: 1.4rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    padding-top: 0.5rem;
+  }
+
+  &__quill {
+    border-radius: 5px;
+  }
+
+  &__btn {
+    .ant-btn-primary {
+      background-color: #0052cc;
+
+      &:hover {
+        background: #0052cc;
+      }
+    }
+  }
+
+  &__checkbox {
+    color: #42526e;
+    font-size: 1.3rem;
+  }
+
+  &__formitem {
+    width: calc(100% - 15rem);
+
+    &.assignee {
+      margin-bottom: 0;
+    }
+  }
+
+  &__top {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+
+  &__bottom {
+    position: relative;
+    padding: 2rem 0;
+
+    &::after {
+      position: absolute;
+      content: "";
+      width: 100%;
+      height: 1px;
+      background: #172b4d;
+      top: 0;
+    }
+  }
+
+  &__icon {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+
+  &__title {
+    font-size: 2rem;
+    font-weight: 500;
+    color: #172b4d;
+    margin-bottom: 3rem;
+  }
+
+  &__btn {
+    background: #172b4d;
+    color: white;
+    border: none;
+
+    &:hover {
+      color: white;
+    }
+  }
+
+  &__btn2 {
+    border: 1px solid #172b4d;
+    color: #172b4d;
+
+    &:hover {
+      color: #172b4d;
+    }
+  }
+
+  &__edit {
+    width: 100%;
+    max-height: 20rem;
+    min-height: 12rem;
+    overflow: auto;
+    border: 1px solid #d9d9d9;
+    padding: 4px 11px;
+    border-radius: 6px;
+
+    &:hover {
+      border-color: #209653;
+    }
+  }
+}
+
+.ql-toolbar.ql-snow {
+  border-radius: 5px;
+}
+
+.history {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  // padding: 1rem 0;
+
+  &__icon {
+    img {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+  }
+
+  &__top,
+  &__content {
+    width: 100%;
+  }
+
+  &__top {
+    display: flex;
+  }
+
+  &__by {
+    padding-top: 2px;
+    margin-left: 1rem;
+    font-weight: 500;
+    color: #172b4d;
+  }
+
+  &__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    background: #172b4d;
+    border-radius: 50%;
+    margin-right: 2rem;
+  }
+
+  &__content {
+    display: flex;
+    align-items: center;
+    padding-left: 1rem;
+    border-bottom: 1px solid #d1d2d3;
+    padding-bottom: 1rem;
+  }
+
+  &__top {
+    padding-top: 1rem;
+  }
+
+  em {
+    font-weight: 500;
+  }
+}
+
+.ant-btn-primary {
+  background-color: #209653;
+
+  &:hover {
+    background: #209653;
+  }
+}

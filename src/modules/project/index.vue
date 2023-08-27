@@ -546,12 +546,12 @@ const avatarUrls = [
                       >
                         Open Issue
                       </div>
-                      <div
+                      <!-- <div
                         class="option"
                         @click="handleDeleteProject(record.id)"
                       >
                         Delete
-                      </div>
+                      </div> -->
                     </template>
                     <EllipsisOutlined style="font-size: 2.5rem" />
                   </Popover>

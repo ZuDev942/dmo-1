@@ -156,7 +156,7 @@ const isTask = ref<boolean>(false);
 const value1 = ref();
 const total = ref(1);
 
-const dataList = ref([]);
+const dataList = ref<any>([]);
 
 // ==== Method ==== //
 onMounted(() => {
@@ -173,7 +173,6 @@ onMounted(() => {
 });
 
 watchEffect(() => {
-  console.log(idProject.value);
   idProject.value = Number(router.currentRoute.value.params.id);
   const a = router.currentRoute.value.params.key;
   keyProject.value = a;
@@ -259,9 +258,11 @@ async function listTask() {
       (item) => new Date(item.dueDate)
     ).reverse();
 
-    dataSource.data = union(tasksNotDoneDue, tasksDoneDue);
+    const dataTask = union(tasksNotDoneDue, tasksDoneDue);
+    dataSource.data = dataTask;
 
-    dataList.value = res.data.data;
+    dataList.value = dataTask;
+
     dataSource.pagination.totalPage = res.data.totalRecords;
     dataSource.pagination.page = res.data.pageIndex;
     total.value = res.data.totalRecords;
@@ -341,53 +342,83 @@ const searchText = ref("");
 
 function filterAssign() {
   isAssign.value = !isAssign.value;
-
-  if (isAssign.value) {
-    dataSource.data = filter(
-      dataList.value,
-      (item: any) => item.assignee === userInfo.value.fullname
-    );
-  } else {
-    dataSource.data = dataList.value;
-  }
 }
 
 function filterDue() {
   isDue.value = !isDue.value;
 }
 
-function filterAll() {
-  if (isAssign.value === false && isDue.value === false) {
-    dataSource.data = filter(dataList.value, (item: any) =>
-      item.content.toLowerCase().includes(searchText.value)
+const today = new Date();
+const currentDay = today.getDay();
+
+// Xác định ngày bắt đầu của tuần (thứ 2)
+const daysToSubtract = currentDay === 0 ? 6 : currentDay - 1;
+const startOfWeek = new Date(today);
+startOfWeek.setDate(today.getDate() - daysToSubtract);
+
+// Xác định ngày kết thúc của tuần (Chủ Nhật)
+const daysToAdd = currentDay === 0 ? 0 : 7 - currentDay;
+const endOfWeek = new Date(today);
+endOfWeek.setDate(today.getDate() + daysToAdd);
+
+const originList = ref<any>([]);
+const isFilter = ref<boolean>(false);
+
+function handleFilter() {
+  let filterTask: any = [];
+
+  if (isAssign.value === true) {
+    filterTask = filter(
+      dataList.value,
+      (item: any) => item.assignee === userInfo.value.fullname
     );
   }
 
-  if (isAssign.value === true && isDue.value === false) {
-    dataSource.data = filter(
-      dataList.value,
-      (item: any) =>
-        item.content.toLowerCase().includes(searchText.value) &&
-        item.assignee === userInfo.value.fullName
-    );
+  if (isDue.value === true) {
+    filterTask = dataList.value.filter((dateStr) => {
+      const date = new Date(dateStr.dueDate);
+      return date >= startOfWeek && date <= endOfWeek;
+    });
   }
 
   if (isAssign.value === true && isDue.value === true) {
-    dataSource.data = filter(
-      dataList.value,
-      (item: any) =>
-        item.content.toLowerCase().includes(searchText.value) &&
-        item.assignee === userInfo.value.fullName
-    );
+    filterTask = dataList.value.filter((dateStr) => {
+      const date = new Date(dateStr.dueDate);
+      return (
+        date >= startOfWeek &&
+        date <= endOfWeek &&
+        dateStr.assignee === userInfo.value.fullname
+      );
+    });
   }
+
+  originList.value = filterTask;
+  dataSource.data = filterTask;
+  isFilter.value = true;
 }
 
 watch(
   searchText,
   debounce(() => {
-    filterAll();
+    if (isFilter.value) {
+      dataSource.data = filter(originList.value, (item) =>
+        item.content.toLowerCase().includes(searchText.value)
+      );
+    } else {
+      dataSource.data = filter(dataList.value, (item) =>
+        item.content.toLowerCase().includes(searchText.value)
+      );
+    }
+    // filterAll();
   }, 300)
 );
+
+function handleClearFilter() {
+  dataSource.data = dataList.value;
+  isFilter.value = false;
+  isAssign.value = false;
+  isDue.value = false;
+}
 
 watch(isAssign, () => {
   // filterAll();
@@ -473,7 +504,10 @@ async function updateProgress() {
 
           <template #overlay>
             <div class="h-[35rem] bg-white filter_box">
-              <div class="filter_box--title">Filters</div>
+              <div class="flex items-center justify-between pr-[1.5rem]">
+                <div class="filter_box--title">Filters</div>
+                <div @click="handleClearFilter">Clear</div>
+              </div>
               <div class="filter_box--list" @click.stop>
                 <div
                   class="filter_box--item justify-between"
@@ -560,6 +594,8 @@ async function updateProgress() {
                     <Button size="small">CR</Button>
                   </div>
                 </div>
+
+                <Button @click="handleFilter()">Filter</Button>
               </div>
             </div>
           </template>
