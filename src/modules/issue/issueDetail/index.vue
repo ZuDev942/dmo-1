@@ -614,7 +614,6 @@ const convertReviewDate = (history: any) => {
                   <template v-if="positionId === 2">
                     <!-- New -->
                     <Select
-                      v-if="issueParams.status === 1"
                       ref="selectStatus"
                       v-model:value="issueParams.status"
                       class="w-[20rem]"
