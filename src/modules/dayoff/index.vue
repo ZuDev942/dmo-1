@@ -136,22 +136,19 @@ async function getDayoff() {
   });
 
   if (res.status === "SUCCESS") {
-    const dateToday = new Date();
-
     dataSource.data = filter(
       res.data.data,
-      (item) => item.status === "TO_APPROVE"
+      (item) => item.status === "TO_APPROVE" && item.fullName !== null
     );
 
     dataSource2.data = filter(
       res.data.data,
-      (item) => item.status !== "TO_APPROVE"
+      (item) => item.status !== "TO_APPROVE" && item.fullName !== null
     );
 
-    const a = filter(res.data.data, (item) => item.status !== "TO_APPROVE");
+    const a = filter(res.data.data, (item) => item.status !== "TO_APPROVE" && item.fullName !== null);
 
     const b = sortByDateBefore(a);
-    console.log(b);
 
     dataSource.data = sortBy(dataSource.data, (item) => new Date(item.time));
 
@@ -222,7 +219,7 @@ async function updateStatusDayoff(type: number, id: number) {
   }
 
   Modal.confirm({
-    title: "Do you want to reject this holiday?",
+    title: `Do you want to ${type === 0 ? 'accept' : 'reject'} this request?`,
     icon: createVNode(ExclamationCircleOutlined),
     async onOk() {
       const res = await dayoffService.putDayoff(req);

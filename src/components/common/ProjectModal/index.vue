@@ -279,6 +279,21 @@ function resetReqParams() {
   messageError.value = "";
 }
 
+function disabledDateStart(current) {
+  const set = new Date(projectParams.value.periodEnd);
+  set.setHours(0, 0, 0, 0);
+
+  return current && current.valueOf() > set;
+}
+
+function handleChangePeriodStart() {
+  isErrorDate.value = false;
+}
+
+function handleChangePeriodEnd() {
+  isErrorEnd.value = false;
+}
+
 function onFinishProject() {
   if (projectParams.value.status !== "NOT_STARTED") {
     if (isEmpty(projectParams.value.periodStart)) {
@@ -331,8 +346,17 @@ async function createProject() {
 async function updateProject() {
   isLoadProject.value = true;
 
-  console.log(projectParams.value.projectUserList);
-  return;
+  const filterManager = {
+    id: 111,
+    accountId: 7,
+    fullName: "Vũ Văn Đạt",
+    departmentId: 1,
+    departmentName: 0,
+    roleId: "LEADER",
+    effort: 0,
+  };
+
+  projectParams.value.projectUserList.push(filterManager);
 
   const res = await projectService
     .updateProject(projectParams.value)
@@ -360,7 +384,7 @@ async function detailProject(id: number) {
 
     projectParams.value.projectUserList = filter(
       projectParams.value.projectUserList,
-      (item) => item.accountId !== 7  
+      (item) => item.accountId !== 7
     );
 
     if (!isEmpty(projectParams.value.projectUserList)) {
@@ -401,7 +425,7 @@ async function detailProject(id: number) {
       isHide.value = false;
     }
 
-    console.log(projectParams.value)
+    console.log(projectParams.value);
   }
 }
 
@@ -740,7 +764,7 @@ function handleFocus(accountId: number) {
                     value-format="YYYY-MM-DD"
                     class="w-full"
                     placeholder="None"
-                    @change="handleChangeStart"
+                    @change="handleChangePeriodStart"
                   >
                     <template #suffixIcon>
                       <img
@@ -769,10 +793,7 @@ function handleFocus(accountId: number) {
                     class="w-full"
                     placeholder="None"
                     :disabledDate="disabledDate"
-                    @change="handleChangeEnd"
-                    @click="handleClickEnd"
-                    :open="isCheckPeriodEnd"
-                    @blur="handleBlurEnd"
+                    @change="handleChangePeriodEnd"
                   >
                     <template #suffixIcon>
                       <img

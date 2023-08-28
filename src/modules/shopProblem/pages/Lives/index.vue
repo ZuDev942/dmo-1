@@ -245,7 +245,7 @@ const top = ref<number>(50);
             :key="'aa' + index"
           >
             <div class="branch__per flex justify-center items-center flex-col">
-              <img src="@/assets/images/avatar.jpeg" alt="" />
+              <img :src="mem.avatar" alt="" />
               <p>{{ mem.fullName }}</p>
             </div>
 
@@ -256,10 +256,13 @@ const top = ref<number>(50);
             >
               <div
                 class="branch__per flex flex-col justify-between"
-                :class="{
-                  branch__active: compareDay(day.dayOfMonth, dateToday),
-                  branch__off: day.off,
-                }"
+                :class="[
+                  {
+                    branch__active: compareDay(day.dayOfMonth, dateToday),
+                    branch__off: day.off,
+                  },
+                  `branch__${dayIndex}`,
+                ]"
               >
                 <div class="branch__cont">
                   <div class="branch__title2">

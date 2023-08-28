@@ -29,7 +29,7 @@ import {
   taskService,
   userService,
 } from "@/services";
-import { filter, isEmpty, map, sortBy } from "lodash";
+import { filter, isEmpty, map, orderBy, sortBy } from "lodash";
 import moment from "moment";
 import { RouteName } from "@/shared/constants";
 
@@ -184,7 +184,7 @@ const statusOptionReject = ref<SelectProps["options"]>([
 const statusOptionCreate = ref<SelectProps["options"]>([
   {
     value: 1,
-    label: "ReOpen",
+    label: "Open",
   },
 ]);
 
@@ -387,7 +387,7 @@ async function handleCreateIssue() {
 }
 
 async function handleUpdateIssue() {
-  console.log(issueParams.value);
+  issueParams.value.bugRepeat += 1;
 
   const res = await issueService.updateIssue(issueParams.value);
 
@@ -415,7 +415,7 @@ const convertDate = (date: string) => {
 
 const sortCreatedDate = (history: any) => {
   if (history) {
-    return sortBy(history, (item) => new Date(item.createDate));
+    return orderBy(history, (item) => new Date(item.createDate), "desc");
   }
 
   return [];
@@ -447,11 +447,33 @@ const convertTitleBug = (history: any) => {
 
 const convertReason = (history: any) => {
   if (history.from.reason || history.to.reason) {
-    const option = ["Bug", "Document Update", "Leakage"];
+    const option = ["Bug", "Bug", "Document Update", "Leakage"];
     const reasonFrom = option[Number(history.from.reason)];
     const reasonTo = option[Number(history.to.reason)];
 
     return `<h4> Reason changed from </h4> <em>${reasonFrom}</em> <h4>to</h4> <em>${reasonTo}</em>`;
+  }
+
+  return "";
+};
+
+const convertFixDate = (history: any) => {
+  if (history.from.fixDate || history.to.fixDate) {
+    const from = moment(history.from.fixDate).format("DD-MM-YYYY");
+    const to = moment(history.to.fixDate).format("DD-MM-YYYY");
+
+    return `<h4> Fixdate changed from </h4> <em>${from}</em> <h4>to</h4> <em>${to}</em>`;
+  }
+
+  return "";
+};
+
+const convertReviewDate = (history: any) => {
+  if (history.from.reviewDate || history.to.reviewDate) {
+    const from = moment(history.from.reviewDate).format("DD-MM-YYYY");
+    const to = moment(history.to.reviewDate).format("DD-MM-YYYY");
+
+    return `<h4> Review date changed from </h4> <em>${from}</em> <h4>to</h4> <em>${to}</em>`;
   }
 
   return "";
@@ -795,7 +817,7 @@ const convertReason = (history: any) => {
 
               <div class="flex mb-4 w-full justify-between">
                 <div class="flex items-center">
-                  <label class="w-[15rem]">Update times</label>
+                  <label class="w-[15rem]">Number updates</label>
                   <SkeletonButton
                     active
                     :block="true"
@@ -900,17 +922,28 @@ const convertReason = (history: any) => {
                 <ul class="ml-5">
                   <li
                     v-html="convertTitleBug(item)"
-                    v-if="item.from.titleBug"
+                    v-if="item.from.titleBug || item.to.titleBug"
                   ></li>
                   <li
                     v-html="convertHistory(item)"
-                    v-if="item.from.contentBug"
+                    v-if="item.from.contentBug || item.to.contentBug"
                   ></li>
                   <li
                     v-html="convertContentFix(item)"
-                    v-if="item.from.contentFix"
+                    v-if="item.from.contentFix || item.to.contentFix"
                   ></li>
-                  <li v-html="convertReason(item)" v-if="item.from.reason"></li>
+                  <li
+                    v-html="convertReason(item)"
+                    v-if="item.from.reason || item.to.reason"
+                  ></li>
+                  <li
+                    v-html="convertFixDate(item)"
+                    v-if="item.from.fixDate || item.to.fixDate"
+                  ></li>
+                  <li
+                    v-html="convertReviewDate(item)"
+                    v-if="item.from.reviewDate || item.to.reviewDate"
+                  ></li>
                 </ul>
               </div>
             </div>

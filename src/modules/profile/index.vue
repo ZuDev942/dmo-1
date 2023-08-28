@@ -208,7 +208,8 @@ async function getContract() {
   contract.value = res.data;
   profileParams.value.contract = res.data;
   infoBank.value = res.data.infoTransfer;
-  dataSource.push(infoBank.value);
+  const a = [infoBank.value];
+  dataSource.value = a;
 }
 
 async function handleUpdateProfile() {
@@ -274,14 +275,16 @@ const handleFileChange = async (event: Event) => {
                       <img :src="reqParams.avatar" alt="" />
                     </div>
 
-                    <input
-                      id="fileInput"
-                      class="custom-file-input"
-                      type="file"
-                      @change="handleFileChange"
-                      accept="image/*, .jpg, .png, .doc"
-                    />
-                    <label for="fileInput"> Upload </label>
+                    <div class="flex justify-center">
+                      <input
+                        id="fileInput"
+                        class="custom-file-input"
+                        type="file"
+                        @change="handleFileChange"
+                        accept="image/*, .jpg, .png, .doc"
+                      />
+                      <label for="fileInput"> Upload </label>
+                    </div>
                   </div>
                 </div>
 
@@ -292,7 +295,7 @@ const handleFileChange = async (event: Event) => {
                     :label-col="{ span: 10 }"
                     :wrapper-col="{ span: 16 }"
                   >
-                    <FormItem label="Username" class="mb-3">
+                    <FormItem label="Username" class="mb-6">
                       <SkeletonButton
                         active
                         :block="true"
@@ -306,7 +309,7 @@ const handleFileChange = async (event: Event) => {
                       />
                     </FormItem>
 
-                    <FormItem label="Password" class="mb-3">
+                    <FormItem label="Password" class="mb-6">
                       <SkeletonButton
                         active
                         :block="true"
@@ -319,7 +322,7 @@ const handleFileChange = async (event: Event) => {
                       />
                     </FormItem>
 
-                    <FormItem label="Roles" class="mb-3">
+                    <FormItem label="Roles" class="mb-6">
                       <SkeletonButton
                         active
                         :block="true"
@@ -335,7 +338,7 @@ const handleFileChange = async (event: Event) => {
                       </Select>
                     </FormItem>
 
-                    <FormItem label="Position" class="mb-3">
+                    <FormItem label="Position" class="mb-6">
                       <SkeletonButton
                         active
                         :block="true"
@@ -384,7 +387,12 @@ const handleFileChange = async (event: Event) => {
                 <div class="flex mb-8 justify-between w-full pr-[2.2rem]">
                   <div class="w-1/2">
                     <label for="" class="mr-[6.8rem]">Gender</label>
-                    <SkeletonButton active :block="true" v-if="isLoadProfile" style="width: 72px"/>
+                    <SkeletonButton
+                      active
+                      :block="true"
+                      v-if="isLoadProfile"
+                      style="width: 72px"
+                    />
                     <Select
                       v-else
                       v-model:value="reqParams.gender"
@@ -397,7 +405,12 @@ const handleFileChange = async (event: Event) => {
 
                   <div class="">
                     <label for="" class="mr-10">Birthday</label>
-                    <SkeletonButton active :block="true" v-if="isLoadProfile" style="width: 130px"/>
+                    <SkeletonButton
+                      active
+                      :block="true"
+                      v-if="isLoadProfile"
+                      style="width: 130px"
+                    />
                     <DatePicker
                       v-else
                       v-model:value="reqParams.birthday"
@@ -447,21 +460,6 @@ const handleFileChange = async (event: Event) => {
           </div>
 
           <!-- Other -->
-          <div class="box mb-10">
-            <h3 class="box__title">Banking Info</h3>
-            <div class="">
-              <Table
-                :dataSource="dataSource"
-                :columns="columns"
-                :pagination="false"
-              >
-                <template #emptyText>
-                  <div class="h-[1rem] flex items-center justify-center"></div>
-                </template>
-              </Table>
-            </div>
-          </div>
-
           <!-- Contract -->
 
           <div class="box__btn">
@@ -592,6 +590,18 @@ const handleFileChange = async (event: Event) => {
                     <Select style="width: 100%" :disabled="true"> </Select>
                   </FormItem>
                 </div>
+              </div>
+            </div>
+
+            <div class="box mb-10">
+              <h3 class="box__title">Banking Info</h3>
+              <div class="">
+                <Table
+                  :dataSource="dataSource"
+                  :columns="columns"
+                  :pagination="false"
+                >
+                </Table>
               </div>
             </div>
           </Form>

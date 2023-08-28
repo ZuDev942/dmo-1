@@ -9,6 +9,7 @@ import {
   Tooltip,
   Dropdown,
   Modal,
+  Drawer,
 } from "ant-design-vue";
 import {
   PlusOutlined,
@@ -25,6 +26,7 @@ import moment from "moment";
 import router from "@/router";
 import { RouteName } from "@/shared/constants";
 import { issueStore } from "@/store";
+import { IssueDetail } from "@/components";
 
 const useIssue = issueStore();
 
@@ -224,14 +226,18 @@ function handleOpenIssue() {
   router.push({
     name: RouteName.ISSUE,
     // params: { id: null },
+    path: 'issue',
+
   });
+  const idP = idProject.value;
+  useIssue.setProjectID(idP);
+  // isOpenIssue.value = true;
 }
 
 function handleGetIssueDetail(idIssue: number) {
-  console.log(idIssue);
-
   router.push({
     name: RouteName.ISSUE,
+    path: 'issue',
     params: { id: idIssue },
   });
 }
@@ -257,6 +263,12 @@ function handleSearch() {
     item.taskName.toLowerCase().includes(searchText.value)
   );
 }
+
+const isOpenIssue = ref<boolean>(false);
+const isTypeIssue = ref<string>("create");
+const afterOpenChange = (bool: boolean) => {
+  console.log("open", bool);
+};
 </script>
 
 <template>
@@ -459,6 +471,18 @@ function handleSearch() {
         </template>
       </Table>
     </div>
+
+    <Drawer
+      v-model:open="isOpenIssue"
+      class="custom-class"
+      root-class-name="root-class-name"
+      :style="{ position: 'absolute' }"
+      title="Basic Drawer"
+      placement="right"
+      @after-open-change="afterOpenChange"
+    >
+      <IssueDetail :is-type-issue="isTypeIssue"></IssueDetail>
+    </Drawer>
   </div>
 </template>
 

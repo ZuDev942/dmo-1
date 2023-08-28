@@ -31,6 +31,7 @@ import {
   reduce,
   size,
   sortBy,
+  union,
 } from "lodash";
 import type { IDataSource } from "@/components";
 import moment from "moment";
@@ -83,6 +84,9 @@ const isLoad = ref<boolean>(false);
 const delayTime = 500;
 const originData2 = ref<any>([]);
 const isLoadingView = ref<boolean>(false);
+const createTime = ref<string>("");
+const monthCreate = ref<number>(0);
+const dateCreate = ref<number>(0);
 
 // ==== Method ==== //
 onMounted(() => {
@@ -94,6 +98,17 @@ onMounted(() => {
 
   currentMonth.value = today.getMonth();
   selectedMonth.value = currentMonth.value;
+
+  //
+  const savedUser = localStorage.getItem("userInfo");
+
+  if (savedUser) {
+    const userInfo = JSON.parse(savedUser);
+    createTime.value = userInfo.createTime;
+    const month = new Date(userInfo.createTime);
+    monthCreate.value = month.getMonth();
+    dateCreate.value = month.getDate();
+  }
 
   getYourTask();
 });
@@ -265,7 +280,7 @@ const dataSource2 = reactive<IDataSource>({
       width: 70,
     },
     {
-      title: "Note",
+      title: "Status",
       dataIndex: "note",
       scopedSlots: "note",
       width: 40,
@@ -332,7 +347,7 @@ const dataSource = reactive<IDataSource>({
       width: 60,
     },
     {
-      title: "Note",
+      title: "Status",
       dataIndex: "note",
       scopedSlots: "note",
       width: 100,
@@ -342,9 +357,14 @@ const dataSource = reactive<IDataSource>({
 
 const dataYourWork = ref<any>([]);
 
-function handleOkReport() {}
-function handleLoadPage() {}
+function handleOkReport() {
+  console.log("a");
+}
+function handleCancel() {
+  console.log("c");
+}
 
+// Your task
 async function getYourTask() {
   const req = {
     pageIndex: 1,
@@ -353,15 +373,28 @@ async function getYourTask() {
 
   const res = await yourworkService.getListTask(req);
 
-  const dueThisWeek = orderBy(
-    res.data.data,
+  // Get done
+  const tasksDone = filter(res.data.data, (item) => item.status === "DONE");
+  const tasksDoneDue = orderBy(
+    tasksDone,
+    (date) => new Date(date.dueDate),
+    "desc"
+  );
+
+  // Get not done
+  const tasksNotDone = filter(res.data.data, (item) => item.status !== "DONE");
+
+  const tasksNotDoneDue = orderBy(
+    tasksNotDone,
     (date) => new Date(date.dueDate),
     "asc"
   );
 
-  yourTasks.value = dueThisWeek;
+  const dataTask = union(tasksNotDoneDue, tasksDoneDue);
 
-  dataYourWork.value = map(dueThisWeek, (item) => {
+  yourTasks.value = dataTask;
+
+  dataYourWork.value = map(dataTask, (item) => {
     return {
       ...item,
       progress: item.process,
@@ -515,6 +548,8 @@ watch(
     );
   }, 300)
 );
+
+const checkDate = () => {};
 </script>
 
 <template>
@@ -531,11 +566,18 @@ watch(
 
         <div
           class="date"
-          :class="{
-            'date-active': d.date === dateToday,
-            warning: !d.haveReported && d.date < dateToday,
-            'date-off': d.off,
-          }"
+          :class="[
+            {
+              'date-active': d.date === dateToday,
+              warning:
+                !d.haveReported &&
+                d.date < dateToday &&
+                currentMonth === selectedMonth,
+              'date-off': d.off,
+              // 'create-time':
+              //   monthCreate === currentMonth && d.date < dateCreate,
+            },
+          ]"
         >
           <div class="date__head flex justify-between">
             <div v-if="d.haveReported" class="text-[#374151] font-[500]">
@@ -544,6 +586,7 @@ watch(
             </div>
             <div v-else></div>
             <div class="text-[1.6rem] date__text">{{ d.date }}</div>
+            <!-- {{ index }} -->
           </div>
 
           <div class="date__task">
@@ -582,7 +625,50 @@ watch(
               </template>
             </div>
 
+            <!-- Nếu select tháng chọn = tháng hiện tại -->
             <template v-if="currentMonth === selectedMonth">
+              <!-- Nếu mà tháng hiện tại = tháng tạo mới tk -->
+              <!-- <template v-if="monthCreate === currentMonth">
+                <template v-if="d.date >= dateCreate">
+                  <template v-if="d.date <= dateToday">
+                    <Button
+                      class="date__btn"
+                      :class="{ 'date__btn--report': d.haveReported }"
+                      @click="selectedDate(d)"
+                      v-if="!d.off"
+                    >
+                      Report
+                    </Button>
+                  </template>
+
+                  <template v-else>
+                    <Button class="date__btn" v-if="!d.off" :disabled="true">
+                      Report
+                    </Button>
+                  </template>
+                </template>
+
+                <template v-else> </template>
+              </template>
+
+              <template v-else>
+                <template v-if="d.date <= dateToday">
+                  <Button
+                    class="date__btn"
+                    :class="{ 'date__btn--report': d.haveReported }"
+                    @click="selectedDate(d)"
+                    v-if="!d.off"
+                  >
+                    Report
+                  </Button>
+                </template>
+
+                <template v-else>
+                  <Button class="date__btn" v-if="!d.off" :disabled="true">
+                    Report
+                  </Button>
+                </template>
+              </template> -->
               <template v-if="d.date <= dateToday">
                 <Button
                   class="date__btn"
@@ -593,6 +679,7 @@ watch(
                   Report
                 </Button>
               </template>
+
               <template v-else>
                 <Button class="date__btn" v-if="!d.off" :disabled="true">
                   Report
@@ -610,6 +697,7 @@ watch(
       :bodyStyle="{ padding: 0, 'border-radius': '10px' }"
       :footer="null"
       @ok="handleOkReport"
+      @cancel="handleCancel"
       title="DAILY REPORT"
     >
       <Spin :spinning="isLoad" :delay="delayTime">
@@ -716,7 +804,9 @@ watch(
                   <div
                     class="column__item"
                     :class="{ select: record.isSelected }"
-                  ></div>
+                  >
+                    {{ record.status }}
+                  </div>
                 </template>
               </template>
             </Table>
@@ -1050,5 +1140,11 @@ watch(
 
 .ant-progress :deep(.ant-progress-inline) {
   margin-bottom: 0;
+}
+
+.create-time {
+  .date__text {
+    color: #172b4d !important;
+  }
 }
 </style>

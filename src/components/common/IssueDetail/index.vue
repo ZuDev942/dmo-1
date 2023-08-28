@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref, watchEffect } from "vue";
+import { onMounted, ref, toRefs, watchEffect } from "vue";
 import {
   Form,
   FormItem,
@@ -42,6 +42,17 @@ type IHistory = {
 };
 
 // ==== Data ==== //
+const props = defineProps<{
+  isTypeIssue: string;
+}>();
+
+const { isTypeIssue } = toRefs(props);
+
+const emit = defineEmits<{
+  (e: "closeProjectModal"): void;
+  (e: "refreshProjects"): void;
+}>();
+
 const issueParams = ref({
   id: 0,
   projectId: "",
@@ -158,6 +169,7 @@ const idIssue = ref<number>(0);
 // ==== Method ==== //
 
 onMounted(() => {
+  console.log('a')
   getProjects();
   getAccounts();
 
@@ -332,12 +344,13 @@ async function handleCreateIssue() {
 
 async function handleUpdateIssue() {
   console.log(issueParams.value);
+  issueParams.value.bugRepeat += 1;
 
   const res = await issueService.updateIssue(issueParams.value);
 
   if (res.status === "SUCCESS") {
     message.success("Update issue successfull");
-    getDetailIssue()
+    getDetailIssue();
   }
 }
 
@@ -554,7 +567,9 @@ const convertReason = (history: any) => {
 
             <div class="p-[10px]">
               <div class="flex">
-                <label class="w-[15rem]">Project ID <span class="text-red-600">&ast;</span></label>
+                <label class="w-[15rem]"
+                  >Project ID <span class="text-red-600">&ast;</span></label
+                >
                 <FormItem name="assignee" class="mb-4 issueDetail__formitem">
                   <Select
                     v-model:value="issueParams.projectId"
@@ -573,7 +588,9 @@ const convertReason = (history: any) => {
               </div>
 
               <div class="flex">
-                <label class="w-[15rem]">Task ID <span class="text-red-600">&ast;</span></label>
+                <label class="w-[15rem]"
+                  >Task ID <span class="text-red-600">&ast;</span></label
+                >
                 <FormItem name="assignee" class="mb-4 issueDetail__formitem">
                   <Select
                     v-model:value="issueParams.taskId"
@@ -591,7 +608,9 @@ const convertReason = (history: any) => {
               </div>
 
               <div class="flex items-center">
-                <label class="w-[15rem]">Reviewer <span class="text-red-600">&ast;</span></label>
+                <label class="w-[15rem]"
+                  >Reviewer <span class="text-red-600">&ast;</span></label
+                >
                 <FormItem name="reviewer" class="mb-4 issueDetail__formitem">
                   <Select v-model:value="userInfo.fullname" disabled>
                     <template #suffixIcon>
@@ -606,7 +625,9 @@ const convertReason = (history: any) => {
               </div>
 
               <div class="flex">
-                <label class="w-[15rem]">Assignee <span class="text-red-600">&ast;</span></label>
+                <label class="w-[15rem]"
+                  >Assignee <span class="text-red-600">&ast;</span></label
+                >
                 <FormItem
                   name="reviewer"
                   class="issueDetail__formitem assignee"
@@ -636,7 +657,9 @@ const convertReason = (history: any) => {
               </div>
 
               <div class="flex">
-                <label class="w-[15rem]">Review Date <span class="text-red-600">&ast;</span></label>
+                <label class="w-[15rem]"
+                  >Review Date <span class="text-red-600">&ast;</span></label
+                >
                 <FormItem class="issueDetail__formitem">
                   <DatePicker
                     v-model:value="issueParams.reviewDate"
@@ -654,7 +677,9 @@ const convertReason = (history: any) => {
               </div>
 
               <div class="flex">
-                <label class="w-[15rem]">Reason <span class="text-red-600">&ast;</span></label>
+                <label class="w-[15rem]"
+                  >Reason <span class="text-red-600">&ast;</span></label
+                >
                 <FormItem name="classiff" class="mb-4 issueDetail__formitem">
                   <Select
                     v-model:value="issueParams.reason"

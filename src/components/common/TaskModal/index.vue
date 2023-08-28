@@ -255,10 +255,29 @@ async function addSubtask(params: any) {
     taskDetail.value.subTask.push(params);
     taskDetail.value.process = setProgressTask();
 
-    console.log(taskDetail.value);
-    getTaskDetail();
+    // console.log(taskDetail.value);
+    handleUpdateTask1();
     message.success("Add subtask successfull");
     isProgress.value = true;
+  }
+}
+
+async function handleUpdateTask1() {
+  try {
+    if (idProject.value) {
+      taskDetail.value.projectId = idProject.value;
+    } else {
+      taskDetail.value.projectId = taskDetail.value.projectDto.projectId;
+    }
+
+    const res = await taskService.updateTask(taskDetail.value);
+
+    if (res.status === "SUCCESS") {
+      isTask.value = false;
+      getTaskDetail();
+    }
+  } catch (error) {
+    message.error("Error");
   }
 }
 

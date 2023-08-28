@@ -105,13 +105,18 @@ const handleOkAbsence = async (e: MouseEvent) => {
     });
   });
 
+  const vietnamTimeZoneOffset = 7;
+  const dateConvert = new Date(formAbsence.offDay);
+  dateConvert.setHours(dateConvert.getHours() + vietnamTimeZoneOffset);
+  const offDayConvert = dateConvert.toISOString();
+
   const reqParams = {
     requestAccountId: 3,
     approverId: formAbsence.approverId,
     informList: inform,
     dayOffType: formAbsence.dayOffType,
     sessionOff: formAbsence.sessionOff,
-    offDay: formAbsence.offDay,
+    offDay: offDayConvert,
     reason: formAbsence.reason,
     note: formAbsence.note,
   };
@@ -134,14 +139,14 @@ import type { FormInstance } from "ant-design-vue";
 
 const formRef = ref<FormInstance>();
 
-let checkOldPass = async (_rule: Rule, value: any) => {
-  console.log(value);
-  if (value === "") {
-    return Promise.reject("Please enter current password");
-  } else {
-    return Promise.resolve();
-  }
-};
+// let checkOldPass = async (_rule: Rule, value: any) => {
+//   console.log(value);
+//   if (value === "") {
+//     return Promise.reject("Please enter current password");
+//   } else {
+//     return Promise.resolve();
+//   }
+// };
 
 const rules: Record<string, Rule[]> = {
   reason: [
@@ -243,11 +248,13 @@ function disabledDate(current) {
                   <SelectOption value="WEDDING_LEAVE"
                     >Wedding Leave</SelectOption
                   >
-                  <SelectOption value="PAID_LEAVE">
-                    Paid Leave
-                  </SelectOption>
-                  <SelectOption value="PATERNITY_LEAVE">Paternity Leave</SelectOption>
-                  <SelectOption value="COMPASSIONATE_LEAVE">Compassionate Leave</SelectOption>
+                  <SelectOption value="PAID_LEAVE"> Paid Leave </SelectOption>
+                  <SelectOption value="PATERNITY_LEAVE"
+                    >Paternity Leave</SelectOption
+                  >
+                  <SelectOption value="COMPASSIONATE_LEAVE"
+                    >Compassionate Leave</SelectOption
+                  >
                 </Select>
               </FormItem>
             </div>

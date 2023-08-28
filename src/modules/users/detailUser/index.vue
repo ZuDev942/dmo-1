@@ -438,8 +438,8 @@ watch(
                 >
                   <Switch
                     v-model:checked="userParams.activeFlag"
-                    checked-children="Active"
-                    un-checked-children="Deactive"
+                    checked-children="Deactive"
+                    un-checked-children="Active"
                   />
 
                   <!-- {{ userParams.activeFlag }} -->
@@ -531,7 +531,7 @@ watch(
                     </div>
 
                     <div class="w-[49%]">
-                      <label for="" class="w-[20rem]">Gender <span class="text-red-600">&ast;</span></label>
+                      <label for="" class="w-[20rem]">Gender </label>
                       <FormItem class="w-full">
                         <Select
                           v-model:value="userParams.gender"

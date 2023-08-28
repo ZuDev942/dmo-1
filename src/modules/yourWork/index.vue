@@ -60,7 +60,7 @@ const dataSource = reactive<IDataSource>({
     {
       title: "Key",
       dataIndex: "key",
-      width: 50,
+      width: 80,
       fixed: "left",
     },
     {
@@ -366,7 +366,7 @@ function getTaskDetail(id: number) {
         :columns="dataSource.columns"
         :data-source="dataSource.data"
         class="custom-table"
-        :scroll="{ x: 1500, y: 480 }"
+        :scroll="{ x: 1500, y: 350 }"
         :loading="dataSource.loading"
       >
         <template #bodyCell="{ column, record }">

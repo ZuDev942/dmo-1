@@ -315,6 +315,12 @@
   &__errEffort {
     color: red;
   }
+
+  &__6 {
+    .branch__cont {
+      display: none;
+    }
+  }
 }
 
 .ant-modal {

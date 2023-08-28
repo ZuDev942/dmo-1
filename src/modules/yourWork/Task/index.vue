@@ -68,6 +68,7 @@ import {
   debounce,
   sortBy,
   union,
+  orderBy,
 } from "lodash";
 import { watchEffect } from "vue";
 import { useRouter } from "vue-router";
@@ -246,17 +247,24 @@ async function listTask() {
   if (res.status === "SUCCESS") {
     // Get done
     const tasksDone = filter(res.data.data, (item) => item.status === "DONE");
-    const tasksDoneDue = sortBy(tasksDone, (item) => new Date(item.dueDate));
+    const tasksDoneDue = orderBy(
+      tasksDone,
+      (date) => new Date(date.dueDate),
+      "desc"
+    );
 
     // Get not done
     const tasksNotDone = filter(
       res.data.data,
       (item) => item.status !== "DONE"
     );
-    const tasksNotDoneDue = sortBy(
+
+    const tasksNotDoneDue = orderBy(
       tasksNotDone,
-      (item) => new Date(item.dueDate)
-    ).reverse();
+      (date) => new Date(date.dueDate),
+      "asc"
+    );
+
 
     const dataTask = union(tasksNotDoneDue, tasksDoneDue);
     dataSource.data = dataTask;
@@ -595,7 +603,10 @@ async function updateProgress() {
                   </div>
                 </div>
 
-                <Button @click="handleFilter()">Filter</Button>
+                <div class="flex justify-center">
+                  <Button @click="handleFilter()" type="primary">Filter</Button>
+
+                </div>
               </div>
             </div>
           </template>

@@ -12,7 +12,7 @@ export const issueStore = defineStore("issue", {
       this.idTask = idTask;
     },
 
-    setProjectID(idProject: number) {
+    setProjectID(idProject: any) {
       console.log(idProject);
       this.idProject = idProject;
     },

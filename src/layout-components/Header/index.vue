@@ -32,8 +32,10 @@ import { notificationService, userService } from "@/services";
 import { map, isEmpty, filter, size } from "lodash";
 import eventBus from "@/eventBus";
 const { onEvent } = eventBus();
+import { issueStore } from "@/store";
 
 // ==== Data ==== //
+const useIssue = issueStore();
 const router = useRouter();
 const isSetting = ref<boolean>(false);
 const isChangePassword = ref<boolean>(false);
@@ -198,7 +200,7 @@ let checkNewPass = async (_rule: Rule, value: string) => {
   if (value === "") {
     return Promise.reject("Please enter new password");
   } else {
-    ""
+    ("");
     if (!containsSpecialCharacter(value)) {
       return Promise.reject("Password at least one special character");
     }

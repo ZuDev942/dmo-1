@@ -56,6 +56,7 @@ const onFinish = async (values: any) => {
         fullname: res.data.fullName,
         role: res.data?.role,
         position: res.data.position,
+        createTime: res.data.createTime
       };
 
       localStorage.setItem("userInfo", JSON.stringify(userInfo));

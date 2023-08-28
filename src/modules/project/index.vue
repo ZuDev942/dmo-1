@@ -253,20 +253,20 @@ async function getListProject() {
   }
 }
 
-async function handleDeleteProject(idProject: number) {
-  Modal.confirm({
-    title: "Do you want to delete account?",
-    icon: createVNode(ExclamationCircleOutlined),
-    async onOk() {
-      const res = await projectService.deleteProject(idProject);
-      if (res.status === "SUCCESS") {
-        message.success("Delete successful!");
-        getListProject();
-      }
-    },
-    onCancel() {},
-  });
-}
+// async function handleDeleteProject(idProject: number) {
+//   Modal.confirm({
+//     title: "Do you want to delete account?",
+//     icon: createVNode(ExclamationCircleOutlined),
+//     async onOk() {
+//       const res = await projectService.deleteProject(idProject);
+//       if (res.status === "SUCCESS") {
+//         message.success("Delete successful!");
+//         getListProject();
+//       }
+//     },
+//     onCancel() {},
+//   });
+// }
 
 const convertType = (type: string) => {
   if (type === "PROJECT") {
